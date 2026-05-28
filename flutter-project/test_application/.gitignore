@@ -1,0 +1,68 @@
+# -------------------------------------------------------------------------
+# Flutter & Dart Git Ignore Rules
+# -------------------------------------------------------------------------
+
+# Compiled/generated artifacts
+/build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Symbolication and Obfuscation artifacts
+app.*.symbols
+app.*.map.json
+
+# Coverage report
+/coverage/
+
+# -------------------------------------------------------------------------
+# Android-specific ignores
+# -------------------------------------------------------------------------
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+/android/.gradle/
+/android/local.properties
+/android/key.properties
+/android/flutter_plugin_android_lifecycle/
+# Gradle build directory
+/android/build/
+
+# -------------------------------------------------------------------------
+# iOS-specific ignores
+# -------------------------------------------------------------------------
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/ephemeral/
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flash/
+**/doc/api/
+/ios/Flutter/.last_build_id
+# User-specific Xcode settings
+**/project.xcworkspace/xcuserdata/
+**/xcuserdata/
+
+# -------------------------------------------------------------------------
+# IDE / Editor configuration
+# -------------------------------------------------------------------------
+# IntelliJ/Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# -------------------------------------------------------------------------
+# Environment variables / Credentials
+# -------------------------------------------------------------------------
+.env
+.env.*
