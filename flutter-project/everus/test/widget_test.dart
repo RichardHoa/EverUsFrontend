@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:test_application/main.dart';
+import 'package:everus/main.dart';
 
 void main() {
   testWidgets('EverUs App smoke test', (WidgetTester tester) async {

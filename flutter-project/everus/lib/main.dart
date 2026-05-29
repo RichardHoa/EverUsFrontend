@@ -110,21 +110,23 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
         break;
     }
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFFFFF5F5), // ultra-light pink
-            Colors.white,
-            Color(0xFFFAF5FF), // ultra-light purple
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFFFFF5F5), // ultra-light pink
+              Colors.white,
+              Color(0xFFFAF5FF), // ultra-light purple
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-      ),
-      child: SafeArea(
-        top: false, // Scaffold will handle SafeArea top for AppBars
-        child: pageBody,
+        child: SafeArea(
+          top: false, // Scaffold will handle SafeArea top for AppBars
+          child: pageBody,
+        ),
       ),
     );
   }
