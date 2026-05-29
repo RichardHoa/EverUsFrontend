@@ -302,35 +302,35 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
             label: 'Romance',
             icon: '💕',
             value: _romance,
-            onChanged: (val) => setState(() => _romance = val),
+            onChanged: (val) => _romance = val,
             colors: const [Color(0xFFEC4899), Color(0xFFF43F5E)],
           ),
           VibeSlider(
             label: 'Adventure',
             icon: '🧗',
             value: _adventure,
-            onChanged: (val) => setState(() => _adventure = val),
+            onChanged: (val) => _adventure = val,
             colors: const [Color(0xFF3B82F6), Color(0xFF06B6D4)],
           ),
           VibeSlider(
             label: 'Creativity',
             icon: '🎨',
             value: _creative,
-            onChanged: (val) => setState(() => _creative = val),
+            onChanged: (val) => _creative = val,
             colors: const [Color(0xFFA855F7), Color(0xFF7C3AED)],
           ),
           VibeSlider(
             label: 'Indoor',
             icon: '🏠',
             value: _indoor,
-            onChanged: (val) => setState(() => _indoor = val),
+            onChanged: (val) => _indoor = val,
             colors: const [Color(0xFF22C55E), Color(0xFF10B981)],
           ),
           VibeSlider(
             label: 'Energy',
             icon: '⚡',
             value: _energy,
-            onChanged: (val) => setState(() => _energy = val),
+            onChanged: (val) => _energy = val,
             colors: const [Color(0xFFF97316), Color(0xFFFBBF24)],
           ),
           const SizedBox(height: 16),
@@ -373,35 +373,35 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
               label: 'Romance',
               icon: '💕',
               value: _romance2,
-              onChanged: (val) => setState(() => _romance2 = val),
+              onChanged: (val) => _romance2 = val,
               colors: const [Color(0xFFEC4899), Color(0xFFF43F5E)],
             ),
             VibeSlider(
               label: 'Adventure',
               icon: '🧗',
               value: _adventure2,
-              onChanged: (val) => setState(() => _adventure2 = val),
+              onChanged: (val) => _adventure2 = val,
               colors: const [Color(0xFF3B82F6), Color(0xFF06B6D4)],
             ),
             VibeSlider(
               label: 'Creativity',
               icon: '🎨',
               value: _creative2,
-              onChanged: (val) => setState(() => _creative2 = val),
+              onChanged: (val) => _creative2 = val,
               colors: const [Color(0xFFA855F7), Color(0xFF7C3AED)],
             ),
             VibeSlider(
               label: 'Indoor',
               icon: '🏠',
               value: _indoor2,
-              onChanged: (val) => setState(() => _indoor2 = val),
+              onChanged: (val) => _indoor2 = val,
               colors: const [Color(0xFF22C55E), Color(0xFF10B981)],
             ),
             VibeSlider(
               label: 'Energy',
               icon: '⚡',
               value: _energy2,
-              onChanged: (val) => setState(() => _energy2 = val),
+              onChanged: (val) => _energy2 = val,
               colors: const [Color(0xFFF97316), Color(0xFFFBBF24)],
             ),
           ],
@@ -700,32 +700,34 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            padding: padding,
+            child: child,
           ),
-          padding: padding,
-          child: child,
         ),
       ),
     );
   }
 }
 
-class VibeSlider extends StatelessWidget {
+class VibeSlider extends StatefulWidget {
   final String label;
   final String icon;
   final double value;
@@ -742,9 +744,30 @@ class VibeSlider extends StatelessWidget {
   });
 
   @override
+  State<VibeSlider> createState() => _VibeSliderState();
+}
+
+class _VibeSliderState extends State<VibeSlider> {
+  late double _currentValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentValue = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(covariant VibeSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) {
+      _currentValue = widget.value;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final startColor = colors[0];
-    final endColor = colors[1];
+    final startColor = widget.colors[0];
+    final endColor = widget.colors[1];
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -753,10 +776,10 @@ class VibeSlider extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(icon, style: const TextStyle(fontSize: 16)),
+              Text(widget.icon, style: const TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
               Text(
-                label,
+                widget.label,
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -770,14 +793,14 @@ class VibeSlider extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: colors,
+                    colors: widget.colors,
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  value.round().toString(),
+                  _currentValue.round().toString(),
                   style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 12,
@@ -809,11 +832,11 @@ class VibeSlider extends StatelessWidget {
                         clipBehavior: Clip.antiAlias,
                         alignment: Alignment.centerLeft,
                         child: FractionallySizedBox(
-                          widthFactor: value / 10,
+                          widthFactor: _currentValue / 10,
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: colors,
+                                colors: widget.colors,
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                               ),
@@ -826,9 +849,9 @@ class VibeSlider extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: List.generate(10, (index) {
                           final tick = index + 1;
-                          final isActive = tick <= value;
+                          final isActive = tick <= _currentValue;
                           final tickColor = isActive
-                              ? (tick <= value / 2 ? startColor : endColor)
+                              ? (tick <= _currentValue / 2 ? startColor : endColor)
                               : const Color(0xFFD1D5DB);
                           return Expanded(
                             child: Center(
@@ -859,7 +882,10 @@ class VibeSlider extends StatelessWidget {
     if (width <= 0) return;
     double rawValue = (localDx / width) * 10;
     double newValue = rawValue.roundToDouble().clamp(1.0, 10.0);
-    onChanged(newValue);
+    if (newValue != _currentValue) {
+      setState(() => _currentValue = newValue);
+      widget.onChanged(newValue);
+    }
   }
 }
 

@@ -189,24 +189,26 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
               const SizedBox(height: 16),
 
               // SVG-like Canvas
-              AspectRatio(
-                aspectRatio: 1.1,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final size = constraints.biggest;
-                    return GestureDetector(
-                      onTapUp: (details) => _handleTap(details, size),
-                      child: CustomPaint(
-                        size: size,
-                        painter: _RadarChartPainter(
-                          userVector: currentUserVec,
-                          activityVector: currentActVec,
-                          theme: currentTheme,
-                          hoveredIdx: _hoveredDimension,
+              RepaintBoundary(
+                child: AspectRatio(
+                  aspectRatio: 1.1,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = constraints.biggest;
+                      return GestureDetector(
+                        onTapUp: (details) => _handleTap(details, size),
+                        child: CustomPaint(
+                          size: size,
+                          painter: _RadarChartPainter(
+                            userVector: currentUserVec,
+                            activityVector: currentActVec,
+                            theme: currentTheme,
+                            hoveredIdx: _hoveredDimension,
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
 

@@ -128,11 +128,12 @@ class _HeartMascotState extends State<HeartMascot> with SingleTickerProviderStat
         ),
 
         // Mascot Canvas
-        AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            // Sway angle based on animation controller
-            final double swayAngle = widget.emotion == 'excited'
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              // Sway angle based on animation controller
+              final double swayAngle = widget.emotion == 'excited'
                 ? math.sin(_controller.value * math.pi * 4) * 0.1
                 : math.sin(_controller.value * math.pi * 2) * 0.06;
 
@@ -216,6 +217,7 @@ class _HeartMascotState extends State<HeartMascot> with SingleTickerProviderStat
               ),
             );
           },
+        ),
         ),
       ],
     );

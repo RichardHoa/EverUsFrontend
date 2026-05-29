@@ -374,12 +374,9 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: widget.result.ranked.length,
-                      itemBuilder: (context, idx) {
-                        final item = widget.result.ranked[idx];
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: widget.result.ranked.map((item) {
                         final key = item['key'] as String;
                         final act = activities[key]!;
                         final isSelected = key == _selectedKey;
@@ -446,7 +443,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                             ),
                           ),
                         );
-                      },
+                      }).toList(),
                     ),
                   ],
                 ),
