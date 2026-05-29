@@ -110,22 +110,35 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
         break;
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFFFFF5F5), // ultra-light pink
-              Colors.white,
-              Color(0xFFFAF5FF), // ultra-light purple
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return PopScope<Object?>(
+      canPop: _currentPage == 'matcher',
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) {
+          return;
+        }
+        if (_currentPage == 'activity') {
+          _onBackToResults();
+        } else if (_currentPage == 'results') {
+          _onBackToMatcher();
+        }
+      },
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFFFF5F5), // ultra-light pink
+                Colors.white,
+                Color(0xFFFAF5FF), // ultra-light purple
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-        ),
-        child: SafeArea(
-          top: false, // Scaffold will handle SafeArea top for AppBars
-          child: pageBody,
+          child: SafeArea(
+            top: false, // Scaffold will handle SafeArea top for AppBars
+            child: pageBody,
+          ),
         ),
       ),
     );
