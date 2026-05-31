@@ -30,7 +30,7 @@ EverUs helps you and your partner choose, experience, and remember your date nig
 
 1. **Navigate to the Flutter project folder:**
    ```bash
-   cd flutter-project/test_application
+   cd flutter-project/everus
    ```
 
 2. **Get packages:**
@@ -56,9 +56,7 @@ git config commit.template .gitmessage
 
 ---
 
-## 🛠 Tech Stack Used
-*   **Frontend**: React 18 + TypeScript + Vite
-*   **Styling**: Tailwind CSS
-*   **Graphics**: SVG filters for interactive Radar charts and mascot rendering.
-*   **Audio**: HTML5 Audio Player (loops previews seamlessly).
-*   **Database**: Supabase Client SDK (PostgreSQL).
+## TODO list
+- [ ] Save the user choice from the landing page
+- [ ] Back movement works on Level page as well
+- [ ] Optimize the next level button, move to next level faster, and scroll to the top when doing so
