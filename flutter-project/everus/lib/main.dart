@@ -4,8 +4,11 @@ import 'models/activity.dart';
 import 'widgets/preference_matcher.dart';
 import 'widgets/results_dashboard.dart';
 import 'widgets/activity_flow.dart';
+import 'screens/login_screen.dart';
+import 'utils/auth_helper.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const EverUsApp());
 }
 
@@ -26,7 +29,24 @@ class EverUsApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.interTextTheme(),
       ),
-      home: const EverUsHomePage(),
+      home: const AuthWrapper(),
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Map<String, dynamic>?>(
+      valueListenable: AuthHelper.sessionNotifier,
+      builder: (context, session, child) {
+        if (session == null) {
+          return const LoginScreen();
+        }
+        return const EverUsHomePage();
+      },
     );
   }
 }
@@ -137,7 +157,46 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
           ),
           child: SafeArea(
             top: false, // Scaffold will handle SafeArea top for AppBars
-            child: pageBody,
+            child: Stack(
+              children: [
+                pageBody,
+                // Only show Profile account icon when we are on the main matcher page
+                if (_currentPage == 'matcher')
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 8,
+                    right: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.account_circle_outlined,
+                          color: Color(0xFFEC4899),
+                          size: 28,
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(
+                                isProfileMode: true,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,0 +1,471 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../utils/auth_helper.dart';
+
+class LoginScreen extends StatefulWidget {
+  final bool isProfileMode;
+
+  const LoginScreen({
+    super.key,
+    this.isProfileMode = false,
+  });
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+
+  bool _isSignUp = false;
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  // Basic email check
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  Future<void> _handleSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      if (_isSignUp) {
+        await AuthHelper.signUp(
+          email: _emailController.text,
+          password: _passwordController.text,
+          name: _nameController.text,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account created successfully! Welcome to EverUs!')),
+        );
+      } else {
+        await AuthHelper.signIn(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+      }
+      
+      if (widget.isProfileMode && mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceAll('AuthException: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleSignOut() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      await AuthHelper.signOut();
+      if (mounted) {
+        Navigator.of(context).pop(); // Go back after signing out
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to log out: $e';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFFFFF5F5), // ultra-light pink
+              Colors.white,
+              Color(0xFFFAF5FF), // ultra-light purple
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Brand / Logo Section
+                    Hero(
+                      tag: 'everus_brand',
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: Column(
+                          children: [
+                            Text(
+                              'EverUs',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFEC4899),
+                                letterSpacing: 1.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.isProfileMode ? 'YOUR PROFILE' : 'CONNECT WITH YOUR PARTNER',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF9CA3AF),
+                                letterSpacing: 2.0,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+
+                    // Glassmorphic Card
+                    Container(
+                      padding: const EdgeInsets.all(32.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.6),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: widget.isProfileMode ? _buildProfileView() : _buildAuthForm(theme),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Back navigation if in profile mode and can pop
+                    if (widget.isProfileMode)
+                      TextButton.icon(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back, color: Color(0xFF6B7280)),
+                        label: Text(
+                          'Back to Home',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileView() {
+    final name = AuthHelper.currentUserName ?? 'Lovebird';
+    final email = AuthHelper.currentUserEmail ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CircleAvatar(
+          radius: 40,
+          backgroundColor: const Color(0xFFFCE7F3),
+          child: Text(
+            name.isNotEmpty ? name[0].toUpperCase() : 'U',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFFEC4899),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          name,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF111827),
+          ),
+        ),
+        if (email.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            email,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: const Color(0xFF6B7280),
+            ),
+          ),
+        ],
+        const SizedBox(height: 32),
+        if (_errorMessage != null) ...[
+          Text(
+            _errorMessage!,
+            style: GoogleFonts.inter(color: Colors.red, fontSize: 13),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+        ],
+        ElevatedButton(
+          onPressed: _isLoading ? null : _handleSignOut,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFF3F4F6),
+            foregroundColor: const Color(0xFF374151),
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+          ),
+          child: _isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF374151)),
+                )
+              : Text(
+                  'Log Out',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAuthForm(ThemeData theme) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _isSignUp ? 'Create Account' : 'Welcome Back',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF111827),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          if (_errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEE2E2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFCA5A5)),
+              ),
+              child: Text(
+                _errorMessage!,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFFB91C1C),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Name Field (Only for Sign Up)
+          if (_isSignUp) ...[
+            TextFormField(
+              controller: _nameController,
+              decoration: _buildInputDecoration('Your Name', Icons.person_outline),
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return 'Please enter your name';
+                }
+                return null;
+              },
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Email Field
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: _buildInputDecoration('Email Address', Icons.mail_outline),
+            validator: (val) {
+              if (val == null || val.trim().isEmpty) {
+                return 'Please enter your email';
+              }
+              if (!_isValidEmail(val)) {
+                return 'Please enter a valid email address';
+              }
+              return null;
+            },
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+
+          // Password Field
+          TextFormField(
+            controller: _passwordController,
+            obscureText: true,
+            decoration: _buildInputDecoration('Password', Icons.lock_outline),
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please enter your password';
+              }
+              if (_isSignUp && val.length < 6) {
+                return 'Password must be at least 6 characters long';
+              }
+              return null;
+            },
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _handleSubmit(),
+          ),
+          const SizedBox(height: 24),
+
+          // Action Button
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFEC4899).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _handleSubmit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(
+                      _isSignUp ? 'Sign Up' : 'Sign In',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Mode Toggle
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isSignUp = !_isSignUp;
+                _errorMessage = null;
+              });
+            },
+            child: Text(
+              _isSignUp
+                  ? 'Already have an account? Sign In'
+                  : "Don't have an account? Sign Up",
+              style: GoogleFonts.inter(
+                color: const Color(0xFFEC4899),
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      filled: true,
+      fillColor: Colors.white.withOpacity(0.8),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFEC4899), width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+      ),
+    );
+  }
+}
