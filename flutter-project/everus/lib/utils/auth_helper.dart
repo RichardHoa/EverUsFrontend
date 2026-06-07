@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 // Defines the application run mode (can only be dev or prod)
 enum AppMode { dev, prod }
@@ -132,11 +133,53 @@ class AuthHelper {
       final uri = Uri.parse('$baseUrl/auth/signout');
       final request = await client.postUrl(uri);
       await request.close();
+      
+      // Also sign out from Google if logged in
+      if (await _googleSignIn.isSignedIn()) {
+        await _googleSignIn.signOut();
+      }
     } catch (_) {
       // Ignore network errors on signout
     } finally {
       client.close();
       sessionNotifier.value = null;
+    }
+  }
+
+  // Google Sign-In instance configured with Web Client ID
+  static final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: '935315479839-f6rtlci4779ivfni4tm5hg1ko46uqa4r.apps.googleusercontent.com',
+  );
+
+  /// Signs in a user using Google OAuth.
+  static Future<void> signInWithGoogle() async {
+    try {
+      // Trigger the flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // User cancelled the sign-in
+        return;
+      }
+
+      // Obtain auth details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        throw const AuthException('Failed to retrieve Google ID Token.');
+      }
+
+      // Post to backend
+      final response = await _post('/auth/google', {
+        'id_token': idToken,
+      });
+
+      sessionNotifier.value = _normalizeSession(response);
+    } catch (e) {
+      if (e is AuthException) {
+        rethrow;
+      }
+      throw AuthException('Google Sign-In failed: $e');
     }
   }
 }
