@@ -1,0 +1,4 @@
+RULES FOR LLM ASSISTANTS:
+1. Under no circumstances is the LLM coding assistant allowed to read, access, search, or parse the contents of the `.env` file.
+2. The LLM coding assistant must only read and refer to `.env.example` to understand the environment variables configuration.
+3. If the LLM needs to access environment variables, it must instruct the user to configure them or explain how they are set up without reading `.env`.

@@ -16,9 +16,9 @@ class AuthException implements Exception {
 
 class AuthHelper {
   // Constant to switch application mode
-  static const AppMode mode = AppMode.dev;
+  static const AppMode mode = AppMode.prod;
 
-  static const String _prodUrl = 'https://api.everus.example.com';
+  static const String _prodUrl = 'https://everus.richardhoa.io.vn';
 
   static String get _devUrl {
     try {

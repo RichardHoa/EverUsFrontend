@@ -207,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      child: widget.isProfileMode ? _buildProfileView() : _buildAuthForm(theme),
+                      child: (widget.isProfileMode && AuthHelper.isLoggedIn) ? _buildProfileView() : _buildAuthForm(theme),
                     ),
                     const SizedBox(height: 24),
 

@@ -42,9 +42,6 @@ class AuthWrapper extends StatelessWidget {
     return ValueListenableBuilder<Map<String, dynamic>?>(
       valueListenable: AuthHelper.sessionNotifier,
       builder: (context, session, child) {
-        if (session == null) {
-          return const LoginScreen();
-        }
         return const EverUsHomePage();
       },
     );

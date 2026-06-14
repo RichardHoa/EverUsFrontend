@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/activity.dart';
 import 'heart_mascot.dart';
+import '../utils/auth_helper.dart';
+import '../screens/login_screen.dart';
 
 class ActivityFlow extends StatefulWidget {
   final Activity activity;
@@ -102,6 +104,11 @@ class _ActivityFlowState extends State<ActivityFlow> {
   }
 
   void _goToNextLevel() {
+    if (!AuthHelper.isLoggedIn) {
+      _showLoginRequiredSheet();
+      return;
+    }
+
     if (_currentLevel < widget.activity.levels.length - 1) {
       _triggerMascotReaction('excited', 'Level ${_currentLevel + 2} coming up!');
       Future.delayed(const Duration(milliseconds: 800), () {
@@ -123,6 +130,150 @@ class _ActivityFlowState extends State<ActivityFlow> {
         }
       });
     }
+  }
+
+  void _showLoginRequiredSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        final activity = widget.activity;
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
+          ),
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 32,
+            bottom: MediaQuery.of(context).padding.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: activity.theme.light,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: activity.theme.primary.withValues(alpha: 0.15),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.lock_person_outlined,
+                    color: activity.theme.primary,
+                    size: 44,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Unlock More Stages! 💖',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade900,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'To continue your couple adventure and access stage 2 and beyond, please log in or create an account.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [activity.theme.primary, activity.theme.secondary],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: activity.theme.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(
+                          isProfileMode: true,
+                        ),
+                      ),
+                    );
+                    if (AuthHelper.isLoggedIn) {
+                      _goToNextLevel();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    'Sign In / Sign Up',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'Maybe Later',
+                  style: GoogleFonts.inter(
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
