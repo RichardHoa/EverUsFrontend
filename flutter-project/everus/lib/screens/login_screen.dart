@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
       
-      if (widget.isProfileMode && mounted) {
+      if (mounted) {
         Navigator.of(context).pop();
       }
     } catch (e) {
@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await AuthHelper.signInWithGoogle();
-      if (widget.isProfileMode && mounted) {
+      if (mounted) {
         Navigator.of(context).pop();
       }
     } catch (e) {

@@ -135,93 +135,93 @@ class _HeartMascotState extends State<HeartMascot> with SingleTickerProviderStat
         RepaintBoundary(
           child: AnimatedBuilder(
             animation: _controller,
-            builder: (context, child) {
-              // Sway angle based on animation controller
-              final double swayAngle = widget.emotion == 'excited'
-                ? math.sin(_controller.value * math.pi * 4) * 0.1
-                : math.sin(_controller.value * math.pi * 2) * 0.06;
-
-            final double verticalOffset = widget.emotion == 'excited'
-                ? math.sin(_controller.value * math.pi * 4) * 5
-                : widget.emotion == 'celebrating'
-                    ? math.sin(_controller.value * math.pi * 4) * 8
-                    : 0.0;
-
-            final double legKickValue = _controller.value;
-
-            return Transform.translate(
-              offset: Offset(0, verticalOffset),
-              child: Transform.rotate(
-                angle: swayAngle,
-                child: SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: Stack(
-                    clipBehavior: Clip.none,
+            child: Center(
+              child: Transform.scale(
+                scale: expr.scale,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 18.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Body, Arms and Legs Painter
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _MascotPainter(
-                            legAnim: legKickValue,
-                            emotion: widget.emotion,
-                          ),
-                        ),
-                      ),
-
-                      // Face text centered inside the heart
-                      Center(
-                        child: Transform.scale(
-                          scale: expr.scale,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 18.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      expr.leftEye,
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontSize: expr.leftEye == '♥' ? 18 : 16,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      expr.rightEye,
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white,
-                                        fontSize: expr.rightEye == '♥' ? 18 : 16,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  expr.mouth,
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    height: 0.8,
-                                  ),
-                                ),
-                              ],
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            expr.leftEye,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: expr.leftEye == '♥' ? 18.0 : 16.0,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
+                          const SizedBox(width: 8),
+                          Text(
+                            expr.rightEye,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: expr.rightEye == '♥' ? 18.0 : 16.0,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        expr.mouth,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w900,
+                          height: 0.8,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+            builder: (context, faceChild) {
+              // Sway angle based on animation controller
+              final double swayAngle = widget.emotion == 'excited'
+                ? math.sin(_controller.value * math.pi * 4) * 0.1
+                : math.sin(_controller.value * math.pi * 2) * 0.06;
+
+              final double verticalOffset = widget.emotion == 'excited'
+                  ? math.sin(_controller.value * math.pi * 4) * 5
+                  : widget.emotion == 'celebrating'
+                      ? math.sin(_controller.value * math.pi * 4) * 8
+                      : 0.0;
+
+              final double legKickValue = _controller.value;
+
+              return Transform.translate(
+                offset: Offset(0, verticalOffset),
+                child: Transform.rotate(
+                  angle: swayAngle,
+                  child: SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Body, Arms and Legs Painter
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _MascotPainter(
+                              legAnim: legKickValue,
+                              emotion: widget.emotion,
+                            ),
+                          ),
+                        ),
+                        // ignore: use_null_aware_elements
+                        if (faceChild != null) faceChild,
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ],
     );

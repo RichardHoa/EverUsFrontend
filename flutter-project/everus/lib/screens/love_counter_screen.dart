@@ -28,6 +28,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
   // Async file cache to prevent main-thread jank
   bool _userImageExists = false;
   bool _loverImageExists = false;
+  File? _userFile;
+  File? _loverFile;
 
   // Live calculation
   Timer? _timer;
@@ -90,6 +92,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         _loverImagePath = loverPath;
         _userImageExists = userExists;
         _loverImageExists = loverExists;
+        _userFile = userExists ? File(userPath) : null;
+        _loverFile = loverExists ? File(loverPath) : null;
         _useDetailedView = data['useDetailedView'];
 
         if (_isSetup && _anniversaryDate != null) {
@@ -112,9 +116,20 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted && _anniversaryDate != null) {
-        setState(() {
-          _elapsed = DateTime.now().difference(_anniversaryDate!);
-        });
+        final newElapsed = DateTime.now().difference(_anniversaryDate!);
+        if (_useDetailedView) {
+          setState(() {
+            _elapsed = newElapsed;
+          });
+        } else {
+          // If detailed view is not active, only update state if the days count actually changes.
+          // This saves significant CPU cycles and prevents unnecessary 1-second interval rebuilds.
+          if (newElapsed.inDays != _elapsed.inDays) {
+            setState(() {
+              _elapsed = newElapsed;
+            });
+          }
+        }
       }
     });
   }
@@ -167,9 +182,11 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                           if (targetKey == 'user') {
                             _setupUserImagePath = path;
                             _userImageExists = exists;
+                            _userFile = exists ? File(path) : null;
                           } else {
                             _setupLoverImagePath = path;
                             _loverImageExists = exists;
+                            _loverFile = exists ? File(path) : null;
                           }
                         });
                       }
@@ -187,9 +204,11 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                           if (targetKey == 'user') {
                             _setupUserImagePath = path;
                             _userImageExists = exists;
+                            _userFile = exists ? File(path) : null;
                           } else {
                             _setupLoverImagePath = path;
                             _loverImageExists = exists;
+                            _loverFile = exists ? File(path) : null;
                           }
                         });
                       }
@@ -295,6 +314,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         _loverImagePath = _setupLoverImagePath;
         _userImageExists = userExists;
         _loverImageExists = loverExists;
+        _userFile = userExists ? File(_setupUserImagePath!) : null;
+        _loverFile = loverExists ? File(_setupLoverImagePath!) : null;
         _elapsed = DateTime.now().difference(_anniversaryDate!);
         _isSetup = true;
       });
@@ -406,25 +427,27 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
             // Beating Heart
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ScaleTransition(
-                scale: _pulseAnimation,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x1F8B5CF6),
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
-                      )
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.favorite,
-                    color: Color(0xFFEC4899),
-                    size: 32,
+              child: RepaintBoundary(
+                child: ScaleTransition(
+                  scale: _pulseAnimation,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x1F8B5CF6),
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.favorite,
+                      color: Color(0xFFEC4899),
+                      size: 32,
+                    ),
                   ),
                 ),
               ),
@@ -526,6 +549,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
 
   Widget _buildProfileAvatar(String name, String? imagePath, bool exists) {
     final size = 100.0;
+    final cachedFile = (imagePath == _userImagePath) ? _userFile : _loverFile;
     return Column(
       children: [
         Container(
@@ -543,9 +567,9 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
             ],
           ),
           child: ClipOval(
-            child: exists && imagePath != null
+            child: exists && cachedFile != null
                 ? Image.file(
-                    File(imagePath),
+                    cachedFile,
                     width: size,
                     height: size,
                     fit: BoxFit.cover,
@@ -845,6 +869,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
 
   Widget _buildSetupProfileButton(String key, String label, String? imagePath, bool exists) {
     final size = 110.0;
+    final cachedFile = (key == 'user') ? _userFile : _loverFile;
 
     return Column(
       children: [
@@ -872,9 +897,9 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                   ],
                 ),
                 child: ClipOval(
-                  child: exists && imagePath != null
+                  child: exists && cachedFile != null
                       ? Image.file(
-                          File(imagePath),
+                          cachedFile,
                           width: size,
                           height: size,
                           fit: BoxFit.cover,

@@ -34,6 +34,16 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
 
   int? _hoveredDimension;
 
+  // Cached TextStyles to avoid expensive dynamic GoogleFonts resolution on every frame
+  late final TextStyle _headerStyle;
+  late final TextStyle _subHeaderStyle;
+  late final TextStyle _legendLabelStyle;
+  late final TextStyle _legendDescStyle;
+  late final TextStyle _noteStyle;
+  late final TextStyle _dimLabelStyle;
+  late final TextStyle _metricLabelStyle;
+  late final TextStyle _metricValueStyle;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +61,44 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
 
     _sourceTheme = widget.activityTheme;
     _targetTheme = widget.activityTheme;
+
+    // Cache the GoogleFonts text styles
+    _headerStyle = GoogleFonts.playfairDisplay(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: Colors.grey.shade900,
+    );
+    _subHeaderStyle = GoogleFonts.inter(
+      fontSize: 12,
+      color: Colors.grey.shade500,
+    );
+    _legendLabelStyle = GoogleFonts.inter(
+      fontSize: 10,
+      fontWeight: FontWeight.bold,
+      color: Colors.grey.shade900,
+    );
+    _legendDescStyle = GoogleFonts.inter(
+      fontSize: 9,
+      color: Colors.grey.shade600,
+    );
+    _noteStyle = GoogleFonts.inter(
+      fontSize: 11,
+      color: Colors.grey.shade500,
+    );
+    _dimLabelStyle = GoogleFonts.inter(
+      fontSize: 13,
+      fontWeight: FontWeight.bold,
+      color: Colors.grey.shade900,
+    );
+    _metricLabelStyle = GoogleFonts.inter(
+      fontSize: 10,
+      color: Colors.grey.shade500,
+    );
+    _metricValueStyle = GoogleFonts.inter(
+      fontSize: 13,
+      fontWeight: FontWeight.bold,
+      color: Colors.grey.shade900,
+    );
   }
 
   @override
@@ -144,60 +192,53 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        final double t = _animation.value;
-        final List<double> currentUserVec = _interpolateVector(_sourceUserVector, _targetUserVector, t);
-        final List<double> currentActVec = _interpolateVector(_sourceActivityVector, _targetActivityVector, t);
-        final ActivityTheme currentTheme = _interpolateTheme(_sourceTheme, _targetTheme, t);
-
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade100),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Text(
-                'Phân Tích Độ Tương Hợp Ý Tưởng',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade900,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Ý Tưởng vs Sở Thích Của Bạn',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: Colors.grey.shade500,
-                ),
-              ),
-              const SizedBox(height: 16),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header - static, does not rebuild on frame tick
+          Text(
+            'Phân Tích Độ Tương Hợp Ý Tưởng',
+            style: _headerStyle,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Ý Tưởng vs Sở Thích Của Bạn',
+            style: _subHeaderStyle,
+          ),
+          const SizedBox(height: 16),
 
-              // SVG-like Canvas
-              RepaintBoundary(
-                child: AspectRatio(
-                  aspectRatio: 1.1,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final size = constraints.biggest;
-                      return GestureDetector(
-                        onTapUp: (details) => _handleTap(details, size),
-                        child: CustomPaint(
+          // SVG-like Canvas - Repaint boundary isolated
+          RepaintBoundary(
+            child: AspectRatio(
+              aspectRatio: 1.1,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = constraints.biggest;
+                  return GestureDetector(
+                    onTapUp: (details) => _handleTap(details, size),
+                    child: AnimatedBuilder(
+                      animation: _animation,
+                      builder: (context, child) {
+                        final double t = _animation.value;
+                        final List<double> currentUserVec = _interpolateVector(_sourceUserVector, _targetUserVector, t);
+                        final List<double> currentActVec = _interpolateVector(_sourceActivityVector, _targetActivityVector, t);
+                        final ActivityTheme currentTheme = _interpolateTheme(_sourceTheme, _targetTheme, t);
+
+                        return CustomPaint(
                           size: size,
                           painter: _RadarChartPainter(
                             userVector: currentUserVec,
@@ -205,71 +246,83 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
                             theme: currentTheme,
                             hoveredIdx: _hoveredDimension,
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
+            ),
+          ),
 
-              const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-              // Legend
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildLegendItem(
+          // Legend - static wrapper, only the dynamic bullet is wrapped in AnimatedBuilder
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) {
+                    final double t = _animation.value;
+                    final ActivityTheme currentTheme = _interpolateTheme(_sourceTheme, _targetTheme, t);
+                    return _buildLegendItem(
                       color: currentTheme.primary,
                       label: 'Độ khớp của ý tưởng',
                       desc: 'Mức độ ý tưởng',
                       isDashed: false,
-                    ),
-                    _buildLegendItem(
-                      color: const Color(0xFFEC4899),
-                      label: 'Sở thích của bạn',
-                      desc: 'Mức độ mong muốn',
-                      isDashed: false,
-                    ),
-                    _buildLegendItem(
-                      color: const Color(0xFFFBBF24),
-                      label: 'Tương thích lý tưởng',
-                      desc: 'Điểm 10 hoàn hảo',
-                      isDashed: true,
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
-
-              // Explanatory note
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Chạm vào các biểu tượng để xem phần trăm tương thích',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
+                _buildLegendItem(
+                  color: const Color(0xFFEC4899),
+                  label: 'Sở thích của bạn',
+                  desc: 'Mức độ mong muốn',
+                  isDashed: false,
                 ),
-              ),
-
-              // Hover / Tap Details Card
-              if (_hoveredDimension != null) ...[
-                const SizedBox(height: 12),
-                _buildAlignmentCard(context, _hoveredDimension!, currentUserVec, currentActVec),
+                _buildLegendItem(
+                  color: const Color(0xFFFBBF24),
+                  label: 'Tương thích lý tưởng',
+                  desc: 'Điểm 10 hoàn hảo',
+                  isDashed: true,
+                ),
               ],
-            ],
+            ),
           ),
-        );
-      },
+
+          // Explanatory note - static
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                'Chạm vào các biểu tượng để xem phần trăm tương thích',
+                style: _noteStyle,
+              ),
+            ),
+          ),
+
+          // Hover / Tap Details Card - only rebuilds with animation if visible
+          if (_hoveredDimension != null) ...[
+            const SizedBox(height: 12),
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                final double t = _animation.value;
+                final List<double> currentUserVec = _interpolateVector(_sourceUserVector, _targetUserVector, t);
+                final List<double> currentActVec = _interpolateVector(_sourceActivityVector, _targetActivityVector, t);
+                return _buildAlignmentCard(context, _hoveredDimension!, currentUserVec, currentActVec);
+              },
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -308,11 +361,7 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
               Flexible(
                 child: Text(
                   label,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade900,
-                  ),
+                  style: _legendLabelStyle,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -321,10 +370,7 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
           const SizedBox(height: 2),
           Text(
             desc,
-            style: GoogleFonts.inter(
-              fontSize: 9,
-              color: Colors.grey.shade600,
-            ),
+            style: _legendDescStyle,
           ),
         ],
       ),
@@ -352,11 +398,7 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
         children: [
           Text(
             '${dim.icon} ${dim.label}',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade900,
-            ),
+            style: _dimLabelStyle,
           ),
           const SizedBox(height: 8),
           Row(
@@ -382,19 +424,14 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 10,
-            color: Colors.grey.shade500,
-          ),
+          style: _metricLabelStyle,
         ),
         const SizedBox(height: 2),
         Text(
           value,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: valueColor ?? Colors.grey.shade900,
-          ),
+          style: valueColor != null
+              ? _metricValueStyle.copyWith(color: valueColor)
+              : _metricValueStyle,
         ),
       ],
     );
@@ -498,7 +535,6 @@ class _RadarChartPainter extends CustomPainter {
       }
     }
     idealPath.close();
-    // In Flutter, simple dashed path can be simulated or drawn as lines
     canvas.drawPath(idealPath, idealPaint);
 
     // 4. Draw Activity polygon (theme gradient filled)
@@ -583,11 +619,14 @@ class _RadarChartPainter extends CustomPainter {
       );
 
       final String emoji = dimensions[i].icon;
+      // Using simple TextStyle instead of GoogleFonts.inter is highly recommended
+      // inside custom painters' paint method to prevent dynamic style resolution on every frame.
+      // Emojis automatically use the platform's default emoji font.
       final textPainter = TextPainter(
         text: TextSpan(
           text: emoji,
-          style: GoogleFonts.inter(
-            fontSize: isHovered ? 20 : 16,
+          style: TextStyle(
+            fontSize: isHovered ? 20.0 : 16.0,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -606,8 +645,16 @@ class _RadarChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _RadarChartPainter oldDelegate) {
     return oldDelegate.hoveredIdx != hoveredIdx ||
-        oldDelegate.userVector != userVector ||
-        oldDelegate.activityVector != activityVector ||
+        !_areListsEqual(oldDelegate.userVector, userVector) ||
+        !_areListsEqual(oldDelegate.activityVector, activityVector) ||
         oldDelegate.theme != theme;
+  }
+
+  bool _areListsEqual(List<double> a, List<double> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 }
