@@ -167,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: GoogleFonts.playfairDisplay(
                                 fontSize: 48,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFFEC4899),
+                                color: const Color(0xFF8B5CF6),
                                 letterSpacing: 1.5,
                               ),
                               textAlign: TextAlign.center,
@@ -243,13 +243,13 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         CircleAvatar(
           radius: 40,
-          backgroundColor: const Color(0xFFFCE7F3),
+          backgroundColor: const Color(0xFFF3E8FF),
           child: Text(
             name.isNotEmpty ? name[0].toUpperCase() : 'U',
             style: GoogleFonts.playfairDisplay(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFFEC4899),
+              color: const Color(0xFF8B5CF6),
             ),
           ),
         ),
@@ -404,12 +404,12 @@ class _LoginScreenState extends State<LoginScreen> {
           Container(
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+                colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
               ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEC4899).withValues(alpha: 0.3),
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -513,7 +513,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ? 'Already have an account? Sign In'
                   : "Don't have an account? Sign Up",
               style: GoogleFonts.inter(
-                color: const Color(0xFFEC4899),
+                color: const Color(0xFF8B5CF6),
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),
@@ -542,7 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEC4899), width: 1.5),
+        borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

@@ -5,6 +5,7 @@ import 'widgets/preference_matcher.dart';
 import 'widgets/results_dashboard.dart';
 import 'widgets/activity_flow.dart';
 import 'screens/login_screen.dart';
+import 'screens/landing_screen.dart';
 import 'utils/auth_helper.dart';
 
 Future<void> main() async {
@@ -22,9 +23,9 @@ class EverUsApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFEC4899),
-          primary: const Color(0xFFEC4899),
-          secondary: const Color(0xFFF43F5E),
+          seedColor: const Color(0xFF8B5CF6),
+          primary: const Color(0xFF8B5CF6),
+          secondary: const Color(0xFFEC4899),
         ),
         useMaterial3: true,
         textTheme: GoogleFonts.interTextTheme(),
@@ -42,7 +43,7 @@ class AuthWrapper extends StatelessWidget {
     return ValueListenableBuilder<Map<String, dynamic>?>(
       valueListenable: AuthHelper.sessionNotifier,
       builder: (context, session, child) {
-        return const EverUsHomePage();
+        return const LandingScreen();
       },
     );
   }
@@ -157,6 +158,35 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
             child: Stack(
               children: [
                 pageBody,
+                // Back button to Love Counter
+                if (_currentPage == 'matcher')
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 8,
+                    left: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Color(0xFF8B5CF6),
+                          size: 28,
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ),
                 // Only show Profile account icon when we are on the main matcher page
                 if (_currentPage == 'matcher')
                   Positioned(
@@ -177,7 +207,7 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
                       child: IconButton(
                         icon: const Icon(
                           Icons.account_circle_outlined,
-                          color: Color(0xFFEC4899),
+                          color: Color(0xFF8B5CF6),
                           size: 28,
                         ),
                         onPressed: () {

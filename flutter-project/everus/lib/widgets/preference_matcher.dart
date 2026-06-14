@@ -180,14 +180,14 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFF472B6), Color(0xFFC084FC), Color(0xFF60A5FA)],
+          colors: [Color(0xFF8B5CF6), Color(0xFFC084FC), Color(0xFFEC4899)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(isDesktop ? 24 : 16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFC084FC).withValues(alpha: 0.2),
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -303,7 +303,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
             icon: '💕',
             value: _romance,
             onChanged: (val) => _romance = val,
-            colors: const [Color(0xFFEC4899), Color(0xFFF43F5E)],
+            colors: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
           ),
           VibeSlider(
             label: 'Adventure',
@@ -351,7 +351,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
                   color: const Color(0xFF374151),
                 ),
               ),
-              activeColor: const Color(0xFFEC4899),
+              activeColor: const Color(0xFF8B5CF6),
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
             ),
@@ -373,8 +373,8 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
               label: 'Romance',
               icon: '💕',
               value: _romance2,
-              onChanged: (val) => _romance2 = val,
-              colors: const [Color(0xFFEC4899), Color(0xFFF43F5E)],
+              onChanged: (val) => setState(() => _romance2 = val),
+              colors: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
             ),
             VibeSlider(
               label: 'Adventure',
@@ -461,7 +461,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: Color(0xFFEC4899), width: 2),
+                              borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
                             ),
                           ),
                           style: GoogleFonts.inter(
@@ -506,7 +506,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: Color(0xFFEC4899), width: 2),
+                              borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
                             ),
                           ),
                           style: GoogleFonts.inter(
@@ -555,7 +555,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
                       decoration: BoxDecoration(
                         gradient: isSelected
                             ? const LinearGradient(
-                                colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+                                colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
                               )
                             : null,
                         color: isSelected ? null : const Color(0xFFF3F4F6),
@@ -563,7 +563,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFFEC4899).withValues(alpha: 0.3),
+                                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -936,13 +936,13 @@ class _CTAButtonState extends State<CTAButton> with SingleTickerProviderStateMix
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             gradient: const LinearGradient(
-              colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+              colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFF43F5E).withValues(alpha: 0.35),
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
