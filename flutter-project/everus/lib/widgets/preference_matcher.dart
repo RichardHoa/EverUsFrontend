@@ -50,7 +50,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
   int _budgetMax = 700000;
   int _stage = 1;
 
-  final List<String> _stageLabels = ['Talking', '1–3M', '3–6M', '6M+'];
+  final List<String> _stageLabels = ['Trò chuyện', '1–3 tháng', '3–6 tháng', 'Trên 6 tháng'];
 
   void _handleMatch() {
     List<double> p1 = [_romance, _adventure, _creative, _indoor, _energy];
@@ -217,7 +217,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
           ),
           const SizedBox(height: 4),
           Text(
-            'COUPLE RECOMMENDATION',
+            'GỢI Ý HẸN HÒ',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: isDesktop ? 12 : 10,
@@ -230,7 +230,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
           Container(
             constraints: const BoxConstraints(maxWidth: 512),
             child: Text(
-              "Tell us your couple's vibe — we'll find your perfect date using advanced vector matching.",
+              "Hãy cho tụi mình biết vibe của hai bạn — tụi mình sẽ tìm ý tưởng hẹn hò phù hợp nhất.",
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: isDesktop ? 16 : 13,
@@ -250,16 +250,16 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
       children: [
         InstructionCard(
           romanNumeral: 'Ⅰ',
-          title: 'How It Works',
-          description: "Adjust your couple's preferences across 5 dimensions. Our math finds the activity that best matches both of you.",
+          title: 'Cách hoạt động',
+          description: "Điều chỉnh sở thích của hai bạn qua 5 khía cạnh. Thuật toán sẽ tìm ý tưởng phù hợp nhất cho cả hai.",
           gradientColors: [Color(0xFFFCE7F3), Color(0xFFFDF2F8)],
           borderColor: Color(0xFFFBCFE8),
         ),
         SizedBox(height: 16),
         InstructionCard(
           romanNumeral: 'Ⅱ',
-          title: 'The Algorithm',
-          description: 'Least squares projection finds your best match in activity space.',
+          title: 'Thuật toán',
+          description: 'Phương pháp bình phương tối thiểu giúp tìm điểm khớp nhất trong không gian ý tưởng.',
           gradientColors: [Color(0xFFF3E8FF), Color(0xFFFAF5FF)],
           borderColor: Color(0xFFE9D5FF),
           extraChild: AlgorithmFormulaBlock(),
@@ -267,8 +267,8 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
         SizedBox(height: 16),
         InstructionCard(
           romanNumeral: 'Ⅲ',
-          title: 'Your Results',
-          description: 'Get ranked activities, dimension analysis, and visual match scores.',
+          title: 'Kết quả của bạn',
+          description: 'Nhận danh sách ý tưởng được xếp hạng, phân tích khía cạnh và điểm số tương thích.',
           gradientColors: [Color(0xFFDBEAFE), Color(0xFFEFF6FF)],
           borderColor: Color(0xFFBFDBFE),
         ),
@@ -282,7 +282,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Partner Ⅰ',
+            'Bạn',
             style: GoogleFonts.playfairDisplay(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -291,7 +291,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
           ),
           const SizedBox(height: 2),
           Text(
-            'Adjust your preferences',
+            'Điều chỉnh sở thích của bạn',
             style: GoogleFonts.inter(
               fontSize: 12,
               color: const Color(0xFF4B5563),
@@ -299,35 +299,35 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
           ),
           const SizedBox(height: 16),
           VibeSlider(
-            label: 'Romance',
+            label: 'Lãng mạn',
             icon: '💕',
             value: _romance,
             onChanged: (val) => _romance = val,
             colors: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
           ),
           VibeSlider(
-            label: 'Adventure',
+            label: 'Phiêu lưu',
             icon: '🧗',
             value: _adventure,
             onChanged: (val) => _adventure = val,
             colors: const [Color(0xFF3B82F6), Color(0xFF06B6D4)],
           ),
           VibeSlider(
-            label: 'Creativity',
+            label: 'Sáng tạo',
             icon: '🎨',
             value: _creative,
             onChanged: (val) => _creative = val,
             colors: const [Color(0xFFA855F7), Color(0xFF7C3AED)],
           ),
           VibeSlider(
-            label: 'Indoor',
+            label: 'Trong nhà',
             icon: '🏠',
             value: _indoor,
             onChanged: (val) => _indoor = val,
             colors: const [Color(0xFF22C55E), Color(0xFF10B981)],
           ),
           VibeSlider(
-            label: 'Energy',
+            label: 'Năng lượng',
             icon: '⚡',
             value: _energy,
             onChanged: (val) => _energy = val,
@@ -344,7 +344,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
               value: _isCouple,
               onChanged: (val) => setState(() => _isCouple = val ?? false),
               title: Text(
-                'Add Partner Ⅱ',
+                'Thêm sở thích của Người ấy',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -361,7 +361,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
             const Divider(color: Color(0xFFE5E7EB)),
             const SizedBox(height: 16),
             Text(
-              'Partner Ⅱ',
+              'Người ấy',
               style: GoogleFonts.playfairDisplay(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -370,35 +370,35 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
             ),
             const SizedBox(height: 16),
             VibeSlider(
-              label: 'Romance',
+              label: 'Lãng mạn',
               icon: '💕',
               value: _romance2,
               onChanged: (val) => setState(() => _romance2 = val),
               colors: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
             ),
             VibeSlider(
-              label: 'Adventure',
+              label: 'Phiêu lưu',
               icon: '🧗',
               value: _adventure2,
               onChanged: (val) => _adventure2 = val,
               colors: const [Color(0xFF3B82F6), Color(0xFF06B6D4)],
             ),
             VibeSlider(
-              label: 'Creativity',
+              label: 'Sáng tạo',
               icon: '🎨',
               value: _creative2,
               onChanged: (val) => _creative2 = val,
               colors: const [Color(0xFFA855F7), Color(0xFF7C3AED)],
             ),
             VibeSlider(
-              label: 'Indoor',
+              label: 'Trong nhà',
               icon: '🏠',
               value: _indoor2,
               onChanged: (val) => _indoor2 = val,
               colors: const [Color(0xFF22C55E), Color(0xFF10B981)],
             ),
             VibeSlider(
-              label: 'Energy',
+              label: 'Năng lượng',
               icon: '⚡',
               value: _energy2,
               onChanged: (val) => _energy2 = val,
@@ -419,7 +419,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '💸 Budget Range',
+                '💸 Khoảng ngân sách',
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -434,7 +434,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Minimum (VND)',
+                          'Tối thiểu (VND)',
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -479,7 +479,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Maximum (VND)',
+                          'Tối đa (VND)',
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -529,7 +529,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '💑 Relationship Stage',
+                '💑 Giai đoạn mối quan hệ',
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -590,7 +590,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
         CTAButton(onPressed: _handleMatch),
         const SizedBox(height: 16),
         Text(
-          "Couple Mode: We'll find the activity that best matches both of your preferences using least squares minimization.",
+          "Chế độ đôi: Tụi mình sẽ tìm ý tưởng hẹn hò phù hợp nhất với sở thích của cả hai bằng phương pháp tối thiểu hoá bình phương.",
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 12,
@@ -951,7 +951,7 @@ class _CTAButtonState extends State<CTAButton> with SingleTickerProviderStateMix
           padding: const EdgeInsets.symmetric(vertical: 16),
           alignment: Alignment.center,
           child: Text(
-            '✨ Find Our Perfect Date',
+            '✨ Tìm ý tưởng hẹn hò hoàn hảo',
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.bold,

@@ -70,7 +70,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
           onPressed: widget.onBack,
         ),
         title: Text(
-          'Match Results',
+          'Kết quả tương thích',
           style: GoogleFonts.playfairDisplay(
             color: Colors.grey.shade900,
             fontWeight: FontWeight.bold,
@@ -149,7 +149,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                             Column(
                               children: [
                                 Text(
-                                  'Match Score',
+                                  'Độ tương hợp',
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
                                     color: Colors.white.withValues(alpha: 0.9),
@@ -208,7 +208,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                     child: Column(
                                       children: [
                                         Text(
-                                          'Budget',
+                                          'Ngân sách',
                                           style: GoogleFonts.inter(
                                             fontSize: 10,
                                             color: Colors.grey.shade500,
@@ -239,7 +239,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                     child: Column(
                                       children: [
                                         Text(
-                                          'Levels',
+                                          'Mức độ',
                                           style: GoogleFonts.inter(
                                             fontSize: 10,
                                             color: Colors.grey.shade500,
@@ -247,7 +247,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          '${selectedActivity.levels.length} activities',
+                                          '${selectedActivity.levels.length} hoạt động',
                                           style: GoogleFonts.inter(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
@@ -276,7 +276,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Let's Start! ",
+                                    "Bắt đầu ngay! ",
                                     style: GoogleFonts.inter(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -316,7 +316,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Your Preferences (v)',
+                      'Sở thích của hai bạn',
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -366,7 +366,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'All Activities (${activities.length} Total)',
+                      'Tất cả ý tưởng (${activities.length} tổng số)',
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

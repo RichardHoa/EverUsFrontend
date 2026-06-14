@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account created successfully! Welcome to EverUs!')),
+            const SnackBar(content: Text('Đăng ký tài khoản thành công! Chào mừng bạn đến với EverUs!')),
           );
         }
       } else {
@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to log out: $e';
+        _errorMessage = 'Đăng xuất thất bại: $e';
       });
     } finally {
       if (mounted) {
@@ -174,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              widget.isProfileMode ? 'YOUR PROFILE' : 'CONNECT WITH YOUR PARTNER',
+                              widget.isProfileMode ? 'HỒ SƠ CỦA BẠN' : 'KẾT NỐI VỚI NỬA KIA CỦA BẠN',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -217,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(Icons.arrow_back, color: Color(0xFF6B7280)),
                         label: Text(
-                          'Back to Home',
+                          'Quay lại trang chủ',
                           style: GoogleFonts.inter(
                             color: const Color(0xFF6B7280),
                             fontWeight: FontWeight.w600,
@@ -235,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildProfileView() {
-    final name = AuthHelper.currentUserName ?? 'Lovebird';
+    final name = AuthHelper.currentUserName ?? 'Người ấy';
     final email = AuthHelper.currentUserEmail ?? '';
 
     return Column(
@@ -302,7 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF374151)),
                 )
               : Text(
-                  'Log Out',
+                  'Đăng xuất',
                   style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
         ),
@@ -317,7 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            _isSignUp ? 'Create Account' : 'Welcome Back',
+            _isSignUp ? 'Tạo Tài Khoản' : 'Chào Mừng Trở Lại',
             style: GoogleFonts.playfairDisplay(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -351,10 +351,10 @@ class _LoginScreenState extends State<LoginScreen> {
           if (_isSignUp) ...[
             TextFormField(
               controller: _nameController,
-              decoration: _buildInputDecoration('Your Name', Icons.person_outline),
+              decoration: _buildInputDecoration('Tên của bạn', Icons.person_outline),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {
-                  return 'Please enter your name';
+                  return 'Vui lòng nhập tên của bạn';
                 }
                 return null;
               },
@@ -367,13 +367,13 @@ class _LoginScreenState extends State<LoginScreen> {
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            decoration: _buildInputDecoration('Email Address', Icons.mail_outline),
+            decoration: _buildInputDecoration('Địa chỉ Email', Icons.mail_outline),
             validator: (val) {
               if (val == null || val.trim().isEmpty) {
-                return 'Please enter your email';
+                return 'Vui lòng nhập email của bạn';
               }
               if (!_isValidEmail(val)) {
-                return 'Please enter a valid email address';
+                return 'Vui lòng nhập địa chỉ email hợp lệ';
               }
               return null;
             },
@@ -385,13 +385,13 @@ class _LoginScreenState extends State<LoginScreen> {
           TextFormField(
             controller: _passwordController,
             obscureText: true,
-            decoration: _buildInputDecoration('Password', Icons.lock_outline),
+            decoration: _buildInputDecoration('Mật khẩu', Icons.lock_outline),
             validator: (val) {
               if (val == null || val.isEmpty) {
-                return 'Please enter your password';
+                return 'Vui lòng nhập mật khẩu của bạn';
               }
               if (_isSignUp && val.length < 6) {
-                return 'Password must be at least 6 characters long';
+                return 'Mật khẩu phải dài ít nhất 6 ký tự';
               }
               return null;
             },
@@ -432,7 +432,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : Text(
-                      _isSignUp ? 'Sign Up' : 'Sign In',
+                      _isSignUp ? 'Đăng Ký' : 'Đăng Nhập',
                       style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -455,7 +455,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'OR',
+                  'HOẶC',
                   style: GoogleFonts.inter(
                     color: const Color(0xFF9CA3AF),
                     fontSize: 12,
@@ -482,7 +482,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: 20,
             ),
             label: Text(
-              'Continue with Google',
+              'Tiếp tục với Google',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
@@ -510,8 +510,8 @@ class _LoginScreenState extends State<LoginScreen> {
             },
             child: Text(
               _isSignUp
-                  ? 'Already have an account? Sign In'
-                  : "Don't have an account? Sign Up",
+                  ? 'Đã có tài khoản? Đăng nhập'
+                  : 'Chưa có tài khoản? Đăng ký',
               style: GoogleFonts.inter(
                 color: const Color(0xFF8B5CF6),
                 fontWeight: FontWeight.w600,

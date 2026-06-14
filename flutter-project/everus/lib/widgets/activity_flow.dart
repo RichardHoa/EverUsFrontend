@@ -35,17 +35,17 @@ class _ActivityFlowState extends State<ActivityFlow> {
   bool _showMascotComment = false;
 
   final List<String> _startComments = [
-    'Ready for this? 💪',
-    "Let's make memories!",
-    'Time to shine! ✨',
-    'Adventure awaits! 🌟',
+    'Sẵn sàng chưa nào? 💪',
+    'Cùng tạo kỉ niệm nhé!',
+    'Đến lúc tỏa sáng rồi! ✨',
+    'Cuộc phiêu lưu đang chờ đón! 🌟',
   ];
 
   final List<String> _completeComments = [
-    'You two are amazing! 💕',
-    'So much love today! 🥰',
-    'Best couple ever! 👑',
-    'This is beautiful! 🌸',
+    'Hai bạn thật tuyệt vời! 💕',
+    'Ngập tràn tình yêu luôn! 🥰',
+    'Cặp đôi hoàn hảo nhất quả đất! 👑',
+    'Khoảnh khắc này thật đẹp! 🌸',
   ];
 
   @override
@@ -189,7 +189,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Unlock More Stages! 💖',
+                'Mở khoá thêm các mức! 💖',
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -200,7 +200,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
-                  'To continue your couple adventure and access stage 2 and beyond, please log in or create an account.',
+                  'Để tiếp tục cuộc phiêu lưu hẹn hò và mở khóa các mức tiếp theo, vui lòng đăng nhập hoặc tạo tài khoản.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 14,
@@ -248,7 +248,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                     ),
                   ),
                   child: Text(
-                    'Sign In / Sign Up',
+                    'Đăng nhập / Đăng ký',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -261,7 +261,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  'Maybe Later',
+                  'Để sau',
                   style: GoogleFonts.inter(
                     color: Colors.grey.shade500,
                     fontWeight: FontWeight.w600,
@@ -854,7 +854,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                               ),
                             ),
                             Text(
-                              'Camera / Gallery access',
+                              'Quyền truy cập Máy ảnh / Thư viện',
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 color: Colors.grey.shade400,
@@ -899,7 +899,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _currentLevel == activity.levels.length - 1 ? 'Complete! 🎉' : 'Next Level ',
+                        _currentLevel == activity.levels.length - 1 ? 'Hoàn thành! 🎉' : 'Mức tiếp theo ',
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

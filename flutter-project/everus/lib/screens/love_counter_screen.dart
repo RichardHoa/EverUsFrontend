@@ -25,6 +25,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
   String? _loverImagePath;
   bool _useDetailedView = false;
 
+  // Async file cache to prevent main-thread jank
+  bool _userImageExists = false;
+  bool _loverImageExists = false;
+
   // Live calculation
   Timer? _timer;
   Duration _elapsed = Duration.zero;
@@ -69,6 +73,12 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
   Future<void> _loadSettings() async {
     final configured = await LoveCounterHelper.isConfigured();
     final data = await LoveCounterHelper.loadSettings();
+    final userPath = data['userImagePath'] as String?;
+    final loverPath = data['loverImagePath'] as String?;
+
+    // Asynchronous file checks to avoid blocking the main UI thread
+    final userExists = userPath != null && await File(userPath).exists();
+    final loverExists = loverPath != null && await File(loverPath).exists();
     
     if (mounted) {
       setState(() {
@@ -76,8 +86,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         _userName = data['userName'];
         _loverName = data['loverName'];
         _anniversaryDate = data['anniversaryDate'];
-        _userImagePath = data['userImagePath'];
-        _loverImagePath = data['loverImagePath'];
+        _userImagePath = userPath;
+        _loverImagePath = loverPath;
+        _userImageExists = userExists;
+        _loverImageExists = loverExists;
         _useDetailedView = data['useDetailedView'];
 
         if (_isSetup && _anniversaryDate != null) {
@@ -132,7 +144,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                 ),
               ),
               Text(
-                'Upload Photo',
+                'Tải ảnh lên',
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -145,16 +157,19 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                 children: [
                   _buildPickerOption(
                     icon: Icons.photo_library_outlined,
-                    label: 'Gallery',
+                    label: 'Thư viện',
                     onTap: () async {
                       Navigator.pop(context);
                       final path = await LoveCounterHelper.pickAndSaveImage(ImageSource.gallery);
                       if (path != null) {
+                        final exists = await File(path).exists();
                         setState(() {
                           if (targetKey == 'user') {
                             _setupUserImagePath = path;
+                            _userImageExists = exists;
                           } else {
                             _setupLoverImagePath = path;
+                            _loverImageExists = exists;
                           }
                         });
                       }
@@ -162,16 +177,19 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                   ),
                   _buildPickerOption(
                     icon: Icons.camera_alt_outlined,
-                    label: 'Camera',
+                    label: 'Máy ảnh',
                     onTap: () async {
                       Navigator.pop(context);
                       final path = await LoveCounterHelper.pickAndSaveImage(ImageSource.camera);
                       if (path != null) {
+                        final exists = await File(path).exists();
                         setState(() {
                           if (targetKey == 'user') {
                             _setupUserImagePath = path;
+                            _userImageExists = exists;
                           } else {
                             _setupLoverImagePath = path;
+                            _loverImageExists = exists;
                           }
                         });
                       }
@@ -250,7 +268,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     if (_formKey.currentState!.validate()) {
       if (_setupAnniversaryDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select your anniversary date.')),
+          const SnackBar(content: Text('Vui lòng chọn ngày kỷ niệm của hai bạn.')),
         );
         return;
       }
@@ -266,12 +284,17 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
       _timer?.cancel();
       _pulseController.repeat(reverse: true);
 
+      final userExists = _setupUserImagePath != null && await File(_setupUserImagePath!).exists();
+      final loverExists = _setupLoverImagePath != null && await File(_setupLoverImagePath!).exists();
+
       setState(() {
         _userName = _userController.text.trim();
         _loverName = _loverController.text.trim();
         _anniversaryDate = _setupAnniversaryDate;
         _userImagePath = _setupUserImagePath;
         _loverImagePath = _setupLoverImagePath;
+        _userImageExists = userExists;
+        _loverImageExists = loverExists;
         _elapsed = DateTime.now().difference(_anniversaryDate!);
         _isSetup = true;
       });
@@ -377,8 +400,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // User photo
-            _buildProfileAvatar(_userName, _userImagePath),
+            // User photo (using cached image exists state variable)
+            _buildProfileAvatar(_userName, _userImagePath, _userImageExists),
             
             // Beating Heart
             Padding(
@@ -407,8 +430,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
               ),
             ),
 
-            // Lover photo
-            _buildProfileAvatar(_loverName, _loverImagePath),
+            // Lover photo (using cached image exists state variable)
+            _buildProfileAvatar(_loverName, _loverImagePath, _loverImageExists),
           ],
         ),
         const SizedBox(height: 32),
@@ -418,7 +441,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
           child: Column(
             children: [
               Text(
-                'WE HAVE BEEN TOGETHER FOR',
+                'CHÚNG TA ĐÃ BÊN NHAU ĐƯỢC',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 11,
@@ -447,7 +470,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                 ),
               ),
               Text(
-                'DAYS',
+                'NGÀY',
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -478,7 +501,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      _useDetailedView ? 'Hide Details' : 'Show Details (Hours/Mins)',
+                      _useDetailedView ? 'Ẩn chi tiết' : 'Xem chi tiết (Giờ/Phút/Giây)',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -501,7 +524,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     );
   }
 
-  Widget _buildProfileAvatar(String name, String? imagePath) {
+  Widget _buildProfileAvatar(String name, String? imagePath, bool exists) {
     final size = 100.0;
     return Column(
       children: [
@@ -520,7 +543,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
             ],
           ),
           child: ClipOval(
-            child: imagePath != null && File(imagePath).existsSync()
+            child: exists && imagePath != null
                 ? Image.file(
                     File(imagePath),
                     width: size,
@@ -571,10 +594,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildDetailUnit('${_elapsed.inDays}', 'Days'),
-        _buildDetailUnit('$hours', 'Hours'),
-        _buildDetailUnit('$minutes', 'Mins'),
-        _buildDetailUnit('$seconds', 'Secs'),
+        _buildDetailUnit('${_elapsed.inDays}', 'Ngày'),
+        _buildDetailUnit('$hours', 'Giờ'),
+        _buildDetailUnit('$minutes', 'Phút'),
+        _buildDetailUnit('$seconds', 'Giây'),
       ],
     );
   }
@@ -616,7 +639,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
   // MARK: - Setup View
   Widget _buildSetupView() {
     final df = _setupAnniversaryDate == null
-        ? 'Select Date'
+        ? 'Chọn ngày'
         : '${_setupAnniversaryDate!.day}/${_setupAnniversaryDate!.month}/${_setupAnniversaryDate!.year}';
 
     return Form(
@@ -634,7 +657,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                 child: Padding(
                   padding: const EdgeInsets.only(right: 48.0),
                   child: Text(
-                    'Create Love Counter',
+                    'Tạo Bộ Đếm Ngày Yêu',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 26,
@@ -648,7 +671,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
           ),
           const SizedBox(height: 6),
           Text(
-            'Record your milestone. All data is kept 100% locally on your phone.',
+            'Ghi lại cột mốc của bạn. Tất cả dữ liệu được bảo mật 100% trên điện thoại.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 14,
@@ -661,8 +684,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildSetupProfileButton('user', 'You', _setupUserImagePath),
-              _buildSetupProfileButton('lover', 'Partner', _setupLoverImagePath),
+              _buildSetupProfileButton('user', 'Bạn', _setupUserImagePath, _userImageExists),
+              _buildSetupProfileButton('lover', 'Người ấy', _setupLoverImagePath, _loverImageExists),
             ],
           ),
           const SizedBox(height: 32),
@@ -680,7 +703,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Anniversary Date',
+                        'Ngày kỷ niệm',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -714,10 +737,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                 TextFormField(
                   controller: _userController,
                   validator: (val) =>
-                      (val == null || val.trim().isEmpty) ? 'Enter your name' : null,
+                      (val == null || val.trim().isEmpty) ? 'Vui lòng nhập tên của bạn' : null,
                   style: GoogleFonts.inter(fontSize: 15),
                   decoration: InputDecoration(
-                    labelText: 'Your Name',
+                    labelText: 'Tên của bạn',
                     labelStyle: GoogleFonts.inter(color: const Color(0xFF6B7280)),
                     prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF8B5CF6)),
                     border: OutlineInputBorder(
@@ -735,10 +758,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                 TextFormField(
                   controller: _loverController,
                   validator: (val) =>
-                      (val == null || val.trim().isEmpty) ? 'Enter their name' : null,
+                      (val == null || val.trim().isEmpty) ? 'Vui lòng nhập tên người ấy' : null,
                   style: GoogleFonts.inter(fontSize: 15),
                   decoration: InputDecoration(
-                    labelText: 'Partner\'s Name',
+                    labelText: 'Tên người ấy',
                     labelStyle: GoogleFonts.inter(color: const Color(0xFF6B7280)),
                     prefixIcon: const Icon(Icons.favorite_border, color: Color(0xFFEC4899)),
                     border: OutlineInputBorder(
@@ -785,7 +808,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                 ),
               ),
               child: Text(
-                'Save & Count Love Days',
+                'Lưu & Đếm Ngày Yêu',
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -805,7 +828,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                 _startTimer();
               },
               child: Text(
-                'Cancel',
+                'Hủy',
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -820,9 +843,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     );
   }
 
-  Widget _buildSetupProfileButton(String key, String label, String? imagePath) {
+  Widget _buildSetupProfileButton(String key, String label, String? imagePath, bool exists) {
     final size = 110.0;
-    final imageExists = imagePath != null && File(imagePath).existsSync();
 
     return Column(
       children: [
@@ -850,7 +872,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                   ],
                 ),
                 child: ClipOval(
-                  child: imageExists
+                  child: exists && imagePath != null
                       ? Image.file(
                           File(imagePath),
                           width: size,
@@ -867,7 +889,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Add Photo',
+                              'Thêm ảnh',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -878,7 +900,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                         ),
                 ),
               ),
-              if (imageExists)
+              if (exists && imagePath != null)
                 Positioned(
                   bottom: 0,
                   right: 0,

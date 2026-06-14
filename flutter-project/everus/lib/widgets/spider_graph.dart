@@ -171,7 +171,7 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
             children: [
               // Header
               Text(
-                'Activity Match Analysis',
+                'Phân Tích Độ Tương Hợp Ý Tưởng',
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -180,7 +180,7 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
               ),
               const SizedBox(height: 2),
               Text(
-                'Ideal vs Activity vs Your Preferences',
+                'Ý Tưởng vs Sở Thích Của Bạn',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: Colors.grey.shade500,
@@ -227,20 +227,20 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
                   children: [
                     _buildLegendItem(
                       color: currentTheme.primary,
-                      label: 'Activity Vector',
-                      desc: 'What you get',
+                      label: 'Độ khớp của ý tưởng',
+                      desc: 'Mức độ ý tưởng',
                       isDashed: false,
                     ),
                     _buildLegendItem(
                       color: const Color(0xFFEC4899),
-                      label: 'Your Preference',
-                      desc: 'What you want',
+                      label: 'Sở thích của bạn',
+                      desc: 'Mức độ mong muốn',
                       isDashed: false,
                     ),
                     _buildLegendItem(
                       color: const Color(0xFFFBBF24),
-                      label: 'Ideal Match',
-                      desc: 'Perfect 10/10',
+                      label: 'Tương thích lý tưởng',
+                      desc: 'Điểm 10 hoàn hảo',
                       isDashed: true,
                     ),
                   ],
@@ -252,7 +252,7 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
-                    'Tap dimensions to see alignment percentage',
+                    'Chạm vào các biểu tượng để xem phần trăm tương thích',
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       color: Colors.grey.shade500,
@@ -362,10 +362,10 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMetricColumn('Activity', '${actVal.toStringAsFixed(0)}/10'),
-              _buildMetricColumn('Your Preference', '${userVal.toStringAsFixed(0)}/10'),
+              _buildMetricColumn('Ý tưởng', '${actVal.toStringAsFixed(0)}/10'),
+              _buildMetricColumn('Sở thích', '${userVal.toStringAsFixed(0)}/10'),
               _buildMetricColumn(
-                'Alignment',
+                'Độ khớp',
                 '$alignmentPct%',
                 valueColor: const Color(0xFF059669),
               ),

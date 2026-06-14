@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,6 +25,7 @@ class _HeartMascotState extends State<HeartMascot> with SingleTickerProviderStat
   late AnimationController _controller;
   String? _displayComment;
   bool _isVisibleComment = false;
+  Timer? _commentTimer;
 
   @override
   void initState() {
@@ -45,13 +47,14 @@ class _HeartMascotState extends State<HeartMascot> with SingleTickerProviderStat
   }
 
   void _updateComment() {
+    _commentTimer?.cancel();
     if (widget.showComment && widget.comment != null) {
       setState(() {
         _displayComment = widget.comment;
         _isVisibleComment = true;
       });
       // Hide after 3 seconds
-      Future.delayed(const Duration(seconds: 3), () {
+      _commentTimer = Timer(const Duration(seconds: 3), () {
         if (mounted) {
           setState(() {
             _isVisibleComment = false;
@@ -68,6 +71,7 @@ class _HeartMascotState extends State<HeartMascot> with SingleTickerProviderStat
   @override
   void dispose() {
     _controller.dispose();
+    _commentTimer?.cancel();
     super.dispose();
   }
 

@@ -529,9 +529,9 @@ class DimensionInfo {
 }
 
 const List<DimensionInfo> dimensions = [
-  DimensionInfo(icon: '💕', label: 'Romance'),
-  DimensionInfo(icon: '🧗', label: 'Adventure'),
-  DimensionInfo(icon: '🎨', label: 'Creativity'),
-  DimensionInfo(icon: '🏠', label: 'Indoor'),
-  DimensionInfo(icon: '⚡', label: 'Energy'),
+  DimensionInfo(icon: '💕', label: 'Lãng mạn'),
+  DimensionInfo(icon: '🧗', label: 'Phiêu lưu'),
+  DimensionInfo(icon: '🎨', label: 'Sáng tạo'),
+  DimensionInfo(icon: '🏠', label: 'Trong nhà'),
+  DimensionInfo(icon: '⚡', label: 'Năng lượng'),
 ];
