@@ -14,9 +14,10 @@ class DatePlannerScreen extends StatefulWidget {
 
 class _DatePlannerScreenState extends State<DatePlannerScreen> {
   // Input states
+  DateTime _selectedDate = DateTime.now();
   TimeOfDay _startTime = const TimeOfDay(hour: 18, minute: 0);
   double _durationHours = 3.5;
-  final TextEditingController _areaController = TextEditingController(text: "Quận 1");
+  final TextEditingController _areaController = TextEditingController(text: "");
   int _budgetPerPerson = 250000;
   String _selectedVibe = 'romantic'; // 'romantic' | 'active' | 'creative' | 'quiet'
   int _stageCount = 3;
@@ -27,9 +28,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   // Flow states
   bool _isGenerating = false;
   DatePlan? _generatedPlan;
-
-  // Preset areas for quick selection
-  final List<String> _presetAreas = ["Quận 1", "Quận 3", "Bình Thạnh", "Quận 2", "Phú Nhuận"];
 
   // Vibes metadata
   final Map<String, Map<String, String>> _vibesInfo = {
@@ -81,6 +79,39 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     }
   }
 
+  void _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF8B5CF6),
+              onPrimary: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  String _formatDate(DateTime dt) {
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    final year = dt.year.toString();
+    return "$day/$month/$year";
+  }
+
   void _generatePlan() {
     setState(() {
       _isGenerating = true;
@@ -113,6 +144,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   void _sharePlanText(DatePlan plan) {
     final buffer = StringBuffer();
     buffer.writeln("✨ KẾ HOẠCH HẸN HÒ: ${plan.dateType} ${plan.emoji} ✨");
+    buffer.writeln("📅 Ngày hẹn: ${_formatDate(_selectedDate)}");
     buffer.writeln("⏱️ Tổng thời lượng: ${plan.totalDurationMinutes} phút ($_durationHours tiếng)");
     buffer.writeln("📍 Khu vực: ${_areaController.text}");
     buffer.writeln("🏍️ Phương tiện: ${_transportation == 'walking' ? 'Đi bộ' : _transportation == 'motorbike' ? 'Xe máy' : 'Taxi'}\n");
@@ -125,9 +157,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
       buffer.writeln("🎯 Mục tiêu: ${stage.purpose}");
       buffer.writeln("🍴 Thể loại gợi ý: ${stage.category}");
       buffer.writeln("🏠 Địa điểm hint: ${stage.placeTypeHint}");
-      buffer.writeln("📝 Nhiệm vụ ngọt ngào:");
+      buffer.writeln("✨ Hoạt động gợi ý:");
       for (var task in stage.tasks) {
-        buffer.writeln("  [ ] $task");
+        buffer.writeln("  • $task");
       }
       buffer.writeln("💡 Mách nhỏ:");
       for (var tip in stage.tips) {
@@ -305,7 +337,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             Container(
               constraints: const BoxConstraints(maxWidth: 300),
               child: Text(
-                'Tụi mình đang cân đối thời gian, sắp xếp thứ tự các chặng và lồng ghép nhiệm vụ ngọt ngào cho hai bạn đó!',
+                'Tụi mình đang cân đối thời gian, sắp xếp thứ tự các chặng và lồng ghép các gợi ý hoạt động thú vị cho hai bạn đó!',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 13,
@@ -344,6 +376,49 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           _buildSectionCard(
             title: "⏱️ Thời Gian & Địa Điểm",
             children: [
+              // Date picker
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      "Ngày hẹn hò",
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF374151),
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: _selectDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.calendar_month_outlined, size: 18, color: Color(0xFF8B5CF6)),
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatDate(_selectedDate),
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF1F2937),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
               // Start time picker
               Row(
                 children: [
@@ -392,16 +467,18 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        "Tổng thời lượng hẹn hò",
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF374151),
+                      Expanded(
+                        child: Text(
+                          "Tổng thời lượng hẹn hò",
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF374151),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         "${_durationHours.toStringAsFixed(1)} tiếng",
                         style: GoogleFonts.inter(
@@ -445,7 +522,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   TextFormField(
                     controller: _areaController,
                     decoration: InputDecoration(
-                      hintText: "Nhập Quận hoặc Khu vực (ví dụ: Quận 1, Hồ Tây)",
+                      hintText: "Ví dụ: Quận 1, TP. HCM",
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF8B5CF6)),
                       border: OutlineInputBorder(
@@ -465,39 +542,15 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                     ),
                     style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(height: 10),
-                  // Preset area chips
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _presetAreas.map((area) {
-                      final isSelected = _areaController.text.trim() == area;
-                      return ChoiceChip(
-                        label: Text(area),
-                        selected: isSelected,
-                        selectedColor: const Color(0xFFEDE9FE),
-                        checkmarkColor: const Color(0xFF8B5CF6),
-                        labelStyle: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? const Color(0xFF6D28D9) : const Color(0xFF4B5563),
-                        ),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(
-                            color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFE5E7EB),
-                          ),
-                        ),
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              _areaController.text = area;
-                            });
-                          }
-                        },
-                      );
-                    }).toList(),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Lưu ý: Bạn vui lòng điền cụ thể Quận/Huyện và Tỉnh/Thành phố (với càng nhiều chi tiết càng tốt) để EverUs định vị và lên lộ trình chính xác nhất.",
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: const Color(0xFF7C7289),
+                      fontStyle: FontStyle.italic,
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
@@ -519,69 +572,73 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Column(
-                children: _vibesInfo.entries.map((entry) {
-                  final isSelected = _selectedVibe == entry.key;
-                  final info = entry.value;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFFDF4FF) : Colors.white,
-                      border: Border.all(
-                        color: isSelected ? const Color(0xFFEC4899) : const Color(0xFFE5E7EB),
-                        width: isSelected ? 1.8 : 1.0,
+              RadioGroup<String>(
+                groupValue: _selectedVibe,
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedVibe = val;
+                    });
+                  }
+                },
+                child: Column(
+                  children: _vibesInfo.entries.map((entry) {
+                    final isSelected = _selectedVibe == entry.key;
+                    final info = entry.value;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFFFDF4FF) : Colors.white,
+                        border: Border.all(
+                          color: isSelected ? const Color(0xFFEC4899) : const Color(0xFFE5E7EB),
+                          width: isSelected ? 1.8 : 1.0,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      onTap: () {
-                        setState(() {
-                          _selectedVibe = entry.key;
-                        });
-                      },
-                      leading: Text(info['emoji']!, style: const TextStyle(fontSize: 24)),
-                      title: Text(
-                        info['label']!,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF1F2937),
+                      child: ListTile(
+                        onTap: () {
+                          setState(() {
+                            _selectedVibe = entry.key;
+                          });
+                        },
+                        leading: Text(info['emoji']!, style: const TextStyle(fontSize: 24)),
+                        title: Text(
+                          info['label']!,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ),
+                        subtitle: Text(
+                          info['desc']!,
+                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+                        ),
+                        trailing: Radio<String>(
+                          value: entry.key,
+                          activeColor: const Color(0xFFEC4899),
                         ),
                       ),
-                      subtitle: Text(
-                        info['desc']!,
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
-                      ),
-                      trailing: Radio<String>(
-                        value: entry.key,
-                        groupValue: _selectedVibe,
-                        activeColor: const Color(0xFFEC4899),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() {
-                              _selectedVibe = val;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
               const SizedBox(height: 12),
 
               // Stage Count
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Số chặng mong muốn",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF374151),
+                  Expanded(
+                    child: Text(
+                      "Số chặng mong muốn",
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF374151),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Row(
                     children: [2, 3, 4].map((stageNum) {
                       final isSelected = _stageCount == stageNum;
@@ -617,16 +674,18 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
               // Budget Per Person
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Ngân sách tối đa / người",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF374151),
+                  Expanded(
+                    child: Text(
+                      "Ngân sách tối đa / người",
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF374151),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     _formatBudget(_budgetPerPerson),
                     style: GoogleFonts.inter(
@@ -651,8 +710,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                 },
               ),
               // Preset Budget chips
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [150000, 300000, 500000, 800000].map((budget) {
                   final isSelected = _budgetPerPerson == budget;
                   return InkWell(
@@ -971,16 +1031,21 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
+                    _buildResultMetaBadge(
+                      icon: Icons.calendar_month_outlined,
+                      label: _formatDate(_selectedDate),
+                    ),
                     _buildResultMetaBadge(
                       icon: Icons.timer_outlined,
                       label: "${plan.totalDurationMinutes} phút (~${_durationHours.toStringAsFixed(1)}h)",
                     ),
-                    const SizedBox(width: 8),
                     _buildResultMetaBadge(
                       icon: Icons.location_on_outlined,
-                      label: _areaController.text,
+                      label: _areaController.text.trim().isEmpty ? "Khu vực tự do" : _areaController.text.trim(),
                     ),
                   ],
                 ),
@@ -1229,16 +1294,19 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                         ),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            stage.title,
-                            style: GoogleFonts.playfairDisplay(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: theme.dark,
+                          Expanded(
+                            child: Text(
+                              stage.title,
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: theme.dark,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -1279,7 +1347,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
                           // Interactive tasks list
                           Text(
-                            "📝 Nhiệm Vụ Ngọt Ngào",
+                            "✨ Hoạt động gợi ý",
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -1389,15 +1457,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
               color: plan.theme.dark,
               fontStyle: FontStyle.italic,
               height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "Chúc hai bạn có một ngày kỷ niệm ngập tràn niềm vui!",
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: plan.theme.primary,
             ),
           ),
         ],
