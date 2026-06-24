@@ -3,7 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/activity.dart';
 import '../utils/date_planner_generator.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
+import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DatePlannerScreen extends StatefulWidget {
   const DatePlannerScreen({super.key});
@@ -28,6 +31,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   // Flow states
   bool _isGenerating = false;
   DatePlan? _generatedPlan;
+  DatePlan? _savedPlan;
 
   // Vibes metadata
   final Map<String, Map<String, String>> _vibesInfo = {
@@ -48,6 +52,52 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     {'key': 'không đi bar', 'label': '🚫 Không đi bar'},
     {'key': 'không ăn cay', 'label': '🌶️ Không ăn cay'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedPlan();
+  }
+
+  void _loadSavedPlan() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final planJson = prefs.getString('saved_date_plan');
+      if (planJson != null) {
+        final data = jsonDecode(planJson);
+        final plan = DatePlan.fromJson(data);
+        if (mounted) {
+          setState(() {
+            _savedPlan = plan;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to load saved plan: $e");
+    }
+  }
+
+  void _savePlan(DatePlan plan) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = jsonEncode(plan.toJson());
+      await prefs.setString('saved_date_plan', jsonStr);
+      if (mounted) {
+        setState(() {
+          _savedPlan = plan;
+        });
+      }
+    } catch (e) {
+      debugPrint("Failed to save plan: $e");
+    }
+  }
+
+  void _clearPlan() {
+    // Just return to form view
+    setState(() {
+      _generatedPlan = null;
+    });
+  }
 
   @override
   void dispose() {
@@ -112,33 +162,39 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     return "$day/$month/$year";
   }
 
-  void _generatePlan() {
+  void _generatePlan() async {
     setState(() {
       _isGenerating = true;
     });
 
-    // Simulate smart planning delay
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      final input = DatePlannerInput(
-        startTime: _startTime,
-        totalDurationHours: _durationHours,
-        area: _areaController.text.trim().isEmpty ? "Quận 1" : _areaController.text.trim(),
-        budgetPerPerson: _budgetPerPerson,
-        vibe: _selectedVibe,
-        stageCount: _stageCount,
-        transportation: _transportation,
-        preferences: _selectedPreferences,
-      );
+    final input = DatePlannerInput(
+      startTime: _startTime,
+      totalDurationHours: _durationHours,
+      area: _areaController.text.trim().isEmpty ? "Quận 1" : _areaController.text.trim(),
+      budgetPerPerson: _budgetPerPerson,
+      vibe: _selectedVibe,
+      stageCount: _stageCount,
+      transportation: _transportation,
+      preferences: _selectedPreferences,
+    );
 
-      final plan = DatePlannerGenerator.generate(input);
-
+    try {
+      final plan = await DatePlannerGenerator.generate(input);
       if (mounted) {
+        _savePlan(plan);
         setState(() {
           _generatedPlan = plan;
           _isGenerating = false;
         });
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isGenerating = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
   }
 
   void _sharePlanText(DatePlan plan) {
@@ -152,11 +208,17 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     buffer.writeln("-----------------------------------------");
 
     for (var stage in plan.stages) {
-      buffer.writeln("📍 Chặng ${stage.stageNum}: ${stage.title} (${stage.name})");
+      buffer.writeln("📍 Chặng ${stage.stageNum}: ${stage.title}");
       buffer.writeln("⏰ Thời gian: ${stage.startTime} - ${stage.endTime} (${stage.durationMinutes} phút)");
       buffer.writeln("🎯 Mục tiêu: ${stage.purpose}");
       buffer.writeln("🍴 Thể loại gợi ý: ${stage.category}");
-      buffer.writeln("🏠 Địa điểm hint: ${stage.placeTypeHint}");
+      
+      if (stage.options.isNotEmpty) {
+        buffer.writeln("📍 Địa điểm gợi ý:");
+        for (var opt in stage.options) {
+          buffer.writeln("  • ${opt.name} - ${opt.address}");
+        }
+      }
       buffer.writeln("✨ Hoạt động gợi ý:");
       for (var task in stage.tasks) {
         buffer.writeln("  • $task");
@@ -252,9 +314,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
               icon: const Icon(Icons.arrow_back, color: Color(0xFF8B5CF6)),
               onPressed: () {
                 if (isViewingResult) {
-                  setState(() {
-                    _generatedPlan = null;
-                  });
+                  _clearPlan();
                 } else {
                   Navigator.of(context).pop();
                 }
@@ -822,6 +882,28 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           ),
           const SizedBox(height: 28),
 
+          // View Saved Plan Button
+          if (_savedPlan != null) ...[
+            OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _generatedPlan = _savedPlan;
+                });
+              },
+              icon: const Icon(Icons.history),
+              label: const Text('Xem lại kế hoạch gần nhất'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF8B5CF6),
+                side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Generate Button
           Container(
             decoration: BoxDecoration(
@@ -1093,11 +1175,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      _generatedPlan = null;
-                    });
-                  },
+                  onPressed: _clearPlan,
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1336,8 +1414,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                           const SizedBox(height: 8),
                           _buildDetailRow("🍴 Thể loại", stage.category),
                           const SizedBox(height: 8),
-                          _buildDetailRow("📍 Gợi ý chỗ", stage.placeTypeHint),
-                          const SizedBox(height: 8),
                           _buildDetailRow("⏱️ Thời lượng", "${stage.durationMinutes} phút"),
                           
                           const Padding(
@@ -1356,6 +1432,53 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                           ),
                           const SizedBox(height: 6),
                           ...stage.tasks.map((task) => _buildInteractiveTaskItem(task, theme)),
+
+                          // Locations
+                          if (stage.options.isNotEmpty) ...[
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12.0),
+                              child: Divider(color: Color(0xFFF3F4F6)),
+                            ),
+                            Text(
+                              "📍 Địa điểm gợi ý",
+                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: theme.dark),
+                            ),
+                            const SizedBox(height: 6),
+                            ...stage.options.map((opt) => Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: theme.primary.withValues(alpha: 0.3)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(opt.name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
+                                  const SizedBox(height: 4),
+                                  Text(opt.address, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[700])),
+                                  const SizedBox(height: 8),
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      final url = Uri.parse(opt.mapsUrl);
+                                      if (await canLaunchUrl(url)) {
+                                        await launchUrl(url);
+                                      }
+                                    },
+                                    icon: const Icon(Icons.map, size: 16),
+                                    label: const Text('Mở bản đồ'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: theme.primary,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      minimumSize: Size.zero,
+                                    ),
+                                  )
+                                ],
+                              ),
+                            )),
+                          ],
 
                           // Tips
                           if (stage.tips.isNotEmpty) ...[
