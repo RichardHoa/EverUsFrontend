@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/heart_mascot.dart';
 import 'love_counter_screen.dart';
 import 'login_screen.dart';
+import 'date_planner_screen.dart';
 import '../utils/love_counter_helper.dart';
 import '../utils/auth_helper.dart';
 import '../main.dart';
@@ -112,6 +113,15 @@ class _LandingScreenState extends State<LandingScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const EverUsHomePage(),
+      ),
+    );
+    _loadLoveStatus();
+  }
+
+  Future<void> _navigateToCustomDatePlanner() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const DatePlannerScreen(),
       ),
     );
     _loadLoveStatus();
@@ -242,6 +252,18 @@ class _LandingScreenState extends State<LandingScreen> {
                           const Color(0xFF6366F1)
                         ],
                         onTap: _navigateToDatePlanner,
+                      ),
+
+                      _buildActionCard(
+                        context: context,
+                        title: 'Thiết Kế Hẹn Hò',
+                        subtitle: 'Tự tạo lộ trình chi tiết cho buổi hẹn',
+                        icon: Icons.map_rounded,
+                        gradientColors: [
+                          const Color(0xFFF59E0B),
+                          const Color(0xFFEC4899)
+                        ],
+                        onTap: _navigateToCustomDatePlanner,
                       ),
 
                       _buildActionCard(

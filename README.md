@@ -51,7 +51,7 @@ This repository contains a git commit message template (`.gitmessage`) to mainta
 
 To set up this template locally in your clone, run:
 ```bash
-git config commit.template .gitmessage
+git config commit.template d
 ```
 
 ---
