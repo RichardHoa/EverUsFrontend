@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/activity.dart';
+import 'auth_helper.dart';
 
 class LocationOption {
   final String name;
@@ -246,9 +247,14 @@ class DatePlannerGenerator {
 
   static Future<DatePlan> generate(DatePlannerInput input) async {
     try {
+      final Map<String, String> headers = {'Content-Type': 'application/json'};
+      if (AuthHelper.isLoggedIn && AuthHelper.currentAccessToken != null) {
+        headers['Authorization'] = 'Bearer ${AuthHelper.currentAccessToken}';
+      }
+
       final response = await http.post(
         Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode(input.toJson()),
       );
 

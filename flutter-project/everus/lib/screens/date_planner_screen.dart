@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/activity.dart';
 import '../utils/date_planner_generator.dart';
+import '../utils/auth_helper.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class DatePlannerScreen extends StatefulWidget {
   const DatePlannerScreen({super.key});
@@ -30,6 +32,8 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   bool _isGenerating = false;
   DatePlan? _generatedPlan;
   DatePlan? _savedPlan;
+  List<Map<String, dynamic>> _backendPlans = [];
+  bool _isLoadingPlans = false;
   final Set<int> _expandedStageBackups = {};
 
   // Vibes metadata
@@ -43,6 +47,61 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   void initState() {
     super.initState();
     _loadSavedPlan();
+    AuthHelper.sessionNotifier.addListener(_onAuthStatusChanged);
+    if (AuthHelper.isLoggedIn) {
+      _fetchBackendPlans();
+    }
+  }
+
+  void _onAuthStatusChanged() {
+    if (mounted) {
+      if (AuthHelper.isLoggedIn) {
+        _fetchBackendPlans();
+      } else {
+        setState(() {
+          _backendPlans = [];
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchBackendPlans() async {
+    if (!AuthHelper.isLoggedIn) return;
+    setState(() {
+      _isLoadingPlans = true;
+    });
+    try {
+      final token = AuthHelper.currentAccessToken;
+      final response = await http.get(
+        Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        if (mounted) {
+          setState(() {
+            _backendPlans = List<Map<String, dynamic>>.from(data);
+            _isLoadingPlans = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingPlans = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch backend plans: $e");
+      if (mounted) {
+        setState(() {
+          _isLoadingPlans = false;
+        });
+      }
+    }
   }
 
   void _loadSavedPlan() async {
@@ -87,6 +146,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
   @override
   void dispose() {
+    AuthHelper.sessionNotifier.removeListener(_onAuthStatusChanged);
     _areaController.dispose();
     super.dispose();
   }
@@ -173,6 +233,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           _generatedPlan = plan;
           _isGenerating = false;
         });
+        _fetchBackendPlans();
       }
     } catch (e) {
       if (mounted) {
@@ -418,6 +479,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           // Header Card
           _buildFormHeaderCard(),
           const SizedBox(height: 16),
+
+          // Saved Plans Dropdown
+          _buildSavedPlansDropdown(),
 
           // Section 1: Thời gian & Không gian
           _buildSectionCard(
@@ -927,6 +991,122 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
       ),
     );
   }
+
+  Widget _buildSavedPlansDropdown() {
+    if (!AuthHelper.isLoggedIn) {
+      return const SizedBox.shrink();
+    }
+    if (_isLoadingPlans) {
+      return const GlassCard(
+        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        child: Center(
+          child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+        ),
+      );
+    }
+    if (_backendPlans.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: GlassCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            "📅 Kế Hoạch Hẹn Hò Đã Lưu",
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF374151),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                hint: Text(
+                  "Chọn kế hoạch để xem lại...",
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF9CA3AF),
+                  ),
+                ),
+                icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF8B5CF6)),
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                items: _backendPlans.map((planMap) {
+                  final String dateStr = planMap['date'] ?? '';
+                  final List<dynamic> locs = planMap['locations'] ?? [];
+                  final String locsStr = locs.join(' ➔ ');
+                  final planData = planMap['plan_data'] ?? {};
+                  final emoji = planData['emoji'] ?? '📅';
+                  
+                  return DropdownMenuItem<String>(
+                    value: planMap['id'],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                "$emoji Ngày $dateStr",
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1F2937),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (locsStr.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              locsStr,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: const Color(0xFF6B7280),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? planId) {
+                  if (planId != null) {
+                    final selectedPlanMap = _backendPlans.firstWhere((p) => p['id'] == planId);
+                    final planData = selectedPlanMap['plan_data'];
+                    if (planData != null) {
+                      setState(() {
+                        _generatedPlan = DatePlan.fromJson(planData);
+                      });
+                    }
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildSectionCard({required String title, required List<Widget> children}) {
     return GlassCard(
