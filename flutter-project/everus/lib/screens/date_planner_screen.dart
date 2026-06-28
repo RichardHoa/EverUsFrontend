@@ -22,11 +22,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   double _durationHours = 3.5;
   final TextEditingController _areaController = TextEditingController(text: "");
   int _budgetPerPerson = 250000;
-  String _selectedVibe = 'romantic'; // 'romantic' | 'active' | 'creative' | 'quiet'
-  int _stageCount = 3;
+  String _selectedVibe = 'romantic'; // 'romantic' | 'fun' | 'chill'
+  final int _stageCount = 3;
   String _transportation = 'motorbike'; // 'walking' | 'motorbike' | 'taxi'
-  
-  final List<String> _selectedPreferences = ['chụp hình đẹp', 'nói chuyện nhiều'];
 
   // Flow states
   bool _isGenerating = false;
@@ -35,23 +33,10 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
   // Vibes metadata
   final Map<String, Map<String, String>> _vibesInfo = {
-    'romantic': {'label': 'Lãng mạn', 'emoji': '💖', 'desc': 'Ánh nến, hoàng hôn & kết nối'},
-    'active': {'label': 'Năng động', 'emoji': '⚡', 'desc': 'Trò chơi, phố đi bộ & tiếng cười'},
-    'creative': {'label': 'Sáng tạo', 'emoji': '🎨', 'desc': 'Làm gốm, Lego & vẽ tranh'},
-    'quiet': {'label': 'Bình yên', 'emoji': '🍃', 'desc': 'Trà chiều, góc sách & tâm sự sâu'},
+    'chill': {'label': 'Bình yên', 'emoji': '🍃', 'desc': 'Trà chiều, góc sách & tâm sự nhẹ nhàng'},
+    'romantic': {'label': 'Lãng mạn', 'emoji': '💖', 'desc': 'Ánh nến, hoàng hôn & kết nối ngọt ngào'},
+    'fun': {'label': 'Vui vẻ', 'emoji': '⚡', 'desc': 'Trò chơi, đường phố náo nhiệt & tiếng cười'},
   };
-
-  // Preference options
-  final List<Map<String, String>> _preferenceOptions = [
-    {'key': 'ít đông', 'label': '🤫 Ít đông'},
-    {'key': 'chụp hình đẹp', 'label': '📸 Chụp hình đẹp'},
-    {'key': 'nói chuyện nhiều', 'label': '💬 Nói chuyện nhiều'},
-    {'key': 'hoạt động vui', 'label': '🎮 Hoạt động vui'},
-    {'key': 'tiết kiệm', 'label': '💸 Tiết kiệm'},
-    {'key': 'bất ngờ', 'label': '🎁 Bất ngờ'},
-    {'key': 'không đi bar', 'label': '🚫 Không đi bar'},
-    {'key': 'không ăn cay', 'label': '🌶️ Không ăn cay'},
-  ];
 
   @override
   void initState() {
@@ -175,7 +160,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
       vibe: _selectedVibe,
       stageCount: _stageCount,
       transportation: _transportation,
-      preferences: _selectedPreferences,
+      preferences: const [],
     );
 
     try {
@@ -683,53 +668,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   }).toList(),
                 ),
               ),
-              const SizedBox(height: 12),
-
-              // Stage Count
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      "Số chặng mong muốn",
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF374151),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Row(
-                    children: [2, 3, 4].map((stageNum) {
-                      final isSelected = _stageCount == stageNum;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _stageCount = stageNum;
-                          });
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFF3F4F6),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            "$stageNum",
-                            style: GoogleFonts.inter(
-                              color: isSelected ? Colors.white : const Color(0xFF374151),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
               const SizedBox(height: 20),
 
               // Budget Per Person
@@ -806,9 +744,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Section 3: Transport & Preferences
+          // Section 3: Transport
           _buildSectionCard(
-            title: "🚗 Phương Tiện & Chi Tiết Khác",
+            title: "🚗 Phương Tiện Di Chuyển",
             children: [
               // Transportation
               Text(
@@ -828,55 +766,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   const SizedBox(width: 8),
                   _buildTransportOption('taxi', '🚕 Taxi'),
                 ],
-              ),
-              const SizedBox(height: 20),
-
-              // Preferences Chips
-              Text(
-                "Sở thích & Yêu cầu đặc biệt",
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF374151),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _preferenceOptions.map((pref) {
-                  final key = pref['key']!;
-                  final label = pref['label']!;
-                  final isSelected = _selectedPreferences.contains(key);
-                  return FilterChip(
-                    label: Text(label),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedPreferences.add(key);
-                        } else {
-                          _selectedPreferences.remove(key);
-                        }
-                      });
-                    },
-                    selectedColor: const Color(0xFFFFF1F2),
-                    checkmarkColor: const Color(0xFFF43F5E),
-                    backgroundColor: Colors.white,
-                    side: BorderSide(
-                      color: isSelected ? const Color(0xFFFDA4AF) : const Color(0xFFE5E7EB),
-                      width: isSelected ? 1.5 : 1.0,
-                    ),
-                    labelStyle: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? const Color(0xFFBE123C) : const Color(0xFF374151),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  );
-                }).toList(),
               ),
             ],
           ),

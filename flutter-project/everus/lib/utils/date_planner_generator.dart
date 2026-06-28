@@ -130,13 +130,10 @@ class DatePlan {
       case 'romantic':
         theme = ActivityTheme.fromHex(primary: '#EC4899', secondary: '#F43F5E', accent: '#DB2777', light: '#FFF1F2', dark: '#9D174D');
         break;
-      case 'active':
+      case 'fun':
         theme = ActivityTheme.fromHex(primary: '#F97316', secondary: '#FBBF24', accent: '#EA580C', light: '#FFF7ED', dark: '#7C2D12');
         break;
-      case 'creative':
-        theme = ActivityTheme.fromHex(primary: '#8B5CF6', secondary: '#A78BFA', accent: '#7C3AED', light: '#F5F3FF', dark: '#4C1D95');
-        break;
-      case 'quiet':
+      case 'chill':
       default:
         theme = ActivityTheme.fromHex(primary: '#0D9488', secondary: '#2DD4BF', accent: '#0F766E', light: '#F0FDFA', dark: '#115E59');
         break;
@@ -172,7 +169,7 @@ class DatePlannerInput {
   final double totalDurationHours;
   final String area;
   final int budgetPerPerson;
-  final String vibe; // 'romantic' | 'active' | 'creative' | 'quiet'
+  final String vibe; // 'romantic' | 'fun' | 'chill'
   final int stageCount;
   final String transportation; // 'walking' | 'motorbike' | 'taxi'
   final List<String> preferences;
@@ -232,13 +229,10 @@ class DatePlannerGenerator {
           case 'romantic':
             theme = ActivityTheme.fromHex(primary: '#EC4899', secondary: '#F43F5E', accent: '#DB2777', light: '#FFF1F2', dark: '#9D174D');
             break;
-          case 'active':
+          case 'fun':
             theme = ActivityTheme.fromHex(primary: '#F97316', secondary: '#FBBF24', accent: '#EA580C', light: '#FFF7ED', dark: '#7C2D12');
             break;
-          case 'creative':
-            theme = ActivityTheme.fromHex(primary: '#8B5CF6', secondary: '#A78BFA', accent: '#7C3AED', light: '#F5F3FF', dark: '#4C1D95');
-            break;
-          case 'quiet':
+          case 'chill':
           default:
             theme = ActivityTheme.fromHex(primary: '#0D9488', secondary: '#2DD4BF', accent: '#0F766E', light: '#F0FDFA', dark: '#115E59');
             break;
