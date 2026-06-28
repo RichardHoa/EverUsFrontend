@@ -30,6 +30,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   bool _isGenerating = false;
   DatePlan? _generatedPlan;
   DatePlan? _savedPlan;
+  final Set<int> _expandedStageBackups = {};
 
   // Vibes metadata
   final Map<String, Map<String, String>> _vibesInfo = {
@@ -153,6 +154,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     });
 
     final input = DatePlannerInput(
+      date: _selectedDate,
       startTime: _startTime,
       totalDurationHours: _durationHours,
       area: _areaController.text.trim().isEmpty ? "Quận 1" : _areaController.text.trim(),
@@ -1051,13 +1053,55 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             itemCount: plan.stages.length,
             itemBuilder: (context, index) {
               final stage = plan.stages[index];
-              return _buildTimelineStageItem(stage, plan.theme, index == plan.stages.length - 1);
+              final isLast = index == plan.stages.length - 1;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTimelineStageItem(stage, plan.theme, isLast),
+                  if (!isLast && stage.transitDurationMinutes != null && stage.transitDurationMinutes! > 0)
+                    _buildTransitTimelineItem(
+                      stage.transitDistanceKm ?? 0.0,
+                      stage.transitDurationMinutes ?? 0,
+                      plan.theme,
+                      _transportation,
+                    ),
+                ],
+              );
             },
           ),
 
           // Plan Ending Card
           _buildEndingQuoteCard(plan),
-          const SizedBox(height: 24),
+          
+          if (plan.googleMapsRouteUrl != null && plan.googleMapsRouteUrl!.isNotEmpty) ...[
+            ElevatedButton.icon(
+              onPressed: () async {
+                final url = Uri.parse(plan.googleMapsRouteUrl!);
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                }
+              },
+              icon: const Icon(Icons.map, size: 20),
+              label: Text(
+                'MỞ BẢN ĐỒ TOÀN LỘ TRÌNH',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B5CF6),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                minimumSize: const Size.fromHeight(56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 2,
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
 
           // Action buttons
           Row(
@@ -1270,6 +1314,8 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                                 fontWeight: FontWeight.bold,
                                 color: theme.dark,
                               ),
+                              maxLines: 2,
+                              softWrap: true,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -1333,40 +1379,58 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                               style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: theme.dark),
                             ),
                             const SizedBox(height: 6),
-                            ...stage.options.map((opt) => Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: theme.primary.withValues(alpha: 0.3)),
+                            _buildLocationCard(stage.options.first, theme, isBackup: false),
+                            
+                            if (stage.options.length > 1) ...[
+                              const SizedBox(height: 4),
+                              InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    if (_expandedStageBackups.contains(stage.stageNum)) {
+                                      _expandedStageBackups.remove(stage.stageNum);
+                                    } else {
+                                      _expandedStageBackups.add(stage.stageNum);
+                                    }
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.assistant_navigation, size: 16, color: theme.accent),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            "Lựa chọn dự phòng khác (${stage.options.length - 1})",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: theme.accent,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Icon(
+                                        _expandedStageBackups.contains(stage.stageNum)
+                                          ? Icons.keyboard_arrow_up
+                                          : Icons.keyboard_arrow_down,
+                                        size: 18,
+                                        color: theme.accent,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(opt.name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
-                                  const SizedBox(height: 4),
-                                  Text(opt.address, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[700])),
-                                  const SizedBox(height: 8),
-                                  ElevatedButton.icon(
-                                    onPressed: () async {
-                                      final url = Uri.parse(opt.mapsUrl);
-                                      if (await canLaunchUrl(url)) {
-                                        await launchUrl(url);
-                                      }
-                                    },
-                                    icon: const Icon(Icons.map, size: 16),
-                                    label: const Text('Mở bản đồ'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: theme.primary,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      minimumSize: Size.zero,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            )),
+                              if (_expandedStageBackups.contains(stage.stageNum)) ...[
+                                const SizedBox(height: 8),
+                                ...stage.options.skip(1).map(
+                                  (opt) => _buildLocationCard(opt, theme, isBackup: true)
+                                ),
+                              ],
+                            ],
                           ],
 
                           // Tips
@@ -1406,6 +1470,202 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationCard(LocationOption opt, ActivityTheme theme, {bool isBackup = false}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isBackup 
+            ? Colors.grey.withValues(alpha: 0.3)
+            : theme.primary.withValues(alpha: 0.3)
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            ),
+            child: (opt.thumbnailUrl != null && opt.thumbnailUrl!.isNotEmpty)
+              ? Image.network(
+                  opt.thumbnailUrl!,
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      height: 150,
+                      color: const Color(0xFFF3F4F6),
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8B5CF6)),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 150,
+                    color: const Color(0xFFF3F4F6),
+                    child: Center(
+                      child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey[400]),
+                    ),
+                  ),
+                )
+              : Container(
+                  height: 150,
+                  color: const Color(0xFFF3F4F6),
+                  child: Center(
+                    child: Icon(Icons.image, size: 40, color: Colors.grey[400]),
+                  ),
+                ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isBackup) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "LỰA CHỌN DỰ PHÒNG",
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.grey[700],
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Text(opt.name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 4),
+                Text(
+                  opt.address.isNotEmpty ? opt.address : "Khu vực trung tâm, Hồ Chí Minh",
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.sell, color: theme.accent, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      "Khoảng giá: ${opt.priceLevel != null && opt.priceLevel!.isNotEmpty ? opt.priceLevel : 'Chưa cập nhật'}",
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[800]),
+                    ),
+                  ],
+                ),
+                if (opt.rating != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${opt.rating} (${opt.ratingCount ?? 0} đánh giá)",
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[800]),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final url = Uri.parse(opt.mapsUrl);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url);
+                    }
+                  },
+                  icon: const Icon(Icons.map, size: 16),
+                  label: const Text('Mở bản đồ'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isBackup ? Colors.grey[700] : theme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransitTimelineItem(double distance, int duration, ActivityTheme theme, String transport) {
+    String transportEmoji = "🏍️";
+    if (transport == "walking") transportEmoji = "🚶";
+    else if (transport == "taxi") transportEmoji = "🚖";
+    
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 32,
+            child: Center(
+              child: Container(
+                width: 2,
+                color: theme.primary.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: theme.light.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.primary.withValues(alpha: 0.15)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(transportEmoji, style: const TextStyle(fontSize: 14)),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Di chuyển: ~ ${distance.toStringAsFixed(1)} km (~$duration phút)",
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: theme.dark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

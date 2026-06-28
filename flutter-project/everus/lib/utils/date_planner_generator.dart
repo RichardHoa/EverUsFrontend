@@ -11,6 +11,10 @@ class LocationOption {
   final double? rating;
   final int? ratingCount;
   final String mapsUrl;
+  final String? thumbnailUrl;
+  final double? latitude;
+  final double? longitude;
+  final String? priceLevel;
 
   const LocationOption({
     required this.name,
@@ -18,6 +22,10 @@ class LocationOption {
     this.rating,
     this.ratingCount,
     required this.mapsUrl,
+    this.thumbnailUrl,
+    this.latitude,
+    this.longitude,
+    this.priceLevel,
   });
 
   factory LocationOption.fromJson(Map<String, dynamic> json) {
@@ -27,6 +35,10 @@ class LocationOption {
       rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
       ratingCount: json['ratingCount'],
       mapsUrl: json['maps_url'] ?? '',
+      thumbnailUrl: json['thumbnail_url'] ?? json['thumbnailUrl'],
+      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
+      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
+      priceLevel: json['price_level'] ?? json['priceLevel'],
     );
   }
   Map<String, dynamic> toJson() {
@@ -36,6 +48,10 @@ class LocationOption {
       'rating': rating,
       'ratingCount': ratingCount,
       'maps_url': mapsUrl,
+      'thumbnail_url': thumbnailUrl,
+      'latitude': latitude,
+      'longitude': longitude,
+      'price_level': priceLevel,
     };
   }
 }
@@ -51,6 +67,8 @@ class DateStage {
   final List<String> tasks;
   final List<String> tips;
   final List<LocationOption> options;
+  final double? transitDistanceKm;
+  final int? transitDurationMinutes;
 
   const DateStage({
     required this.stageNum,
@@ -63,6 +81,8 @@ class DateStage {
     required this.tasks,
     required this.tips,
     required this.options,
+    this.transitDistanceKm,
+    this.transitDurationMinutes,
   });
 
   factory DateStage.fromJson(Map<String, dynamic> json) {
@@ -71,16 +91,18 @@ class DateStage {
     var tipsList = json['tips'] as List? ?? [];
 
     return DateStage(
-      stageNum: json['stageNum'] ?? 0,
+      stageNum: json['stageNum'] ?? json['stage_num'] ?? 0,
       title: json['title'] ?? '',
       purpose: json['purpose'] ?? '',
       category: json['category'] ?? '',
-      durationMinutes: json['durationMinutes'] ?? 0,
-      startTime: json['startTime'] ?? '',
-      endTime: json['endTime'] ?? '',
+      durationMinutes: json['durationMinutes'] ?? json['duration_minutes'] ?? 0,
+      startTime: json['startTime'] ?? json['start_time'] ?? '',
+      endTime: json['endTime'] ?? json['end_time'] ?? '',
       options: optionsList.map((e) => LocationOption.fromJson(e)).toList(),
       tasks: tasksList.map((e) => e.toString()).toList(),
       tips: tipsList.map((e) => e.toString()).toList(),
+      transitDistanceKm: json['transit_distance_km'] != null ? (json['transit_distance_km'] as num).toDouble() : null,
+      transitDurationMinutes: json['transit_duration_minutes'],
     );
   }
 
@@ -96,6 +118,8 @@ class DateStage {
       'options': options.map((e) => e.toJson()).toList(),
       'tasks': tasks,
       'tips': tips,
+      'transit_distance_km': transitDistanceKm,
+      'transit_duration_minutes': transitDurationMinutes,
     };
   }
 }
@@ -109,6 +133,7 @@ class DatePlan {
   final List<DateStage> stages;
   final String oath;
   final String endingQuote;
+  final String? googleMapsRouteUrl;
 
   const DatePlan({
     required this.dateType,
@@ -119,6 +144,7 @@ class DatePlan {
     required this.stages,
     required this.oath,
     required this.endingQuote,
+    this.googleMapsRouteUrl,
   });
 
   factory DatePlan.fromJson(Map<String, dynamic> json) {
@@ -148,6 +174,7 @@ class DatePlan {
       stages: stagesList.map((e) => DateStage.fromJson(e)).toList(),
       oath: json['oath'] ?? '',
       endingQuote: json['endingQuote'] ?? '',
+      googleMapsRouteUrl: json['google_maps_route_url'] ?? json['googleMapsRouteUrl'],
     );
   }
 
@@ -160,11 +187,13 @@ class DatePlan {
       'stages': stages.map((e) => e.toJson()).toList(),
       'oath': oath,
       'endingQuote': endingQuote,
+      'google_maps_route_url': googleMapsRouteUrl,
     };
   }
 }
 
 class DatePlannerInput {
+  final DateTime date;
   final TimeOfDay startTime;
   final double totalDurationHours;
   final String area;
@@ -175,6 +204,7 @@ class DatePlannerInput {
   final List<String> preferences;
 
   const DatePlannerInput({
+    required this.date,
     required this.startTime,
     required this.totalDurationHours,
     required this.area,
@@ -188,7 +218,9 @@ class DatePlannerInput {
   Map<String, dynamic> toJson() {
     final hourStr = startTime.hour.toString().padLeft(2, '0');
     final minStr = startTime.minute.toString().padLeft(2, '0');
+    final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
     return {
+      'date': dateStr,
       'startTime': '$hourStr:$minStr',
       'totalDurationHours': totalDurationHours,
       'area': area,
@@ -249,6 +281,7 @@ class DatePlannerGenerator {
           stages: stagesList.map((e) => DateStage.fromJson(e)).toList(),
           oath: data['oath'] ?? '',
           endingQuote: data['endingQuote'] ?? '',
+          googleMapsRouteUrl: data['google_maps_route_url'] ?? data['googleMapsRouteUrl'],
         );
       } else {
         throw Exception('Failed to generate date plan from server: ${response.statusCode}');

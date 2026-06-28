@@ -57,10 +57,18 @@ git config commit.template d
 ---
 
 ## TODO list
-- [ ] implement price splitting in plan
-   - [ ] when search, add the price to the search, like coffeeshop in district 7 in range 100-200k
-- [ ] get all the places, sort based on suitable pricing, then sort by suitable opening hour, then sort by rating, then return the top 2, this sort is based on the mode of transporation, if the user walks then the closest distance, if the user walks then it's the cloest distance, if by taxi then also close (they want to save money), if they are motorbike then prioritize other things
-- [ ] make it one button to open the whole journey
+
+Regarding the thiết kế hẹn hò, we have some big structural change
+
+Let's say the user input 300k for both, then that's 600k for both people, we need to calculate the price in each location so that all the price add up less than 600k, when use search in the API, use the range so the return json includes priceLevel. we would have 3 search for the APi in 3 stages, first filter out all the places that do not have priceLevel, after that filter out all the place that the openingHours do not match the user chosen hour, from the date of the user we can derive the date of the week, and use that to check if the time is suited for the user, and calculate the time, like if the location of the stage one take 1,5 hours, and user start from 4, then for the second location calculate the time to arrive there + 1,5 hours have passed, do not take the 4. 
+
+next, calculate all the possible combinations and their accumulative distance, if the user walk on feet, then be sure choose the combination with the highest rating possible, but prioritize the overall shortest distance, if user use taxi then we can relax the distance a bit, if there is a higher rating combination, if the user is in motorbike then prioritize the rating, but the distance between each locations can be more than 10km.
+
+Since we do not have access to the google API, just calculate the distance using math, but say approx, since this is very approx distance calculating. 
+
+After all of this work, show the plan to the user, the places, their images, but there is one button at the end, if user click this button then it will open gg maps with 3 locations, like we go from first to last location, with the second location being a stop in the middle. 
+
+Almost forget, if the user choose the mood chill, and if the first stage is the cafe, then search for  chill cafe in district (user choice)
 
 
 search: quán cà phê giá rẻ quận 7
