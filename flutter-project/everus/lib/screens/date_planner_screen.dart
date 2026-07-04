@@ -9,7 +9,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
 class DatePlannerScreen extends StatefulWidget {
   const DatePlannerScreen({super.key});
@@ -25,7 +24,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   double _durationHours = 3.5;
   final TextEditingController _areaController = TextEditingController(text: "");
   int _budgetPerPerson = 250000;
-  String _selectedVibe = 'romantic'; // 'romantic' | 'fun' | 'chill'
+  String _selectedVibe = 'romantic'; // 'romantic' | 'adventure' | 'casual'
   final int _stageCount = 3;
   String _transportation = 'motorbike'; // 'walking' | 'motorbike' | 'taxi'
 
@@ -33,77 +32,22 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   bool _isGenerating = false;
   DatePlan? _generatedPlan;
   DatePlan? _savedPlan;
-  List<Map<String, dynamic>> _backendPlans = [];
-  bool _isLoadingPlans = false;
   final Set<int> _expandedStageBackups = {};
 
   // Vibes metadata
   final Map<String, Map<String, String>> _vibesInfo = {
-    'chill': {'label': 'Bình yên', 'emoji': '🍃', 'desc': 'Trà chiều, góc sách & tâm sự nhẹ nhàng'},
+    'casual': {'label': 'Đời thường', 'emoji': '🍃', 'desc': 'Trà chiều, đi dạo & những điều bình dị'},
     'romantic': {'label': 'Lãng mạn', 'emoji': '💖', 'desc': 'Ánh nến, hoàng hôn & kết nối ngọt ngào'},
-    'fun': {'label': 'Vui vẻ', 'emoji': '⚡', 'desc': 'Trò chơi, đường phố náo nhiệt & tiếng cười'},
+    'adventure': {'label': 'Trải nghiệm', 'emoji': '⚡', 'desc': 'Trò chơi, khám phá & phiêu lưu cùng nhau'},
   };
 
   @override
   void initState() {
     super.initState();
     _loadSavedPlan();
-    AuthHelper.sessionNotifier.addListener(_onAuthStatusChanged);
-    if (AuthHelper.isLoggedIn) {
-      _fetchBackendPlans();
-    }
   }
 
-  void _onAuthStatusChanged() {
-    if (mounted) {
-      if (AuthHelper.isLoggedIn) {
-        _fetchBackendPlans();
-      } else {
-        setState(() {
-          _backendPlans = [];
-        });
-      }
-    }
-  }
 
-  Future<void> _fetchBackendPlans() async {
-    if (!AuthHelper.isLoggedIn) return;
-    setState(() {
-      _isLoadingPlans = true;
-    });
-    try {
-      final token = AuthHelper.currentAccessToken;
-      final response = await http.get(
-        Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-        if (mounted) {
-          setState(() {
-            _backendPlans = List<Map<String, dynamic>>.from(data);
-            _isLoadingPlans = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoadingPlans = false;
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Failed to fetch backend plans: $e");
-      if (mounted) {
-        setState(() {
-          _isLoadingPlans = false;
-        });
-      }
-    }
-  }
 
   void _loadSavedPlan() async {
     try {
@@ -147,7 +91,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
   @override
   void dispose() {
-    AuthHelper.sessionNotifier.removeListener(_onAuthStatusChanged);
     _areaController.dispose();
     super.dispose();
   }
@@ -234,7 +177,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           _generatedPlan = plan;
           _isGenerating = false;
         });
-        _fetchBackendPlans();
       }
     } catch (e) {
       if (mounted) {
@@ -253,7 +195,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     buffer.writeln("⏱️ Tổng thời lượng: ${plan.totalDurationMinutes} phút ($_durationHours tiếng)");
     buffer.writeln("📍 Khu vực: ${_areaController.text}");
     buffer.writeln("🏍️ Phương tiện: ${_transportation == 'walking' ? 'Đi bộ' : _transportation == 'motorbike' ? 'Xe máy' : 'Taxi'}\n");
-    buffer.writeln("📜 Lời thề hẹn hò: \"${plan.oath}\"\n");
+    buffer.writeln("🎯 Mục tiêu buổi hẹn: ${plan.purpose}\n");
     buffer.writeln("-----------------------------------------");
 
     for (var stage in plan.stages) {
@@ -278,7 +220,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
       }
       buffer.writeln("-----------------------------------------");
     }
-    buffer.writeln("\n💬 \"${plan.endingQuote}\"");
     buffer.writeln("👉 Tạo kế hoạch hẹn hò của riêng bạn trên app EverUs!");
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
@@ -1144,8 +1085,8 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Oath Commitment
-          _buildOathCard(plan),
+          // Purpose Card
+          _buildPurposeCard(plan),
           const SizedBox(height: 20),
 
           // Stages List Title
@@ -1187,8 +1128,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             },
           ),
 
-          // Plan Ending Card
-          _buildEndingQuoteCard(plan),
+          const SizedBox(height: 24),
           
           if (plan.googleMapsRouteUrl != null && plan.googleMapsRouteUrl!.isNotEmpty) ...[
             ElevatedButton.icon(
@@ -1338,7 +1278,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     );
   }
 
-  Widget _buildOathCard(DatePlan plan) {
+  Widget _buildPurposeCard(DatePlan plan) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1358,10 +1298,10 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("📜", style: TextStyle(fontSize: 22)),
+              const Text("🎯", style: TextStyle(fontSize: 22)),
               const SizedBox(width: 8),
               Text(
-                "Lời Thề Hẹn Hò",
+                "Mục Tiêu Buổi Hẹn",
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -1372,11 +1312,11 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            '"${plan.oath}"',
+            plan.purpose,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 13,
-              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w500,
               color: const Color(0xFF4B5563),
               height: 1.5,
             ),
@@ -1860,34 +1800,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     return _InteractiveTaskWidget(task: task, theme: theme);
   }
 
-  Widget _buildEndingQuoteCard(DatePlan plan) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: plan.theme.light.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: plan.theme.primary.withValues(alpha: 0.15)),
-      ),
-      child: Column(
-        children: [
-          const Text("💬", style: TextStyle(fontSize: 32)),
-          const SizedBox(height: 8),
-          Text(
-            plan.endingQuote,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: plan.theme.dark,
-              fontStyle: FontStyle.italic,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Ending quote card removed.
 }
 
 // Statefull widget for tasks checklist to support checking off tasks interactively

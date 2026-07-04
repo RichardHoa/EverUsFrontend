@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/activity.dart';
 import 'auth_helper.dart';
 
@@ -132,8 +130,7 @@ class DatePlan {
   final int totalDurationMinutes;
   final ActivityTheme theme;
   final List<DateStage> stages;
-  final String oath;
-  final String endingQuote;
+  final String purpose;
   final String? googleMapsRouteUrl;
 
   const DatePlan({
@@ -143,8 +140,7 @@ class DatePlan {
     required this.totalDurationMinutes,
     required this.theme,
     required this.stages,
-    required this.oath,
-    required this.endingQuote,
+    required this.purpose,
     this.googleMapsRouteUrl,
   });
 
@@ -158,9 +154,11 @@ class DatePlan {
         theme = ActivityTheme.fromHex(primary: '#EC4899', secondary: '#F43F5E', accent: '#DB2777', light: '#FFF1F2', dark: '#9D174D');
         break;
       case 'fun':
+      case 'adventure':
         theme = ActivityTheme.fromHex(primary: '#F97316', secondary: '#FBBF24', accent: '#EA580C', light: '#FFF7ED', dark: '#7C2D12');
         break;
       case 'chill':
+      case 'casual':
       default:
         theme = ActivityTheme.fromHex(primary: '#0D9488', secondary: '#2DD4BF', accent: '#0F766E', light: '#F0FDFA', dark: '#115E59');
         break;
@@ -168,13 +166,12 @@ class DatePlan {
 
     return DatePlan(
       dateType: json['dateType'] ?? '',
-      vibe: json['vibe'] ?? 'quiet',
+      vibe: json['vibe'] ?? 'casual',
       emoji: json['emoji'] ?? '📅',
       totalDurationMinutes: json['totalDurationMinutes'] ?? 0,
       theme: theme,
       stages: stagesList.map((e) => DateStage.fromJson(e)).toList(),
-      oath: json['oath'] ?? '',
-      endingQuote: json['endingQuote'] ?? '',
+      purpose: json['purpose'] ?? '',
       googleMapsRouteUrl: json['google_maps_route_url'] ?? json['googleMapsRouteUrl'],
     );
   }
@@ -186,8 +183,7 @@ class DatePlan {
       'emoji': emoji,
       'totalDurationMinutes': totalDurationMinutes,
       'stages': stages.map((e) => e.toJson()).toList(),
-      'oath': oath,
-      'endingQuote': endingQuote,
+      'purpose': purpose,
       'google_maps_route_url': googleMapsRouteUrl,
     };
   }
@@ -260,9 +256,11 @@ class DatePlannerGenerator {
             theme = ActivityTheme.fromHex(primary: '#EC4899', secondary: '#F43F5E', accent: '#DB2777', light: '#FFF1F2', dark: '#9D174D');
             break;
           case 'fun':
+          case 'adventure':
             theme = ActivityTheme.fromHex(primary: '#F97316', secondary: '#FBBF24', accent: '#EA580C', light: '#FFF7ED', dark: '#7C2D12');
             break;
           case 'chill':
+          case 'casual':
           default:
             theme = ActivityTheme.fromHex(primary: '#0D9488', secondary: '#2DD4BF', accent: '#0F766E', light: '#F0FDFA', dark: '#115E59');
             break;
@@ -277,8 +275,7 @@ class DatePlannerGenerator {
           totalDurationMinutes: data['totalDurationMinutes'] ?? 0,
           theme: theme,
           stages: stagesList.map((e) => DateStage.fromJson(e)).toList(),
-          oath: data['oath'] ?? '',
-          endingQuote: data['endingQuote'] ?? '',
+          purpose: data['purpose'] ?? '',
           googleMapsRouteUrl: data['google_maps_route_url'] ?? data['googleMapsRouteUrl'],
         );
       } else {
