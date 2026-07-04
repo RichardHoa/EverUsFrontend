@@ -178,8 +178,10 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
       case 'romantic':
         return const Color(0xFFEC4899); // romantic pink
       case 'fun':
+      case 'adventure':
         return const Color(0xFFF97316); // fun orange
       case 'chill':
+      case 'casual':
       default:
         return const Color(0xFF0D9488); // chill teal
     }
@@ -191,10 +193,21 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
         return 'Lãng mạn';
       case 'fun':
         return 'Sôi nổi';
+      case 'adventure':
+        return 'Trải nghiệm';
+      case 'casual':
+        return 'Đời thường';
       case 'chill':
       default:
         return 'Chill';
     }
+  }
+
+  String _formatBudget(int val) {
+    if (val >= 1000000) {
+      return "${(val / 1000000).toStringAsFixed(1).replaceAll('.0', '')}M VND";
+    }
+    return "${(val / 1000).toStringAsFixed(0)}K VND";
   }
 
   @override
@@ -355,13 +368,43 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
         final emoji = planData['emoji'] ?? '📅';
         final dateType = planData['dateType'] ?? 'Kế hoạch Hẹn hò';
 
+        // Extract area
+        String displayArea = planData['area']?.toString() ?? '';
+        if (displayArea.isEmpty && planData['stages'] != null && (planData['stages'] as List).isNotEmpty) {
+          try {
+            final stages = planData['stages'] as List;
+            final firstStage = stages.first as Map<String, dynamic>;
+            final options = firstStage['options'] as List;
+            if (options.isNotEmpty) {
+              final firstOption = options.first as Map<String, dynamic>;
+              final address = firstOption['address']?.toString() ?? '';
+              final parts = address.split(',');
+              if (parts.length > 1) {
+                displayArea = parts[parts.length - 2].trim();
+              }
+            }
+          } catch (_) {}
+        }
+
+        // Extract pricing
+        String displayPrice = '';
+        final rawBudget = planData['budgetPerPerson'] ?? planData['budgetTotal'];
+        if (rawBudget != null) {
+          final intVal = int.tryParse(rawBudget.toString());
+          if (intVal != null) {
+            displayPrice = _formatBudget(intVal);
+          }
+        }
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                final plan = DatePlan.fromJson(planData);
+                final Map<String, dynamic> mutableData = Map<String, dynamic>.from(planData);
+                mutableData['id'] = planId;
+                final plan = DatePlan.fromJson(mutableData);
                 Navigator.of(context).pop(plan);
               },
               borderRadius: BorderRadius.circular(24),
@@ -391,7 +434,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Ngày: $dateStr',
+                                'Ngày: $dateStr${displayArea.isNotEmpty ? " • $displayArea" : ""}${displayPrice.isNotEmpty ? " • $displayPrice" : ""}',
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   color: const Color(0xFF6B7280),
@@ -425,15 +468,43 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${planData['stages']?.length ?? 0} chặng',
+                        Text(
+                          '${planData['stages']?.length ?? 0} chặng',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
+                        if (planData['budgetPerPerson'] != null) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.monetization_on_outlined, size: 14, color: Colors.green),
+                          const SizedBox(width: 2),
+                          Text(
+                            _formatBudget(int.parse(planData['budgetPerPerson'].toString())),
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: const Color(0xFF6B7280),
                             ),
                           ),
-                        ),
+                        ],
+                        if (planData['area'] != null && planData['area'].toString().isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.pin_drop_outlined, size: 14, color: Color(0xFF8B5CF6)),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              planData['area'].toString(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: const Color(0xFF6B7280),
+                              ),
+                            ),
+                          ),
+                        ] else ...[
+                          const Spacer(),
+                        ],
                       ],
                     ),
                     if (locsStr.isNotEmpty) ...[

@@ -1,14 +1,19 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/activity.dart';
 import '../utils/date_planner_generator.dart';
 import '../utils/auth_helper.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
 import 'saved_plans_screen.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'create_invite_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'login_screen.dart';
+import 'notifications_screen.dart';
 
 class DatePlannerScreen extends StatefulWidget {
   const DatePlannerScreen({super.key});
@@ -32,7 +37,12 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   bool _isGenerating = false;
   DatePlan? _generatedPlan;
   DatePlan? _savedPlan;
+
+  Timer? _progressTimer;
+  double _progressValue = 0.0;
   final Set<int> _expandedStageBackups = {};
+  String? _existingInviteUrl;
+  List<Map<String, dynamic>> _notifications = [];
 
   // Vibes metadata
   final Map<String, Map<String, String>> _vibesInfo = {
@@ -45,6 +55,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   void initState() {
     super.initState();
     _loadSavedPlan();
+    if (AuthHelper.isLoggedIn) {
+      _fetchNotifications();
+    }
   }
 
 
@@ -91,6 +104,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
   @override
   void dispose() {
+    _progressTimer?.cancel();
     _areaController.dispose();
     super.dispose();
   }
@@ -152,16 +166,75 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     return "$day/$month/$year";
   }
 
+  void _startProgressTimer() {
+    _progressValue = 0.0;
+    _progressTimer?.cancel();
+    
+    // Ticking every 100ms. 25 seconds total = 250 ticks.
+    // Progress increases by 1/250 = 0.004 per tick.
+    const duration = Duration(milliseconds: 100);
+    const totalTime = Duration(seconds: 25);
+    final increment = 1.0 / (totalTime.inMilliseconds / duration.inMilliseconds);
+    
+    _progressTimer = Timer.periodic(duration, (timer) {
+      if (mounted) {
+        setState(() {
+          if (_progressValue < 0.95) {
+            _progressValue += increment;
+          } else if (_progressValue < 0.99) {
+            // Slow down near 100%
+            _progressValue += 0.001;
+          }
+        });
+      }
+    });
+  }
+
+  Future<void> _completeProgress() async {
+    _progressTimer?.cancel();
+    
+    // Smooth rapid fast-forward to 100%
+    const steps = 10;
+    final remaining = 1.0 - _progressValue;
+    final stepVal = remaining / steps;
+    
+    for (int i = 0; i < steps; i++) {
+      await Future.delayed(const Duration(milliseconds: 30));
+      if (mounted) {
+        setState(() {
+          _progressValue = (_progressValue + stepVal).clamp(0.0, 1.0);
+        });
+      }
+    }
+    
+    // Brief pause at 100%
+    await Future.delayed(const Duration(milliseconds: 200));
+  }
+
   void _generatePlan() async {
+    final areaText = _areaController.text.trim();
+    if (areaText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng nhập khu vực muốn hẹn hò!'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isGenerating = true;
+      _progressValue = 0.0;
     });
+
+    _startProgressTimer();
 
     final input = DatePlannerInput(
       date: _selectedDate,
       startTime: _startTime,
       totalDurationHours: _durationHours,
-      area: _areaController.text.trim().isEmpty ? "Quận 1" : _areaController.text.trim(),
+      area: areaText,
       budgetPerPerson: _budgetPerPerson,
       vibe: _selectedVibe,
       stageCount: _stageCount,
@@ -171,14 +244,19 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
     try {
       final plan = await DatePlannerGenerator.generate(input);
+      
+      // Accelerate progress to 100%
+      await _completeProgress();
+      
       if (mounted) {
         _savePlan(plan);
         setState(() {
-          _generatedPlan = plan;
           _isGenerating = false;
         });
+        _setGeneratedPlan(plan);
       }
     } catch (e) {
+      _progressTimer?.cancel();
       if (mounted) {
         setState(() {
           _isGenerating = false;
@@ -192,7 +270,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     final buffer = StringBuffer();
     buffer.writeln("✨ KẾ HOẠCH HẸN HÒ: ${plan.dateType} ${plan.emoji} ✨");
     buffer.writeln("📅 Ngày hẹn: ${_formatDate(_selectedDate)}");
-    buffer.writeln("⏱️ Tổng thời lượng: ${plan.totalDurationMinutes} phút ($_durationHours tiếng)");
+    buffer.writeln("⏱️ Tổng thời lượng: ${plan.totalDurationMinutes} phút (~${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)} tiếng)");
     buffer.writeln("📍 Khu vực: ${_areaController.text}");
     buffer.writeln("🏍️ Phương tiện: ${_transportation == 'walking' ? 'Đi bộ' : _transportation == 'motorbike' ? 'Xe máy' : 'Taxi'}\n");
     buffer.writeln("🎯 Mục tiêu buổi hẹn: ${plan.purpose}\n");
@@ -341,34 +419,58 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             ),
             const SizedBox(width: 8),
           ],
-          if (AuthHelper.isLoggedIn)
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+          if (AuthHelper.isLoggedIn) ...[
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.history, color: Color(0xFF8B5CF6)),
-                onPressed: () async {
-                  final selectedPlan = await Navigator.push<DatePlan>(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
-                  );
-                  if (selectedPlan != null) {
-                    setState(() {
-                      _generatedPlan = selectedPlan;
-                    });
-                  }
-                },
-              ),
+                  child: IconButton(
+                    icon: Icon(
+                      _notifications.any((n) => n['is_read'] == false)
+                          ? Icons.notifications_active_outlined
+                          : Icons.notifications_none_outlined,
+                      color: const Color(0xFFEC4899),
+                    ),
+                    onPressed: () async {
+                      final selectedPlan = await Navigator.push<DatePlan>(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                      );
+                      if (selectedPlan != null) {
+                        _setGeneratedPlan(selectedPlan);
+                      } else {
+                        _fetchNotifications();
+                      }
+                    },
+                  ),
+                ),
+                if (_notifications.any((n) => n['is_read'] == false))
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
             ),
+          ],
         ],
       ),
     );
@@ -426,13 +528,29 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
-            const SizedBox(
-              width: 140,
-              child: LinearProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
-                backgroundColor: Color(0xFFE5E7EB),
-                borderRadius: BorderRadius.all(Radius.circular(4)),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 280),
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: _progressValue,
+                      minHeight: 8,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                      backgroundColor: const Color(0xFFE5E7EB),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '${(_progressValue * 100).toInt()}%',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF8B5CF6),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -624,7 +742,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    "Lưu ý: Bạn vui lòng điền cụ thể Quận/Huyện và Tỉnh/Thành phố (với càng nhiều chi tiết càng tốt) để EverUs định vị và lên lộ trình chính xác nhất.",
+                    "Lưu ý: EverUs hiện tại hỗ trợ tốt nhất các địa điểm thuộc khu vực TP. Hồ Chí Minh. Vui lòng nhập khu vực để tụi mình lên lộ trình chính xác nhất nhé!",
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       color: const Color(0xFF7C7289),
@@ -806,47 +924,42 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           ),
           const SizedBox(height: 28),
 
-          // View Saved Plan Button
           if (AuthHelper.isLoggedIn) ...[
-            OutlinedButton.icon(
-              onPressed: () async {
-                final selectedPlan = await Navigator.push<DatePlan>(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
-                );
-                if (selectedPlan != null) {
-                  setState(() {
-                    _generatedPlan = selectedPlan;
-                  });
-                }
-              },
-              icon: const Icon(Icons.history),
-              label: const Text('Xem kế hoạch trước đây'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF8B5CF6),
-                side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+            Center(
+              child: TextButton.icon(
+                onPressed: () async {
+                  final selectedPlan = await Navigator.push<DatePlan>(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
+                  );
+                  if (selectedPlan != null) {
+                    _setGeneratedPlan(selectedPlan);
+                  }
+                },
+                icon: const Icon(Icons.history, color: Color(0xFF8B5CF6), size: 18),
+                label: Text(
+                  'Xem kế hoạch trước đây',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF8B5CF6),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
           ] else if (_savedPlan != null) ...[
-            OutlinedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _generatedPlan = _savedPlan;
-                });
-              },
-              icon: const Icon(Icons.history),
-              label: const Text('Xem lại kế hoạch gần nhất'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF8B5CF6),
-                side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+            Center(
+              child: TextButton.icon(
+                onPressed: () {
+                  _setGeneratedPlan(_savedPlan);
+                },
+                icon: const Icon(Icons.history, color: Color(0xFF8B5CF6), size: 18),
+                label: Text(
+                  'Xem lại kế hoạch gần nhất',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF8B5CF6),
+                  ),
                 ),
               ),
             ),
@@ -1072,11 +1185,11 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                     ),
                     _buildResultMetaBadge(
                       icon: Icons.timer_outlined,
-                      label: "${plan.totalDurationMinutes} phút (~${_durationHours.toStringAsFixed(1)}h)",
+                      label: "${plan.totalDurationMinutes} phút (~${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)}h)",
                     ),
                     _buildResultMetaBadge(
                       icon: Icons.location_on_outlined,
-                      label: _areaController.text.trim().isEmpty ? "Khu vực tự do" : _areaController.text.trim(),
+                      label: (plan.area != null && plan.area!.isNotEmpty) ? plan.area! : (_areaController.text.trim().isEmpty ? "Khu vực tự do" : _areaController.text.trim()),
                     ),
                   ],
                 ),
@@ -1214,6 +1327,128 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
               ),
             ],
           ),
+          // Spacer for invite button/container
+          const SizedBox(height: 24),
+
+          if (AuthHelper.isLoggedIn && _existingInviteUrl != null) ...[
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: plan.theme.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: plan.theme.primary.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.mail_outline, color: plan.theme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Đã tạo thư mời hẹn hò 💖",
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: plan.theme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _existingInviteUrl!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.copy, size: 18),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: _existingInviteUrl!));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Đã sao chép liên kết lời mời!')),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            ElevatedButton.icon(
+              onPressed: () async {
+                if (!AuthHelper.isLoggedIn) {
+                  final loggedIn = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(isProfileMode: false),
+                    ),
+                  );
+                  if (!mounted) return;
+                  if (loggedIn == true || AuthHelper.isLoggedIn) {
+                    _fetchNotifications();
+                    setState(() {});
+                  } else {
+                    return;
+                  }
+                }
+                
+                String activityKey = 'traveler';
+                if (plan.vibe == 'romantic') {
+                  activityKey = 'cooking';
+                } else if (plan.vibe == 'adventure') {
+                  activityKey = 'mapper';
+                }
+                final newInviteUrl = await Navigator.push<String>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateInviteScreen(
+                      activityKey: activityKey,
+                      activityName: plan.dateType,
+                      initialDate: _selectedDate,
+                      initialTime: "${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}",
+                      initialLocation: _areaController.text.trim().isEmpty ? "Quận 1" : _areaController.text.trim(),
+                      duration: "~${_durationHours.toStringAsFixed(1)} giờ",
+                      primaryColor: plan.theme.primary,
+                      secondaryColor: plan.theme.secondary,
+                      planId: plan.id,
+                    ),
+                  ),
+                );
+                if (newInviteUrl != null) {
+                  setState(() {
+                    _existingInviteUrl = newInviteUrl;
+                  });
+                }
+              },
+              icon: const Icon(Icons.mail_outline, size: 20),
+              label: Text(
+                'GỬI LỜI MỜI HẸN HÒ',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: plan.theme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                minimumSize: const Size.fromHeight(56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 2,
+              ),
+            ),
+          ],
           if (AuthHelper.isLoggedIn) ...[
             const SizedBox(height: 16),
             OutlinedButton.icon(
@@ -1223,9 +1458,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
                 );
                 if (selectedPlan != null) {
-                  setState(() {
-                    _generatedPlan = selectedPlan;
-                  });
+                  _setGeneratedPlan(selectedPlan);
                 }
               },
               icon: const Icon(Icons.history, color: Color(0xFF8B5CF6)),
@@ -1800,7 +2033,187 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     return _InteractiveTaskWidget(task: task, theme: theme);
   }
 
-  // Ending quote card removed.
+  void _checkExistingInvitation(String planId) async {
+    if (!AuthHelper.isLoggedIn) return;
+    setState(() {
+      _existingInviteUrl = null;
+    });
+    final client = HttpClient();
+    try {
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/invitations/by-plan/$planId');
+      final request = await client.getUrl(uri);
+      final token = AuthHelper.currentAccessToken;
+      if (token != null) {
+        request.headers.set('Authorization', 'Bearer $token');
+      }
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        final responseBody = await response.transform(utf8.decoder).join();
+        final Map<String, dynamic> data = json.decode(responseBody);
+        if (data['exists'] == true) {
+          setState(() {
+            _existingInviteUrl = data['url'];
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error checking existing invitation: $e");
+    } finally {
+      client.close();
+    }
+  }
+
+  void _setGeneratedPlan(DatePlan? plan) {
+    setState(() {
+      _generatedPlan = plan;
+      _existingInviteUrl = null;
+    });
+    if (plan != null && plan.id != null) {
+      _checkExistingInvitation(plan.id!);
+    }
+  }
+
+  void _fetchNotifications() async {
+    if (!AuthHelper.isLoggedIn) return;
+    final client = HttpClient();
+    try {
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/notifications');
+      final request = await client.getUrl(uri);
+      final token = AuthHelper.currentAccessToken;
+      if (token != null) {
+        request.headers.set('Authorization', 'Bearer $token');
+      }
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        final responseBody = await response.transform(utf8.decoder).join();
+        final List<dynamic> data = json.decode(responseBody);
+        final newNotifs = List<Map<String, dynamic>>.from(data);
+        if (mounted) {
+          setState(() {
+            _notifications = newNotifs;
+          });
+          final unread = newNotifs.firstWhere(
+            (n) => n['is_read'] == false,
+            orElse: () => {},
+          );
+          if (unread.isNotEmpty) {
+            _showNotificationDialog(unread);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching notifications: $e");
+    } finally {
+      client.close();
+    }
+  }
+
+  void _markNotificationAsRead(String notifId) async {
+    final client = HttpClient();
+    try {
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/notifications/$notifId/read');
+      final request = await client.postUrl(uri);
+      final token = AuthHelper.currentAccessToken;
+      if (token != null) {
+        request.headers.set('Authorization', 'Bearer $token');
+      }
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        _fetchNotifications();
+      }
+    } catch (e) {
+      debugPrint("Error marking notification as read: $e");
+    } finally {
+      client.close();
+    }
+  }
+
+  void _showNotificationDialog(Map<String, dynamic> notif) {
+    final notifId = notif['id'] as String;
+    final planId = notif['plan_id'] as String?;
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.favorite, color: Colors.red, size: 28),
+              const SizedBox(width: 8),
+              Expanded(child: Text(notif['title'] ?? 'Thông báo')),
+            ],
+          ),
+          content: Text(notif['message'] ?? 'Buổi hẹn đã được chấp nhận.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _markNotificationAsRead(notifId);
+              },
+              child: const Text('Đóng'),
+            ),
+            if (planId != null)
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  _markNotificationAsRead(notifId);
+                  _loadAndDirectToPlan(planId);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEC4899),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Xem kế hoạch ➔', style: TextStyle(color: Colors.white)),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _loadAndDirectToPlan(String planId) async {
+    setState(() {
+      _isGenerating = true;
+    });
+    final client = HttpClient();
+    try {
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans/$planId');
+      final request = await client.getUrl(uri);
+      final token = AuthHelper.currentAccessToken;
+      if (token != null) {
+        request.headers.set('Authorization', 'Bearer $token');
+      }
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        final responseBody = await response.transform(utf8.decoder).join();
+        final Map<String, dynamic> data = json.decode(responseBody);
+        final planData = data['plan_data'] ?? {};
+        final Map<String, dynamic> mutableData = Map<String, dynamic>.from(planData);
+        mutableData['id'] = planId;
+        final plan = DatePlan.fromJson(mutableData);
+        _setGeneratedPlan(plan);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không thể tải kế hoạch hẹn hò này.')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error directing to plan: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi tải kế hoạch: $e')),
+        );
+      }
+    } finally {
+      client.close();
+      setState(() {
+        _isGenerating = false;
+      });
+    }
+  }
 }
 
 // Statefull widget for tasks checklist to support checking off tasks interactively
@@ -1851,3 +2264,4 @@ class _InteractiveTaskWidgetState extends State<_InteractiveTaskWidget> {
     );
   }
 }
+

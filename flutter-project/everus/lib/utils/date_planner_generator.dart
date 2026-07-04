@@ -124,6 +124,7 @@ class DateStage {
 }
 
 class DatePlan {
+  final String? id;
   final String dateType;
   final String vibe;
   final String emoji;
@@ -132,8 +133,11 @@ class DatePlan {
   final List<DateStage> stages;
   final String purpose;
   final String? googleMapsRouteUrl;
+  final int? budgetPerPerson;
+  final String? area;
 
   const DatePlan({
+    this.id,
     required this.dateType,
     required this.vibe,
     required this.emoji,
@@ -142,6 +146,8 @@ class DatePlan {
     required this.stages,
     required this.purpose,
     this.googleMapsRouteUrl,
+    this.budgetPerPerson,
+    this.area,
   });
 
   factory DatePlan.fromJson(Map<String, dynamic> json) {
@@ -165,6 +171,7 @@ class DatePlan {
     }
 
     return DatePlan(
+      id: json['id']?.toString(),
       dateType: json['dateType'] ?? '',
       vibe: json['vibe'] ?? 'casual',
       emoji: json['emoji'] ?? '📅',
@@ -173,11 +180,14 @@ class DatePlan {
       stages: stagesList.map((e) => DateStage.fromJson(e)).toList(),
       purpose: json['purpose'] ?? '',
       googleMapsRouteUrl: json['google_maps_route_url'] ?? json['googleMapsRouteUrl'],
+      budgetPerPerson: json['budgetPerPerson'] != null ? int.tryParse(json['budgetPerPerson'].toString()) : null,
+      area: json['area']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'dateType': dateType,
       'vibe': vibe,
       'emoji': emoji,
@@ -185,6 +195,8 @@ class DatePlan {
       'stages': stages.map((e) => e.toJson()).toList(),
       'purpose': purpose,
       'google_maps_route_url': googleMapsRouteUrl,
+      'budgetPerPerson': budgetPerPerson,
+      'area': area,
     };
   }
 }
@@ -269,6 +281,7 @@ class DatePlannerGenerator {
         var stagesList = data['stages'] as List? ?? [];
         
         return DatePlan(
+          id: data['id']?.toString(),
           dateType: data['dateType'] ?? 'Kế hoạch Hẹn hò',
           vibe: input.vibe,
           emoji: data['emoji'] ?? '📅',
