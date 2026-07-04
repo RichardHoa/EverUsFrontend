@@ -235,15 +235,7 @@ class DatePlannerInput {
 }
 
 class DatePlannerGenerator {
-  static String get apiUrl {
-    if (kIsWeb) {
-      return 'http://127.0.0.1:8009/api/date-planner/generate';
-    } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8009/api/date-planner/generate';
-    } else {
-      return 'http://127.0.0.1:8009/api/date-planner/generate';
-    }
-  }
+  static String get apiUrl => '${AuthHelper.baseUrl}/api/date-planner/generate';
 
   static Future<DatePlan> generate(DatePlannerInput input) async {
     try {

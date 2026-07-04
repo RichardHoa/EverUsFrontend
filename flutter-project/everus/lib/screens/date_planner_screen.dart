@@ -4,6 +4,7 @@ import '../models/activity.dart';
 import '../utils/date_planner_generator.dart';
 import '../utils/auth_helper.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
+import 'saved_plans_screen.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -379,7 +380,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             ),
           ),
           const Spacer(),
-          if (isViewingResult)
+          if (isViewingResult) ...[
             Container(
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.8),
@@ -395,6 +396,36 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
               child: IconButton(
                 icon: const Icon(Icons.share_outlined, color: Color(0xFFEC4899)),
                 onPressed: () => _sharePlanText(_generatedPlan!),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          if (AuthHelper.isLoggedIn)
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.8),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.history, color: Color(0xFF8B5CF6)),
+                onPressed: () async {
+                  final selectedPlan = await Navigator.push<DatePlan>(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
+                  );
+                  if (selectedPlan != null) {
+                    setState(() {
+                      _generatedPlan = selectedPlan;
+                    });
+                  }
+                },
               ),
             ),
         ],
@@ -479,9 +510,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           // Header Card
           _buildFormHeaderCard(),
           const SizedBox(height: 16),
-
-          // Saved Plans Dropdown
-          _buildSavedPlansDropdown(),
 
           // Section 1: Thời gian & Không gian
           _buildSectionCard(
@@ -838,7 +866,32 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           const SizedBox(height: 28),
 
           // View Saved Plan Button
-          if (_savedPlan != null) ...[
+          if (AuthHelper.isLoggedIn) ...[
+            OutlinedButton.icon(
+              onPressed: () async {
+                final selectedPlan = await Navigator.push<DatePlan>(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
+                );
+                if (selectedPlan != null) {
+                  setState(() {
+                    _generatedPlan = selectedPlan;
+                  });
+                }
+              },
+              icon: const Icon(Icons.history),
+              label: const Text('Xem kế hoạch trước đây'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF8B5CF6),
+                side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ] else if (_savedPlan != null) ...[
             OutlinedButton.icon(
               onPressed: () {
                 setState(() {
@@ -991,122 +1044,6 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
       ),
     );
   }
-
-  Widget _buildSavedPlansDropdown() {
-    if (!AuthHelper.isLoggedIn) {
-      return const SizedBox.shrink();
-    }
-    if (_isLoadingPlans) {
-      return const GlassCard(
-        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        child: Center(
-          child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
-        ),
-      );
-    }
-    if (_backendPlans.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GlassCard(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            "📅 Kế Hoạch Hẹn Hò Đã Lưu",
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF374151),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                hint: Text(
-                  "Chọn kế hoạch để xem lại...",
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: const Color(0xFF9CA3AF),
-                  ),
-                ),
-                icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF8B5CF6)),
-                dropdownColor: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                items: _backendPlans.map((planMap) {
-                  final String dateStr = planMap['date'] ?? '';
-                  final List<dynamic> locs = planMap['locations'] ?? [];
-                  final String locsStr = locs.join(' ➔ ');
-                  final planData = planMap['plan_data'] ?? {};
-                  final emoji = planData['emoji'] ?? '📅';
-                  
-                  return DropdownMenuItem<String>(
-                    value: planMap['id'],
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                "$emoji Ngày $dateStr",
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF1F2937),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (locsStr.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              locsStr,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: const Color(0xFF6B7280),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (String? planId) {
-                  if (planId != null) {
-                    final selectedPlanMap = _backendPlans.firstWhere((p) => p['id'] == planId);
-                    final planData = selectedPlanMap['plan_data'];
-                    if (planData != null) {
-                      setState(() {
-                        _generatedPlan = DatePlan.fromJson(planData);
-                      });
-                    }
-                  }
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
 
   Widget _buildSectionCard({required String title, required List<Widget> children}) {
     return GlassCard(
@@ -1337,6 +1274,39 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
               ),
             ],
           ),
+          if (AuthHelper.isLoggedIn) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () async {
+                final selectedPlan = await Navigator.push<DatePlan>(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
+                );
+                if (selectedPlan != null) {
+                  setState(() {
+                    _generatedPlan = selectedPlan;
+                  });
+                }
+              },
+              icon: const Icon(Icons.history, color: Color(0xFF8B5CF6)),
+              label: Text(
+                'XEM KẾ HOẠCH TRƯỚC ĐÂY',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF8B5CF6),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                minimumSize: const Size.fromHeight(56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 48),
         ],
       ),
@@ -1800,8 +1770,11 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
   Widget _buildTransitTimelineItem(double distance, int duration, ActivityTheme theme, String transport) {
     String transportEmoji = "🏍️";
-    if (transport == "walking") transportEmoji = "🚶";
-    else if (transport == "taxi") transportEmoji = "🚖";
+    if (transport == "walking") {
+      transportEmoji = "🚶";
+    } else if (transport == "taxi") {
+      transportEmoji = "🚖";
+    }
     
     return IntrinsicHeight(
       child: Row(
