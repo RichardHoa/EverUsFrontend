@@ -7,9 +7,11 @@ import 'widgets/activity_flow.dart';
 import 'screens/login_screen.dart';
 import 'screens/landing_screen.dart';
 import 'utils/auth_helper.dart';
+import 'widgets/everus_footer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AuthHelper.initializeSession();
   runApp(const EverUsApp());
 }
 
@@ -141,6 +143,7 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
         }
       },
       child: Scaffold(
+        extendBody: true,
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -187,45 +190,11 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
                       ),
                     ),
                   ),
-                // Only show Profile account icon when we are on the main matcher page
-                if (_currentPage == 'matcher')
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 8,
-                    right: 16,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.account_circle_outlined,
-                          color: Color(0xFF8B5CF6),
-                          size: 28,
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(
-                                isProfileMode: true,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
         ),
+        bottomNavigationBar: const EverUsFooter(currentTab: 'other'),
       ),
     );
   }

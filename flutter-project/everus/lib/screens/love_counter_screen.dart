@@ -5,9 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utils/love_counter_helper.dart';
 import '../widgets/heart_mascot.dart';
+import '../widgets/everus_footer.dart';
 
 class LoveCounterScreen extends StatefulWidget {
-  const LoveCounterScreen({super.key});
+  final bool isForceSetup;
+  const LoveCounterScreen({super.key, this.isForceSetup = false});
 
   @override
   State<LoveCounterScreen> createState() => _LoveCounterScreenState();
@@ -33,7 +35,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
 
   // Live calculation
   Timer? _timer;
-  Duration _elapsed = Duration.zero;
+  late final ValueNotifier<Duration> _elapsedNotifier;
 
   // Setup form fields
   final _formKey = GlobalKey<FormState>();
@@ -50,6 +52,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
   @override
   void initState() {
     super.initState();
+    _elapsedNotifier = ValueNotifier<Duration>(Duration.zero);
     _loadSettings();
 
     // Pulse animation for the heart icon between profile pictures
@@ -69,6 +72,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     _pulseController.dispose();
     _userController.dispose();
     _loverController.dispose();
+    _elapsedNotifier.dispose();
     super.dispose();
   }
 
@@ -97,7 +101,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         _useDetailedView = data['useDetailedView'];
 
         if (_isSetup && _anniversaryDate != null) {
-          _elapsed = DateTime.now().difference(_anniversaryDate!);
+          _elapsedNotifier.value = DateTime.now().difference(_anniversaryDate!);
           _startTimer();
         } else {
           // Defaults for setup
@@ -118,16 +122,12 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
       if (mounted && _anniversaryDate != null) {
         final newElapsed = DateTime.now().difference(_anniversaryDate!);
         if (_useDetailedView) {
-          setState(() {
-            _elapsed = newElapsed;
-          });
+          _elapsedNotifier.value = newElapsed;
         } else {
           // If detailed view is not active, only update state if the days count actually changes.
           // This saves significant CPU cycles and prevents unnecessary 1-second interval rebuilds.
-          if (newElapsed.inDays != _elapsed.inDays) {
-            setState(() {
-              _elapsed = newElapsed;
-            });
+          if (newElapsed.inDays != _elapsedNotifier.value.inDays) {
+            _elapsedNotifier.value = newElapsed;
           }
         }
       }
@@ -175,7 +175,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                     label: 'Thư viện',
                     onTap: () async {
                       Navigator.pop(context);
-                      final path = await LoveCounterHelper.pickAndSaveImage(ImageSource.gallery);
+                      final path = await LoveCounterHelper.pickAndSaveImage(
+                        ImageSource.gallery,
+                        targetKey == 'user' ? _setupUserImagePath : _setupLoverImagePath,
+                      );
                       if (path != null) {
                         final exists = await File(path).exists();
                         setState(() {
@@ -197,7 +200,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                     label: 'Máy ảnh',
                     onTap: () async {
                       Navigator.pop(context);
-                      final path = await LoveCounterHelper.pickAndSaveImage(ImageSource.camera);
+                      final path = await LoveCounterHelper.pickAndSaveImage(
+                        ImageSource.camera,
+                        targetKey == 'user' ? _setupUserImagePath : _setupLoverImagePath,
+                      );
                       if (path != null) {
                         final exists = await File(path).exists();
                         setState(() {
@@ -316,7 +322,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         _loverImageExists = loverExists;
         _userFile = userExists ? File(_setupUserImagePath!) : null;
         _loverFile = loverExists ? File(_setupLoverImagePath!) : null;
-        _elapsed = DateTime.now().difference(_anniversaryDate!);
+        _elapsedNotifier.value = DateTime.now().difference(_anniversaryDate!);
         _isSetup = true;
       });
 
@@ -347,28 +353,44 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
       );
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFFFFF5F5), // ultra-light pink
-              Colors.white,
-              Color(0xFFFAF5FF), // ultra-light purple
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return PopScope<Object?>(
+      canPop: _isSetup,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) return;
+        if (!_isSetup) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Vui lòng hoàn thành thiết lập để tiếp tục! 💖'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        extendBody: true,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFFFF5F5), // ultra-light pink
+                Colors.white,
+                Color(0xFFFAF5FF), // ultra-light purple
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: _isSetup ? _buildDashboardView() : _buildSetupView(),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: _isSetup ? _buildDashboardView() : _buildSetupView(),
+              ),
             ),
           ),
         ),
+        bottomNavigationBar: _isSetup ? const EverUsFooter(currentTab: 'other') : null,
       ),
     );
   }
@@ -460,87 +482,95 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         const SizedBox(height: 32),
 
         // Glass Counter Card
-        _GlassCard(
-          child: Column(
-            children: [
-              Text(
-                'CHÚNG TA ĐÃ BÊN NHAU ĐƯỢC',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                  color: const Color(0xFF8B5CF6),
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Animated Shader Days text
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ).createShader(bounds),
-                child: Text(
-                  '${_elapsed.inDays}',
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 72,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    height: 1.0,
-                  ),
-                ),
-              ),
-              Text(
-                'NGÀY',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 2.0,
-                  color: const Color(0xFF1F2937),
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-              const Divider(color: Color(0xFFF3E8FF), height: 1),
-              const SizedBox(height: 16),
-
-              // Detailed Toggle Button
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _useDetailedView = !_useDetailedView;
-                  });
-                  LoveCounterHelper.saveUseDetailedView(_useDetailedView);
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _useDetailedView ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                      size: 16,
+        ValueListenableBuilder<Duration>(
+          valueListenable: _elapsedNotifier,
+          builder: (context, elapsed, child) {
+            return _GlassCard(
+              child: Column(
+                children: [
+                  Text(
+                    'CHÚNG TA ĐÃ BÊN NHAU ĐƯỢC',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
                       color: const Color(0xFF8B5CF6),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _useDetailedView ? 'Ẩn chi tiết' : 'Xem chi tiết (Giờ/Phút/Giây)',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF8B5CF6),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Animated Shader Days text
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: Text(
+                      '${elapsed.inDays}',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 72,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1.0,
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                  Text(
+                    'NGÀY',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 2.0,
+                      color: const Color(0xFF1F2937),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  const Divider(color: Color(0xFFF3E8FF), height: 1),
+                  const SizedBox(height: 16),
 
-              if (_useDetailedView) ...[
-                const SizedBox(height: 16),
-                _buildDetailedGrid(),
-              ],
-            ],
-          ),
+                  // Detailed Toggle Button
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _useDetailedView = !_useDetailedView;
+                      });
+                      LoveCounterHelper.saveUseDetailedView(_useDetailedView);
+                      if (_anniversaryDate != null) {
+                        _elapsedNotifier.value = DateTime.now().difference(_anniversaryDate!);
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _useDetailedView ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          size: 16,
+                          color: const Color(0xFF8B5CF6),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _useDetailedView ? 'Ẩn chi tiết' : 'Xem chi tiết (Giờ/Phút/Giây)',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF8B5CF6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  if (_useDetailedView) ...[
+                    const SizedBox(height: 16),
+                    _buildDetailedGrid(elapsed),
+                  ],
+                ],
+              ),
+            );
+          },
         ),
         const SizedBox(height: 32),
       ],
@@ -610,15 +640,15 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     );
   }
 
-  Widget _buildDetailedGrid() {
-    final hours = _elapsed.inHours % 24;
-    final minutes = _elapsed.inMinutes % 60;
-    final seconds = _elapsed.inSeconds % 60;
+  Widget _buildDetailedGrid(Duration elapsed) {
+    final hours = elapsed.inHours % 24;
+    final minutes = elapsed.inMinutes % 60;
+    final seconds = elapsed.inSeconds % 60;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildDetailUnit('${_elapsed.inDays}', 'Ngày'),
+        _buildDetailUnit('${elapsed.inDays}', 'Ngày'),
         _buildDetailUnit('$hours', 'Giờ'),
         _buildDetailUnit('$minutes', 'Phút'),
         _buildDetailUnit('$seconds', 'Giây'),
@@ -673,13 +703,14 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         children: [
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF6B7280)),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
+              if (!widget.isForceSetup)
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFF6B7280)),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 48.0),
+                  padding: EdgeInsets.only(right: widget.isForceSetup ? 0.0 : 48.0),
                   child: Text(
                     'Tạo Bộ Đếm Ngày Yêu',
                     textAlign: TextAlign.center,

@@ -409,6 +409,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
               },
               borderRadius: BorderRadius.circular(24),
               child: GlassCard(
+                enableBlur: false,
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

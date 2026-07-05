@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Defines the application run mode (can only be dev or prod)
 enum AppMode { dev, prod }
@@ -16,7 +17,7 @@ class AuthException implements Exception {
 
 class AuthHelper {
   // Constant to switch application mode
-  static const AppMode mode = AppMode.prod;
+  static const AppMode mode = AppMode.dev;
 
   static const String _prodUrl = 'https://everus.richardhoa.io.vn';
 
@@ -44,6 +45,45 @@ class AuthHelper {
   static String? get currentUserEmail => sessionNotifier.value?['email'] as String?;
 
   static String? get currentAccessToken => sessionNotifier.value?['access_token'] as String?;
+
+  static Future<void> initializeSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionJson = prefs.getString('auth_session');
+      final loginTimeStr = prefs.getString('auth_login_time');
+      if (sessionJson != null && loginTimeStr != null) {
+        final loginTime = DateTime.parse(loginTimeStr);
+        final difference = DateTime.now().difference(loginTime);
+        if (difference.inDays < 14) {
+          sessionNotifier.value = Map<String, dynamic>.from(json.decode(sessionJson));
+        } else {
+          await signOut();
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to initialize session: $e");
+    }
+  }
+
+  static Future<void> _persistSession(Map<String, dynamic> session) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_session', json.encode(session));
+      await prefs.setString('auth_login_time', DateTime.now().toIso8601String());
+    } catch (e) {
+      debugPrint("Failed to persist session: $e");
+    }
+  }
+
+  static Future<void> _clearPersistedSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_session');
+      await prefs.remove('auth_login_time');
+    } catch (e) {
+      debugPrint("Failed to clear persisted session: $e");
+    }
+  }
 
   /// Normalizes signin/signup responses into a unified local session map
   static Map<String, dynamic> _normalizeSession(Map<String, dynamic> data) {
@@ -109,7 +149,9 @@ class AuthHelper {
     });
 
     if (response['session'] != null) {
-      sessionNotifier.value = _normalizeSession(response);
+      final sessionData = _normalizeSession(response);
+      sessionNotifier.value = sessionData;
+      await _persistSession(sessionData);
     }
   }
 
@@ -123,7 +165,9 @@ class AuthHelper {
       'password': password,
     });
 
-    sessionNotifier.value = _normalizeSession(response);
+    final sessionData = _normalizeSession(response);
+    sessionNotifier.value = sessionData;
+    await _persistSession(sessionData);
   }
 
   /// Log out current session
@@ -142,6 +186,7 @@ class AuthHelper {
       // Ignore network errors on signout
     } finally {
       client.close();
+      await _clearPersistedSession();
       sessionNotifier.value = null;
     }
   }
@@ -174,7 +219,9 @@ class AuthHelper {
         'id_token': idToken,
       });
 
-      sessionNotifier.value = _normalizeSession(response);
+      final sessionData = _normalizeSession(response);
+      sessionNotifier.value = sessionData;
+      await _persistSession(sessionData);
     } catch (e) {
       if (e is AuthException) {
         rethrow;

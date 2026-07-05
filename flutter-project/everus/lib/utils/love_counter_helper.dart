@@ -88,8 +88,8 @@ class LoveCounterHelper {
     await prefs.setBool(_keyUseDetailedView, useDetailed);
   }
 
-  /// Pick an image from gallery or camera, copy it to the local app documents directory, and return its local path
-  static Future<String?> pickAndSaveImage(ImageSource source) async {
+  /// Pick an image from gallery or camera, copy it to the local app documents directory, delete old image if exists, and return its local path
+  static Future<String?> pickAndSaveImage(ImageSource source, String? oldPath) async {
     try {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(source: source, imageQuality: 85);
@@ -103,6 +103,18 @@ class LoveCounterHelper {
       final String fileName = 'love_profile_${DateTime.now().microsecondsSinceEpoch}.$extension';
       final String newPath = '${appDir.path}/$fileName';
       
+      // Clean up the old file to prevent storage/memory leaks
+      if (oldPath != null) {
+        try {
+          final oldFile = File(oldPath);
+          if (await oldFile.exists()) {
+            await oldFile.delete();
+          }
+        } catch (e) {
+          // Ignore errors deleting old files
+        }
+      }
+
       final File savedImage = await File(originalPath).copy(newPath);
       return savedImage.path;
     } catch (e) {

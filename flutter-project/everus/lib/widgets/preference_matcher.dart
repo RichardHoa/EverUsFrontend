@@ -278,6 +278,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
 
   Widget _buildCenterColumn() {
     return GlassCard(
+      enableBlur: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -373,7 +374,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
               label: 'Lãng mạn',
               icon: '💕',
               value: _romance2,
-              onChanged: (val) => setState(() => _romance2 = val),
+              onChanged: (val) => _romance2 = val,
               colors: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
             ),
             VibeSlider(
@@ -415,6 +416,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         GlassCard(
+          enableBlur: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -525,6 +527,7 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
         ),
         const SizedBox(height: 16),
         GlassCard(
+          enableBlur: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -691,38 +694,46 @@ class AlgorithmFormulaBlock extends StatelessWidget {
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
+  final bool enableBlur;
 
   const GlassCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(24),
+    this.enableBlur = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: ClipRRect(
+    Widget cardContent = Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: enableBlur ? 0.7 : 0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: padding,
+      child: child,
+    );
+
+    if (enableBlur) {
+      cardContent = ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
           filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            padding: padding,
-            child: child,
-          ),
+          child: cardContent,
         ),
-      ),
+      );
+    }
+
+    return RepaintBoundary(
+      child: cardContent,
     );
   }
 }

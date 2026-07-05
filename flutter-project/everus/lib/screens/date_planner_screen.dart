@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/activity.dart';
 import '../utils/date_planner_generator.dart';
+import '../widgets/everus_footer.dart';
 import '../utils/auth_helper.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
 import 'saved_plans_screen.dart';
@@ -39,7 +40,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   DatePlan? _savedPlan;
 
   Timer? _progressTimer;
-  double _progressValue = 0.0;
+  late final ValueNotifier<double> _progressNotifier;
   final Set<int> _expandedStageBackups = {};
   String? _existingInviteUrl;
   List<Map<String, dynamic>> _notifications = [];
@@ -54,6 +55,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   @override
   void initState() {
     super.initState();
+    _progressNotifier = ValueNotifier<double>(0.0);
     _loadSavedPlan();
     if (AuthHelper.isLoggedIn) {
       _fetchNotifications();
@@ -106,6 +108,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   void dispose() {
     _progressTimer?.cancel();
     _areaController.dispose();
+    _progressNotifier.dispose();
     super.dispose();
   }
 
@@ -167,7 +170,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   }
 
   void _startProgressTimer() {
-    _progressValue = 0.0;
+    _progressNotifier.value = 0.0;
     _progressTimer?.cancel();
     
     // Ticking every 100ms. 25 seconds total = 250 ticks.
@@ -178,14 +181,13 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     
     _progressTimer = Timer.periodic(duration, (timer) {
       if (mounted) {
-        setState(() {
-          if (_progressValue < 0.95) {
-            _progressValue += increment;
-          } else if (_progressValue < 0.99) {
-            // Slow down near 100%
-            _progressValue += 0.001;
-          }
-        });
+        final currentVal = _progressNotifier.value;
+        if (currentVal < 0.95) {
+          _progressNotifier.value = currentVal + increment;
+        } else if (currentVal < 0.99) {
+          // Slow down near 100%
+          _progressNotifier.value = currentVal + 0.001;
+        }
       }
     });
   }
@@ -195,15 +197,13 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     
     // Smooth rapid fast-forward to 100%
     const steps = 10;
-    final remaining = 1.0 - _progressValue;
+    final remaining = 1.0 - _progressNotifier.value;
     final stepVal = remaining / steps;
     
     for (int i = 0; i < steps; i++) {
       await Future.delayed(const Duration(milliseconds: 30));
       if (mounted) {
-        setState(() {
-          _progressValue = (_progressValue + stepVal).clamp(0.0, 1.0);
-        });
+        _progressNotifier.value = (_progressNotifier.value + stepVal).clamp(0.0, 1.0);
       }
     }
     
@@ -225,7 +225,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
     setState(() {
       _isGenerating = true;
-      _progressValue = 0.0;
+      _progressNotifier.value = 0.0;
     });
 
     _startProgressTimer();
@@ -329,6 +329,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: const Color(0xFFFFF7F7),
       body: Container(
         decoration: const BoxDecoration(
@@ -357,6 +358,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: const EverUsFooter(currentTab: 'other'),
     );
   }
 
@@ -528,29 +530,61 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 36),
             Container(
               constraints: const BoxConstraints(maxWidth: 280),
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: _progressValue,
-                      minHeight: 8,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
-                      backgroundColor: const Color(0xFFE5E7EB),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '${(_progressValue * 100).toInt()}%',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF8B5CF6),
-                    ),
-                  ),
-                ],
+              child: ValueListenableBuilder<double>(
+                valueListenable: _progressNotifier,
+                builder: (context, progress, child) {
+                  return Column(
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3E8FF),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final width = constraints.maxWidth * progress;
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: width,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFEC4899).withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFEC4899),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -1101,6 +1135,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
   Widget _buildSectionCard({required String title, required List<Widget> children}) {
     return GlassCard(
+      enableBlur: false,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1386,17 +1421,17 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             ElevatedButton.icon(
               onPressed: () async {
                 if (!AuthHelper.isLoggedIn) {
-                  final loggedIn = await Navigator.push<bool>(
+                  await LoginScreen.showGentleLoginModal(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(isProfileMode: false),
-                    ),
+                    onLoginSuccess: () {
+                      _fetchNotifications();
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    },
                   );
                   if (!mounted) return;
-                  if (loggedIn == true || AuthHelper.isLoggedIn) {
-                    _fetchNotifications();
-                    setState(() {});
-                  } else {
+                  if (!AuthHelper.isLoggedIn) {
                     return;
                   }
                 }

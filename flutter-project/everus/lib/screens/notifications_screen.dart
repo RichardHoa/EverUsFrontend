@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../utils/auth_helper.dart';
+import '../widgets/everus_footer.dart';
 import '../utils/date_planner_generator.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
 
@@ -175,6 +176,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: const Color(0xFFFFF7F7),
       body: Container(
         decoration: const BoxDecoration(
@@ -236,6 +238,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: const EverUsFooter(currentTab: 'other'),
     );
   }
 
@@ -331,6 +334,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
           child: GlassCard(
+            enableBlur: false,
             padding: const EdgeInsets.all(16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,

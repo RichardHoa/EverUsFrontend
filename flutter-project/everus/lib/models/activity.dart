@@ -37,6 +37,26 @@ class ActivityTheme {
     required this.dark,
   });
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ActivityTheme &&
+          runtimeType == other.runtimeType &&
+          primary == other.primary &&
+          secondary == other.secondary &&
+          accent == other.accent &&
+          light == other.light &&
+          dark == other.dark;
+
+  @override
+  int get hashCode =>
+      primary.hashCode ^
+      secondary.hashCode ^
+      accent.hashCode ^
+      light.hashCode ^
+      dark.hashCode;
+
+
   static Color parseHexColor(String hex) {
     hex = hex.replaceFirst('#', '');
     if (hex.length == 6) {
