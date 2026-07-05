@@ -10,6 +10,7 @@ import 'date_planner_screen.dart';
 import 'notifications_screen.dart';
 import '../utils/love_counter_helper.dart';
 import '../utils/auth_helper.dart';
+import '../utils/notification_manager.dart';
 import '../main.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -66,6 +67,9 @@ class _LandingScreenState extends State<LandingScreen> {
   void initState() {
     super.initState();
     _loadLoveStatus();
+    if (AuthHelper.isLoggedIn) {
+      NotificationManager.instance.initialize();
+    }
   }
 
   Future<void> _loadLoveStatus() async {
@@ -308,19 +312,25 @@ class _LandingScreenState extends State<LandingScreen> {
                           const Color(0xFFF43F5E)
                         ],
                         onTap: _navigateToLoveCounter,
-                        customIcon: _buildDoubleAvatar(),
-                      ),
-
-                      _buildActionCard(
-                        context: context,
-                        title: 'Ý Tưởng Hẹn Hò',
-                        subtitle: 'Lên kế hoạch phù hợp với cả hai',
-                        icon: Icons.explore_rounded,
-                        gradientColors: [
-                          const Color(0xFF8B5CF6),
-                          const Color(0xFF6366F1)
-                        ],
-                        onTap: _navigateToDatePlanner,
+                        customIcon: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x1F8B5CF6),
+                                blurRadius: 8,
+                                offset: Offset(0, 3),
+                              )
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.favorite,
+                            color: Color(0xFFEC4899),
+                            size: 24,
+                          ),
+                        ),
                       ),
 
                       _buildActionCard(
@@ -333,6 +343,18 @@ class _LandingScreenState extends State<LandingScreen> {
                           const Color(0xFFEC4899)
                         ],
                         onTap: _navigateToCustomDatePlanner,
+                      ),
+
+                      _buildActionCard(
+                        context: context,
+                        title: 'Ý Tưởng Hẹn Hò',
+                        subtitle: 'Lên kế hoạch phù hợp với cả hai',
+                        icon: Icons.explore_rounded,
+                        gradientColors: [
+                          const Color(0xFF8B5CF6),
+                          const Color(0xFF6366F1)
+                        ],
+                        onTap: _navigateToDatePlanner,
                       ),
                       const SizedBox(height: 32),
                     ],
@@ -598,7 +620,7 @@ class _LandingScreenState extends State<LandingScreen> {
     );
   }
 
-  Widget _buildDoubleAvatar({double size = 32.0}) {
+  Widget _buildDoubleAvatar({double size = 48.0}) {
     if (!_isConfigured) {
       return Container(
         padding: const EdgeInsets.all(12),
@@ -621,93 +643,87 @@ class _LandingScreenState extends State<LandingScreen> {
       );
     }
 
-    if (_userImageExists || _loverImageExists) {
-      return SizedBox(
-        width: 54,
-        height: size,
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              top: 0,
-              child: _buildAvatarCircle(
-                _loveSettings['loverName'] ?? 'Em',
-                _loverFile,
-                _loverImageExists,
-                size: size,
-              ),
+    if (_userImageExists && _loverImageExists) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildAvatarCircle(
+            _loveSettings['loverName'] ?? 'Em',
+            _loverFile,
+            _loverImageExists,
+            size: size,
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Icon(
+              Icons.favorite,
+              color: Color(0xFFEC4899),
+              size: 24,
             ),
-            Positioned(
-              left: 18,
-              top: 0,
-              child: _buildAvatarCircle(
-                _loveSettings['userName'] ?? 'Bạn',
-                _userFile,
-                _userImageExists,
-                size: size,
-              ),
-            ),
-          ],
-        ),
+          ),
+          _buildAvatarCircle(
+            _loveSettings['userName'] ?? 'Bạn',
+            _userFile,
+            _userImageExists,
+            size: size,
+          ),
+        ],
       );
     } else {
       final uName = _loveSettings['userName'] ?? '';
       final lName = _loveSettings['loverName'] ?? '';
       final uInitial = uName.isNotEmpty ? uName[0].toUpperCase() : 'B';
       final lInitial = lName.isNotEmpty ? lName[0].toUpperCase() : 'N';
-      return SizedBox(
-        width: 54,
-        height: size,
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              top: 0,
-              child: Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFCE7F3),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: Center(
-                  child: Text(
-                    lInitial,
-                    style: GoogleFonts.inter(
-                      fontSize: size * 0.375,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFEC4899),
-                    ),
-                  ),
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFCE7F3),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: Center(
+              child: Text(
+                lInitial,
+                style: GoogleFonts.inter(
+                  fontSize: size * 0.375,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFFEC4899),
                 ),
               ),
             ),
-            Positioned(
-              left: 18,
-              top: 0,
-              child: Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3E8FF),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: Center(
-                  child: Text(
-                    uInitial,
-                    style: GoogleFonts.inter(
-                      fontSize: size * 0.375,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF8B5CF6),
-                    ),
-                  ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Icon(
+              Icons.favorite,
+              color: Color(0xFFEC4899),
+              size: 24,
+            ),
+          ),
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3E8FF),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: Center(
+              child: Text(
+                uInitial,
+                style: GoogleFonts.inter(
+                  fontSize: size * 0.375,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF8B5CF6),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
   }

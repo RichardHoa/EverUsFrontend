@@ -9,6 +9,8 @@ import 'screens/landing_screen.dart';
 import 'utils/auth_helper.dart';
 import 'widgets/everus_footer.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AuthHelper.initializeSession();
@@ -22,6 +24,7 @@ class EverUsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EverUs - Couple Vibe',
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(

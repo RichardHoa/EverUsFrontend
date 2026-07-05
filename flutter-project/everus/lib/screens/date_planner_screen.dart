@@ -43,6 +43,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   late final ValueNotifier<double> _progressNotifier;
   final Set<int> _expandedStageBackups = {};
   String? _existingInviteUrl;
+  String? _inviteExpiresAt;
   List<Map<String, dynamic>> _notifications = [];
 
   // Vibes metadata
@@ -1308,62 +1309,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             const SizedBox(height: 24),
           ],
 
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _clearPlan,
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    'THIẾT LẬP LẠI',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF8B5CF6),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _sharePlanText(plan),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEC4899),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.copy, size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        'SAO CHÉP LỘ TRÌNH',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // Spacer for invite button/container
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
 
           if (AuthHelper.isLoggedIn && _existingInviteUrl != null) ...[
             Container(
@@ -1414,6 +1360,43 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                       ),
                     ],
                   ),
+                  if (_inviteExpiresAt != null) ...[
+                    const SizedBox(height: 8),
+                    Builder(
+                      builder: (context) {
+                        try {
+                          final exp = DateTime.parse(_inviteExpiresAt!).toLocal();
+                          final diff = exp.difference(DateTime.now());
+                          if (diff.isNegative) {
+                            return Text(
+                              "Thư mời đã hết hạn ⚠️",
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.redAccent,
+                              ),
+                            );
+                          } else {
+                            final days = diff.inDays;
+                            final hours = diff.inHours % 24;
+                            final timeText = days > 0
+                                ? "Hết hạn sau $days ngày $hours giờ ⏳"
+                                : "Hết hạn sau $hours giờ ⏳";
+                            return Text(
+                              timeText,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: Colors.black54,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            );
+                          }
+                        } catch (_) {
+                          return const SizedBox.shrink();
+                        }
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1484,39 +1467,85 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
               ),
             ),
           ],
-          if (AuthHelper.isLoggedIn) ...[
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: () async {
-                final selectedPlan = await Navigator.push<DatePlan>(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
-                );
-                if (selectedPlan != null) {
-                  _setGeneratedPlan(selectedPlan);
-                }
-              },
-              icon: const Icon(Icons.history, color: Color(0xFF8B5CF6)),
-              label: Text(
-                'XEM KẾ HOẠCH TRƯỚC ĐÂY',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF8B5CF6),
-                ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildCompactActionButton(
+                icon: Icons.restart_alt,
+                label: 'Tạo lại',
+                onTap: _clearPlan,
               ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                minimumSize: const Size.fromHeight(56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+              _buildCompactActionButton(
+                icon: Icons.content_copy,
+                label: 'Sao chép',
+                onTap: () => _sharePlanText(plan),
+              ),
+              if (AuthHelper.isLoggedIn)
+                _buildCompactActionButton(
+                  icon: Icons.history,
+                  label: 'Lịch sử',
+                  onTap: () async {
+                    final selectedPlan = await Navigator.push<DatePlan>(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SavedPlansScreen()),
+                    );
+                    if (selectedPlan != null) {
+                      _setGeneratedPlan(selectedPlan);
+                    }
+                  },
                 ),
+            ],
+          ),
+          const SizedBox(height: 48),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                color: const Color(0xFF8B5CF6),
+                size: 20,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF4B5563),
               ),
             ),
           ],
-          const SizedBox(height: 48),
-        ],
+        ),
       ),
     );
   }
@@ -2072,6 +2101,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     if (!AuthHelper.isLoggedIn) return;
     setState(() {
       _existingInviteUrl = null;
+      _inviteExpiresAt = null;
     });
     final client = HttpClient();
     try {
@@ -2088,6 +2118,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
         if (data['exists'] == true) {
           setState(() {
             _existingInviteUrl = data['url'];
+            _inviteExpiresAt = data['expires_at'];
           });
         }
       }
@@ -2102,6 +2133,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     setState(() {
       _generatedPlan = plan;
       _existingInviteUrl = null;
+      _inviteExpiresAt = null;
     });
     if (plan != null && plan.id != null) {
       _checkExistingInvitation(plan.id!);

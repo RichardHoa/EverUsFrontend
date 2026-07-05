@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -93,7 +94,8 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
   @override
   void initState() {
     super.initState();
-    templateId = 'love_letter';
+    final random = Random();
+    templateId = templates[random.nextInt(templates.length)].id;
     senderName = 'Anh';
     receiverName = 'Em';
     selectedDate = widget.initialDate;
@@ -266,30 +268,6 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
           onChanged: (val) {
             locationStr = val;
             _updateText();
-          },
-        ),
-        const SizedBox(height: 16),
-
-        // Dropdown template selection instead of list
-        DropdownButtonFormField<String>(
-          initialValue: templateId,
-          decoration: const InputDecoration(
-            labelText: 'Mẫu thư mời',
-            border: OutlineInputBorder(),
-          ),
-          items: templates.map((t) {
-            return DropdownMenuItem<String>(
-              value: t.id,
-              child: Text(t.name, style: const TextStyle(fontSize: 14)),
-            );
-          }).toList(),
-          onChanged: (val) {
-            if (val != null) {
-              setState(() {
-                templateId = val;
-                _updateText();
-              });
-            }
           },
         ),
         const SizedBox(height: 16),
