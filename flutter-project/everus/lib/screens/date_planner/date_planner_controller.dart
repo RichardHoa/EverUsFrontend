@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import '../../models/date_plan.dart';
 import '../../utils/auth_helper.dart';
 import '../../utils/date_planner_generator.dart';
@@ -30,7 +30,6 @@ class DatePlannerController extends ChangeNotifier {
   String? _existingInviteUrl;
   String? _inviteExpiresAt;
   bool _inviteAccepted = false;
-  List<Map<String, dynamic>> _notifications = [];
   final Set<int> expandedStageBackups = {};
 
   /// Notifier driving the progress percentage on the generating view page.
@@ -53,7 +52,6 @@ class DatePlannerController extends ChangeNotifier {
   String? get existingInviteUrl => _existingInviteUrl;
   String? get inviteExpiresAt => _inviteExpiresAt;
   bool get inviteAccepted => _inviteAccepted;
-  List<Map<String, dynamic>> get notifications => _notifications;
 
   /// Updates the selected date and notifies views.
   void setSelectedDate(DateTime date) {
@@ -253,18 +251,17 @@ class DatePlannerController extends ChangeNotifier {
     _inviteAccepted = false;
     notifyListeners();
 
-    final client = HttpClient();
     try {
-      final uri = Uri.parse('${AuthHelper.baseUrl}/api/invitations/by-plan/$planId');
-      final request = await client.getUrl(uri);
       final token = AuthHelper.currentAccessToken;
-      if (token != null) {
-        request.headers.set('Authorization', 'Bearer $token');
-      }
-      final response = await request.close();
+      final response = await http.get(
+        Uri.parse('${AuthHelper.baseUrl}/api/invitations/by-plan/$planId'),
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
       if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        final Map<String, dynamic> data = json.decode(responseBody);
+        final Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
         if (data['exists'] == true) {
           _existingInviteUrl = data['url'];
           _inviteExpiresAt = data['expires_at'];
@@ -274,65 +271,6 @@ class DatePlannerController extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint("Error checking existing invitation: $e");
-    } finally {
-      client.close();
-    }
-  }
-
-  /// Fetches system notifications.
-  ///
-  /// Returns the first unread notification if any, enabling views to trigger alert dialogs.
-  Future<Map<String, dynamic>?> fetchNotifications() async {
-    if (!AuthHelper.isLoggedIn) return null;
-    final client = HttpClient();
-    try {
-      final uri = Uri.parse('${AuthHelper.baseUrl}/api/notifications');
-      final request = await client.getUrl(uri);
-      final token = AuthHelper.currentAccessToken;
-      if (token != null) {
-        request.headers.set('Authorization', 'Bearer $token');
-      }
-      final response = await request.close();
-      if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        final List<dynamic> data = json.decode(responseBody);
-        _notifications = List<Map<String, dynamic>>.from(data);
-        notifyListeners();
-        
-        final unread = _notifications.firstWhere(
-          (n) => n['is_read'] == false,
-          orElse: () => {},
-        );
-        if (unread.isNotEmpty) {
-          return unread;
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching notifications: $e");
-    } finally {
-      client.close();
-    }
-    return null;
-  }
-
-  /// Marks a specific notification as read.
-  Future<void> markNotificationAsRead(String notifId) async {
-    final client = HttpClient();
-    try {
-      final uri = Uri.parse('${AuthHelper.baseUrl}/api/notifications/$notifId/read');
-      final request = await client.postUrl(uri);
-      final token = AuthHelper.currentAccessToken;
-      if (token != null) {
-        request.headers.set('Authorization', 'Bearer $token');
-      }
-      final response = await request.close();
-      if (response.statusCode == 200) {
-        await fetchNotifications();
-      }
-    } catch (e) {
-      debugPrint("Error marking notification as read: $e");
-    } finally {
-      client.close();
     }
   }
 
@@ -340,18 +278,17 @@ class DatePlannerController extends ChangeNotifier {
   Future<void> loadAndDirectToPlan(String planId) async {
     _isLoadingPlan = true;
     notifyListeners();
-    final client = HttpClient();
     try {
-      final uri = Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans/$planId');
-      final request = await client.getUrl(uri);
       final token = AuthHelper.currentAccessToken;
-      if (token != null) {
-        request.headers.set('Authorization', 'Bearer $token');
-      }
-      final response = await request.close();
+      final response = await http.get(
+        Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans/$planId'),
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
       if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        final Map<String, dynamic> data = json.decode(responseBody);
+        final Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
         final planData = data['plan_data'] ?? {};
         final Map<String, dynamic> mutableData = Map<String, dynamic>.from(planData);
         mutableData['id'] = planId;
@@ -363,7 +300,6 @@ class DatePlannerController extends ChangeNotifier {
     } catch (e) {
       rethrow;
     } finally {
-      client.close();
       _isLoadingPlan = false;
       notifyListeners();
     }
@@ -432,30 +368,25 @@ class DatePlannerController extends ChangeNotifier {
   /// Pushes mutated updates of locations order to server database.
   Future<void> _updatePlanOnServer(DatePlan plan) async {
     if (plan.id == null || !AuthHelper.isLoggedIn) return;
-    final client = HttpClient();
     try {
-      final uri = Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans/${plan.id}');
-      final request = await client.putUrl(uri);
-      request.headers.set('Content-Type', 'application/json');
       final token = AuthHelper.currentAccessToken;
-      if (token != null) {
-        request.headers.set('Authorization', 'Bearer $token');
-      }
-      
       final payload = {
         'date': _selectedDate.toIso8601String().split('T')[0],
         'plan_data': plan.toJson(),
       };
-      
-      request.write(jsonEncode(payload));
-      final response = await request.close();
+      final response = await http.put(
+        Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans/${plan.id}'),
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
       if (response.statusCode == 200) {
         debugPrint("Plan updated successfully on database");
       }
     } catch (e) {
       debugPrint("Error updating plan on database: $e");
-    } finally {
-      client.close();
     }
   }
 
@@ -464,26 +395,22 @@ class DatePlannerController extends ChangeNotifier {
     if (!AuthHelper.isLoggedIn) return;
     if (_generatedPlan == null || _generatedPlan!.id != null) return;
     
-    final client = HttpClient();
     try {
-      final uri = Uri.parse('${AuthHelper.baseUrl}/api/date-planner/save');
-      final request = await client.postUrl(uri);
-      request.headers.set('Content-Type', 'application/json');
       final token = AuthHelper.currentAccessToken;
-      if (token != null) {
-        request.headers.set('Authorization', 'Bearer $token');
-      }
-      
       final payload = {
         'date': _selectedDate.toIso8601String().split('T')[0],
         'plan_data': _generatedPlan!.toJson(),
       };
-      
-      request.write(jsonEncode(payload));
-      final response = await request.close();
+      final response = await http.post(
+        Uri.parse('${AuthHelper.baseUrl}/api/date-planner/save'),
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
       if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        final Map<String, dynamic> responseData = json.decode(responseBody);
+        final Map<String, dynamic> responseData = json.decode(utf8.decode(response.bodyBytes));
         final planId = responseData['id']?.toString();
         if (planId != null) {
           _generatedPlan = _generatedPlan!.copyWith(id: planId);
@@ -493,8 +420,6 @@ class DatePlannerController extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint("Error syncing local plan to server: $e");
-    } finally {
-      client.close();
     }
   }
 }

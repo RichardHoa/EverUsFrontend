@@ -70,6 +70,20 @@ class _LandingScreenState extends State<LandingScreen> {
     _loadLoveStatus();
     if (AuthHelper.isLoggedIn) {
       NotificationManager.instance.initialize();
+      NotificationManager.instance.fetchNotifications();
+    }
+    NotificationManager.refreshNotifier.addListener(_onNotificationRefresh);
+  }
+
+  @override
+  void dispose() {
+    NotificationManager.refreshNotifier.removeListener(_onNotificationRefresh);
+    super.dispose();
+  }
+
+  void _onNotificationRefresh() {
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -365,26 +379,46 @@ class _LandingScreenState extends State<LandingScreen> {
               Positioned(
                 top: 8,
                 right: 16,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: Color(0xFF8B5CF6),
-                      size: 28,
+                      child: IconButton(
+                        icon: Icon(
+                          AuthHelper.isLoggedIn && NotificationManager.instance.notifications.any((n) => n['is_read'] == false)
+                              ? Icons.notifications_active_outlined
+                              : Icons.notifications_none_outlined,
+                          color: const Color(0xFF8B5CF6),
+                          size: 28,
+                        ),
+                        onPressed: _handleNotiTap,
+                      ),
                     ),
-                    onPressed: _handleNotiTap,
-                  ),
+                    if (AuthHelper.isLoggedIn && NotificationManager.instance.notifications.any((n) => n['is_read'] == false))
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],

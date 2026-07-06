@@ -25,6 +25,14 @@ class NotificationManager with WidgetsBindingObserver {
   bool _isConnectingSse = false;
   Timer? _reconnectTimer;
 
+  // Dedup: track notification IDs already shown this session
+  final Set<String> _shownNotificationIds = {};
+  bool _isFetchingNotifications = false;
+
+  // Centralized notifications cache
+  List<Map<String, dynamic>> _notifications = [];
+  List<Map<String, dynamic>> get notifications => _notifications;
+
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -71,8 +79,11 @@ class NotificationManager with WidgetsBindingObserver {
       if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed ||
           WidgetsBinding.instance.lifecycleState == null) {
         startSseConnection();
+        fetchAndShowUnreadNotification();
       }
     } else {
+      _shownNotificationIds.clear();
+      _notifications.clear();
       stopSseConnection();
     }
   }
@@ -80,9 +91,9 @@ class NotificationManager with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Immediate check when coming back to the app
       checkInvitationStatus(forceCheck: true);
       startSseConnection();
+      fetchAndShowUnreadNotification();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
       stopSseConnection();
     }
@@ -91,6 +102,7 @@ class NotificationManager with WidgetsBindingObserver {
   void startMonitoring() {
     checkInvitationStatus();
     startSseConnection();
+    fetchAndShowUnreadNotification();
   }
 
   void stopPolling() {
@@ -213,8 +225,18 @@ class NotificationManager with WidgetsBindingObserver {
         });
       }
       
+      final notifId = data['notif_id']?.toString();
+      if (notifId != null) {
+        _shownNotificationIds.add(notifId);
+      }
+
       _handleInvitationAccepted(inviteData);
-      refreshNotifier.value = !refreshNotifier.value;
+      
+      // Delay updating the bell shape to guarantee the modal appears first
+      Future.delayed(const Duration(milliseconds: 300), () {
+        refreshNotifier.value = !refreshNotifier.value;
+        fetchAndShowUnreadNotification();
+      });
     }
   }
 
@@ -280,7 +302,8 @@ class NotificationManager with WidgetsBindingObserver {
   }
 
   void _handleInvitationAccepted(Map<String, dynamic> inviteData) {
-    final isBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
+    final isBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed &&
+                         WidgetsBinding.instance.lifecycleState != null;
 
     if (isBackground) {
       _showLocalNotification(
@@ -327,7 +350,12 @@ class NotificationManager with WidgetsBindingObserver {
 
   void _showForegroundModal(Map<String, dynamic> inviteData) {
     final context = navigatorKey.currentContext;
-    if (context == null) return;
+    if (context == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showForegroundModal(inviteData);
+      });
+      return;
+    }
 
     showDialog(
       context: context,
@@ -515,9 +543,217 @@ class NotificationManager with WidgetsBindingObserver {
     final nav = navigatorKey.currentState;
     if (nav == null) return;
     
-    // Open the DatePlannerScreen (EverUsHomePage handles tabs or displays date planner)
     nav.push(
       MaterialPageRoute(builder: (context) => const DatePlannerScreen()),
     );
+  }
+
+  /// Centralized logic to fetch all notifications and notify listeners
+  Future<void> fetchNotifications() async {
+    if (!AuthHelper.isLoggedIn) return;
+    try {
+      final token = AuthHelper.currentAccessToken;
+      if (token == null) return;
+
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/notifications');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        _notifications = List<Map<String, dynamic>>.from(data);
+        refreshNotifier.value = !refreshNotifier.value;
+      }
+    } catch (e) {
+      debugPrint("Error fetching notifications in NotificationManager: $e");
+    }
+  }
+
+  /// Fetches notifications silently from the server without updating UI listeners.
+  Future<List<Map<String, dynamic>>> _fetchNotificationsSilently() async {
+    if (!AuthHelper.isLoggedIn) return [];
+    try {
+      final token = AuthHelper.currentAccessToken;
+      if (token == null) return [];
+
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/notifications');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        return List<Map<String, dynamic>>.from(data);
+      }
+    } catch (e) {
+      debugPrint("Error fetching notifications silently: $e");
+    }
+    return [];
+  }
+
+  /// Fetches unread notifications from the server and shows a dialog globally.
+  ///
+  /// This is page-agnostic — it uses [navigatorKey] so the dialog appears
+  /// regardless of which screen the user is on.
+  Future<void> fetchAndShowUnreadNotification() async {
+    if (!AuthHelper.isLoggedIn || _isFetchingNotifications) return;
+    
+    if (navigatorKey.currentContext == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        fetchAndShowUnreadNotification();
+      });
+      return;
+    }
+    
+    _isFetchingNotifications = true;
+
+    try {
+      // 1. Fetch notifications silently first
+      final list = await _fetchNotificationsSilently();
+      final prefs = await SharedPreferences.getInstance();
+
+      // 2. Find the first unread notification we haven't shown yet
+      Map<String, dynamic>? unreadNotif;
+      for (final notif in list) {
+        final isRead = notif['is_read'] as bool? ?? true;
+        final notifId = notif['id']?.toString();
+        final planId = notif['plan_id']?.toString();
+        
+        if (!isRead && notifId != null) {
+          // If the elegant invitation accepted modal was already shown for this plan,
+          // automatically mark this notification as read and skip the alert dialog.
+          if (planId != null) {
+            final modalShownKey = 'invitation_accepted_modal_shown_$planId';
+            final alreadyShown = prefs.getBool(modalShownKey) ?? false;
+            if (alreadyShown) {
+              _shownNotificationIds.add(notifId);
+              _markNotificationAsRead(notifId);
+              continue;
+            }
+          }
+          
+          if (!_shownNotificationIds.contains(notifId)) {
+            unreadNotif = notif;
+            _shownNotificationIds.add(notifId);
+            break; // Show one at a time
+          }
+        }
+      }
+
+      // 3. If there is an unread notification modal to show, present it first
+      if (unreadNotif != null) {
+        _showGlobalNotificationDialog(unreadNotif);
+      }
+
+      // 4. Update the notifications cache and notify the bell UI after modal triggers
+      _notifications = list;
+      refreshNotifier.value = !refreshNotifier.value;
+
+    } catch (e) {
+      debugPrint("Error in fetchAndShowUnreadNotification: $e");
+    } finally {
+      _isFetchingNotifications = false;
+    }
+  }
+
+  void _showGlobalNotificationDialog(Map<String, dynamic> notif) {
+    final context = navigatorKey.currentContext;
+    if (context == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showGlobalNotificationDialog(notif);
+      });
+      return;
+    }
+
+    final notifId = notif['id']?.toString() ?? '';
+    final planId = notif['plan_id'] as String?;
+    final title = notif['title'] ?? 'Thông báo';
+    final message = notif['message'] ?? '';
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.favorite, color: Colors.red, size: 28),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: GoogleFonts.inter(fontSize: 14, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                _markNotificationAsRead(notifId);
+              },
+              child: Text(
+                'Đóng',
+                style: GoogleFonts.inter(color: const Color(0xFF6B7280)),
+              ),
+            ),
+            if (planId != null)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _markNotificationAsRead(notifId);
+                  _navigateToPlanner();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEC4899),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text(
+                  'Xem kế hoạch ➔',
+                  style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _markNotificationAsRead(String notifId) async {
+    try {
+      final token = AuthHelper.currentAccessToken;
+      if (token == null) return;
+
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/notifications/$notifId/read');
+      await http.post(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      // Trigger refresh so page-specific UIs (bell badge) update
+      refreshNotifier.value = !refreshNotifier.value;
+    } catch (e) {
+      debugPrint("Error marking notification as read: $e");
+    }
   }
 }

@@ -9,6 +9,7 @@ import '../../login_screen.dart';
 import '../../saved_plans_screen.dart';
 import '../../create_invite_screen.dart';
 import '../date_planner_controller.dart';
+import '../../../utils/notification_manager.dart';
 
 /// Renders the generated date plan itinerary, with timeline stages and maps links.
 class DatePlannerResults extends StatefulWidget {
@@ -442,7 +443,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
       await LoginScreen.showGentleLoginModal(
         context,
         onLoginSuccess: () async {
-          await widget.controller.fetchNotifications();
+          await NotificationManager.instance.fetchNotifications();
           await widget.controller.syncLocalPlanToServer();
         },
       );

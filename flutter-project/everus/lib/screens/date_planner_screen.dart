@@ -42,6 +42,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     }
     
     if (AuthHelper.isLoggedIn) {
+      NotificationManager.instance.fetchNotifications();
       _onNotificationRefresh();
     }
     
@@ -56,65 +57,14 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
   }
 
   void _onNotificationRefresh() async {
-    final unread = await _controller.fetchNotifications();
-    if (unread != null && mounted) {
-      _showNotificationDialog(unread);
+    // Refresh invite accepted state — use savedPlan as fallback
+    final planId = _controller.generatedPlan?.id ?? _controller.savedPlan?.id;
+    if (planId != null) {
+      _controller.checkExistingInvitation(planId);
     }
-    if (_controller.generatedPlan != null && _controller.generatedPlan!.id != null) {
-      _controller.checkExistingInvitation(_controller.generatedPlan!.id!);
+    if (mounted) {
+      setState(() {});
     }
-  }
-
-  void _showNotificationDialog(Map<String, dynamic> notif) {
-    final notifId = notif['id'] as String;
-    final planId = notif['plan_id'] as String?;
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              const Icon(Icons.favorite, color: Colors.red, size: 28),
-              const SizedBox(width: 8),
-              Expanded(child: Text(notif['title'] ?? 'Thông báo')),
-            ],
-          ),
-          content: Text(notif['message'] ?? 'Buổi hẹn đã được chấp nhận.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _controller.markNotificationAsRead(notifId);
-              },
-              child: const Text('Đóng'),
-            ),
-            if (planId != null)
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  _controller.markNotificationAsRead(notifId);
-                  try {
-                    await _controller.loadAndDirectToPlan(planId);
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Không thể tải kế hoạch hẹn hò này.')),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEC4899),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                child: const Text('Xem kế hoạch ➔', style: TextStyle(color: Colors.white)),
-              ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -226,7 +176,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   ),
                   child: IconButton(
                     icon: Icon(
-                      _controller.notifications.any((n) => n['is_read'] == false)
+                      NotificationManager.instance.notifications.any((n) => n['is_read'] == false)
                           ? Icons.notifications_active_outlined
                           : Icons.notifications_none_outlined,
                       color: const Color(0xFFEC4899),
@@ -244,7 +194,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                     },
                   ),
                 ),
-                if (_controller.notifications.any((n) => n['is_read'] == false))
+                if (NotificationManager.instance.notifications.any((n) => n['is_read'] == false))
                   Positioned(
                     right: 0,
                     top: 0,
