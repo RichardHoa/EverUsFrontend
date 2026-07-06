@@ -11,6 +11,7 @@ import 'notifications_screen.dart';
 import '../utils/love_counter_helper.dart';
 import '../utils/auth_helper.dart';
 import '../utils/notification_manager.dart';
+import '../models/date_plan.dart';
 import '../main.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -91,8 +92,8 @@ class _LandingScreenState extends State<LandingScreen> {
         final loverPath = settings['loverImagePath'] as String?;
         userExists = userPath != null && await File(userPath).exists();
         loverExists = loverPath != null && await File(loverPath).exists();
-        if (userExists) userFile = File(userPath!);
-        if (loverExists) loverFile = File(loverPath!);
+        if (userExists) userFile = File(userPath);
+        if (loverExists) loverFile = File(loverPath);
       }
       if (mounted) {
         setState(() {
@@ -163,23 +164,21 @@ class _LandingScreenState extends State<LandingScreen> {
     _loadLoveStatus();
   }
 
-  Future<void> _navigateToProfile() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => LoginScreen(
-          isProfileMode: AuthHelper.isLoggedIn,
-        ),
-      ),
-    );
-    _loadLoveStatus();
-  }
-
   Future<void> _navigateToNotifications() async {
-    await Navigator.of(context).push(
+    final selectedPlan = await Navigator.of(context).push<DatePlan>(
       MaterialPageRoute(
         builder: (context) => const NotificationsScreen(),
       ),
     );
+    if (selectedPlan != null) {
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => DatePlannerScreen(initialPlan: selectedPlan),
+          ),
+        );
+      }
+    }
     _loadLoveStatus();
   }
 

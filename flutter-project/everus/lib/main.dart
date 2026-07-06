@@ -4,16 +4,17 @@ import 'models/activity.dart';
 import 'widgets/preference_matcher.dart';
 import 'widgets/results_dashboard.dart';
 import 'widgets/activity_flow.dart';
-import 'screens/login_screen.dart';
 import 'screens/landing_screen.dart';
 import 'utils/auth_helper.dart';
 import 'widgets/everus_footer.dart';
+import 'utils/notification_manager.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AuthHelper.initializeSession();
+  NotificationManager.instance.initialize();
   runApp(const EverUsApp());
 }
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../utils/auth_helper.dart';
-import '../utils/date_planner_generator.dart';
+import '../models/date_plan.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
 
 class SavedPlansScreen extends StatefulWidget {

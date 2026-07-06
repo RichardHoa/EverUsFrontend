@@ -4,8 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../utils/auth_helper.dart';
 import '../widgets/everus_footer.dart';
-import '../utils/date_planner_generator.dart';
+import '../models/date_plan.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
+import '../utils/notification_manager.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -23,6 +24,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     _fetchNotifications();
+    NotificationManager.refreshNotifier.addListener(_onRefreshNotifications);
+  }
+
+  @override
+  void dispose() {
+    NotificationManager.refreshNotifier.removeListener(_onRefreshNotifications);
+    super.dispose();
+  }
+
+  void _onRefreshNotifications() {
+    if (mounted) {
+      _fetchNotifications();
+    }
   }
 
   Future<void> _fetchNotifications() async {
@@ -333,114 +347,141 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
-          child: GlassCard(
-            enableBlur: false,
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isRead ? Colors.grey.shade100 : const Color(0xFFFDF2F8),
-                    shape: BoxShape.circle,
+          child: GestureDetector(
+            onTap: () {
+              if (planId != null) {
+                _loadAndDirectToPlan(planId, notifId);
+              } else if (!isRead) {
+                _markAsRead(notifId);
+              }
+            },
+            child: GlassCard(
+              enableBlur: false,
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isRead ? Colors.grey.shade100 : const Color(0xFFFDF2F8),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.favorite,
+                      color: isRead ? Colors.grey : const Color(0xFFEC4899),
+                      size: 20,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.favorite,
-                    color: isRead ? Colors.grey : const Color(0xFFEC4899),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              title,
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: isRead ? const Color(0xFF6B7280) : const Color(0xFF1F2937),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: isRead ? const Color(0xFF6B7280) : const Color(0xFF1F2937),
+                                ),
                               ),
                             ),
-                          ),
-                          if (!isRead)
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFEC4899),
-                                shape: BoxShape.circle,
+                            if (!isRead)
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFEC4899),
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        message,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: const Color(0xFF4B5563),
-                          height: 1.4,
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Thời gian chấp nhận: ${_formatDateTime(createdAt)}',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: const Color(0xFF9CA3AF),
-                              fontStyle: FontStyle.italic,
-                            ),
+                        const SizedBox(height: 6),
+                        Text(
+                          message,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: const Color(0xFF4B5563),
+                            height: 1.4,
                           ),
-                          if (planId != null)
-                            TextButton(
-                              onPressed: () => _loadAndDirectToPlan(planId, notifId),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                'Xem lộ trình ➔',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFEC4899),
-                                ),
-                              ),
-                            )
-                          else if (!isRead)
-                            TextButton(
-                              onPressed: () => _markAsRead(notifId),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                'Đã đọc',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF8B5CF6),
-                                ),
+                        ),
+                        const SizedBox(height: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Thời gian chấp nhận: ${_formatDateTime(createdAt)}',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: const Color(0xFF9CA3AF),
+                                fontStyle: FontStyle.italic,
                               ),
                             ),
-                        ],
-                      ),
-                    ],
+                            if (planId != null) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () => _loadAndDirectToPlan(planId, notifId),
+                                  icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+                                  label: Text(
+                                    'Xem lộ trình',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFFF1F2),
+                                    foregroundColor: const Color(0xFFEC4899),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                    minimumSize: const Size(0, 32),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: const BorderSide(color: Color(0xFFFECDD3), width: 1),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ] else if (!isRead) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () => _markAsRead(notifId),
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: const Color(0xFFF5F3FF),
+                                    foregroundColor: const Color(0xFF8B5CF6),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                    minimumSize: const Size(0, 32),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: const BorderSide(color: Color(0xFFDDD6FE), width: 1),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Đã đọc',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

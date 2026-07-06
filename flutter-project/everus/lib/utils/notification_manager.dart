@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,18 +12,24 @@ import 'auth_helper.dart';
 
 class NotificationManager with WidgetsBindingObserver {
   static final NotificationManager instance = NotificationManager._internal();
+  static final ValueNotifier<bool> refreshNotifier = ValueNotifier<bool>(false);
 
   NotificationManager._internal();
 
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   Timer? _pollingTimer;
   bool _isInitialized = false;
-  String? _lastCheckedPlanId;
-  bool _hasActiveInvitation = false;
+
+  StreamSubscription<String>? _sseSubscription;
+  HttpClient? _sseClient;
+  bool _isConnectingSse = false;
+  Timer? _reconnectTimer;
+
 
   Future<void> initialize() async {
     if (_isInitialized) return;
     WidgetsBinding.instance.addObserver(this);
+    AuthHelper.sessionNotifier.addListener(_onAuthStateChanged);
 
     // Initialize Local Notifications
     const AndroidInitializationSettings androidSettings =
@@ -56,7 +61,20 @@ class NotificationManager with WidgetsBindingObserver {
 
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    AuthHelper.sessionNotifier.removeListener(_onAuthStateChanged);
     stopPolling();
+    stopSseConnection();
+  }
+
+  void _onAuthStateChanged() {
+    if (AuthHelper.isLoggedIn) {
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed ||
+          WidgetsBinding.instance.lifecycleState == null) {
+        startSseConnection();
+      }
+    } else {
+      stopSseConnection();
+    }
   }
 
   @override
@@ -64,17 +82,140 @@ class NotificationManager with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // Immediate check when coming back to the app
       checkInvitationStatus(forceCheck: true);
+      startSseConnection();
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
+      stopSseConnection();
     }
   }
 
   void startMonitoring() {
-    // Check immediately, then it will set up the timer if needed
     checkInvitationStatus();
+    startSseConnection();
   }
 
   void stopPolling() {
     _pollingTimer?.cancel();
     _pollingTimer = null;
+  }
+
+  void startSseConnection() async {
+    if (!AuthHelper.isLoggedIn) {
+      stopSseConnection();
+      return;
+    }
+    
+    if (_sseSubscription != null || _isConnectingSse) {
+      return; // Already connected or connecting
+    }
+
+    _isConnectingSse = true;
+
+    try {
+      final token = AuthHelper.currentAccessToken;
+      if (token == null) {
+        _isConnectingSse = false;
+        return;
+      }
+
+      _sseClient?.close(force: true);
+      
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 15);
+      _sseClient = client;
+
+      final sseUri = Uri.parse('${AuthHelper.baseUrl}/api/notifications/sse');
+      final request = await client.getUrl(sseUri);
+      request.headers.set('Authorization', 'Bearer $token');
+      request.headers.set('Accept', 'text/event-stream');
+      request.headers.set('Cache-Control', 'no-cache');
+
+      final response = await request.close();
+      _isConnectingSse = false;
+
+      if (response.statusCode == 200) {
+        _sseSubscription = response
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .listen(
+          (line) {
+            if (line.startsWith('data: ')) {
+              try {
+                final dataStr = line.substring(6);
+                final data = jsonDecode(dataStr);
+                _handleSseMessage(data);
+              } catch (e) {
+                debugPrint("Error parsing SSE line: $e");
+              }
+            }
+          },
+          onError: (e) {
+            debugPrint("SSE stream error: $e");
+            stopSseConnection();
+            _retrySseConnection();
+          },
+          onDone: () {
+            debugPrint("SSE stream closed by server");
+            stopSseConnection();
+            _retrySseConnection();
+          },
+          cancelOnError: true,
+        );
+      } else {
+        debugPrint("Failed to establish SSE: status ${response.statusCode}");
+        stopSseConnection();
+        _retrySseConnection();
+      }
+    } catch (e) {
+      debugPrint("Error establishing SSE connection: $e");
+      _isConnectingSse = false;
+      stopSseConnection();
+      _retrySseConnection();
+    }
+  }
+
+  void _retrySseConnection() {
+    _reconnectTimer?.cancel();
+    if (!AuthHelper.isLoggedIn || 
+        (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed && 
+         WidgetsBinding.instance.lifecycleState != null)) {
+      return;
+    }
+    _reconnectTimer = Timer(const Duration(seconds: 5), () {
+      startSseConnection();
+    });
+  }
+
+  void stopSseConnection() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _sseSubscription?.cancel();
+    _sseSubscription = null;
+    _sseClient?.close(force: true);
+    _sseClient = null;
+    _isConnectingSse = false;
+  }
+
+  void _handleSseMessage(Map<String, dynamic> data) {
+    if (data['type'] == 'invitation_accepted') {
+      final inviteData = {
+        'id': data['invite_id'] ?? data['id'],
+        'receiver_name': data['receiver_name'],
+        'date': data['date'],
+        'time': data['time'],
+        'location': data['location'],
+      };
+      
+      final planId = data['plan_id'] as String?;
+      if (planId != null) {
+        SharedPreferences.getInstance().then((prefs) {
+          final modalShownKey = 'invitation_accepted_modal_shown_$planId';
+          prefs.setBool(modalShownKey, true);
+        });
+      }
+      
+      _handleInvitationAccepted(inviteData);
+      refreshNotifier.value = !refreshNotifier.value;
+    }
   }
 
   Future<void> checkInvitationStatus({bool forceCheck = false}) async {
@@ -98,8 +239,6 @@ class NotificationManager with WidgetsBindingObserver {
         return;
       }
 
-      _lastCheckedPlanId = planId;
-
       final token = AuthHelper.currentAccessToken;
       final uri = Uri.parse('${AuthHelper.baseUrl}/api/invitations/by-plan/$planId');
       
@@ -117,17 +256,12 @@ class NotificationManager with WidgetsBindingObserver {
         final accepted = data['accepted'] as bool? ?? false;
 
         if (exists && !accepted) {
-          _hasActiveInvitation = true;
-          // Start 15s polling if not already running
-          if (_pollingTimer == null) {
-            _pollingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
-              checkInvitationStatus();
-            });
-          }
+          _pollingTimer ??= Timer.periodic(const Duration(seconds: 15), (timer) {
+            checkInvitationStatus();
+          });
         } else {
           // No active unaccepted invitation, stop polling
           stopPolling();
-          _hasActiveInvitation = false;
         }
 
         if (exists && accepted) {
@@ -216,7 +350,7 @@ class NotificationManager with WidgetsBindingObserver {
     final location = inviteData['location'] ?? '';
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28), // increased padding from 24 to 28 for elegance
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
@@ -254,7 +388,7 @@ class NotificationManager with WidgetsBindingObserver {
               size: 48,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24), // increased space between heart and title
           
           // Title
           Text(
@@ -266,7 +400,7 @@ class NotificationManager with WidgetsBindingObserver {
               color: const Color(0xFF1F2937),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16), // increased space between title and message
           
           // Message
           RichText(
@@ -286,11 +420,11 @@ class NotificationManager with WidgetsBindingObserver {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24), // increased space between message and details box
 
           // Date Details Box
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20), // increased padding from 16 to 20
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(16),
@@ -307,7 +441,7 @@ class NotificationManager with WidgetsBindingObserver {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28), // increased space between details box and action buttons
 
           // Action Buttons
           Row(
@@ -355,16 +489,17 @@ class NotificationManager with WidgetsBindingObserver {
 
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 12.0), // increased from 8.0 to 12.0 for breathing room
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 16, color: const Color(0xFF9CA3AF)),
           const SizedBox(width: 8),
           Text(
-            "$label: ",
+            "$label:",
             style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)),
           ),
+          const SizedBox(width: 8), // added clear horizontal separation between label and value
           Expanded(
             child: Text(
               value,
