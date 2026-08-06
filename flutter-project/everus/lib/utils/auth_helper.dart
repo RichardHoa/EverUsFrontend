@@ -16,7 +16,15 @@ class AuthException implements Exception {
 }
 
 class AuthHelper {
+  static const String _prodUrl = 'https://everus-backend.richardhoa.io.vn';
+
   static String get baseUrl {
+    if (kIsWeb) {
+      final host = Uri.base.host;
+      if (host.contains('richardhoa.io.vn')) {
+        return _prodUrl;
+      }
+    }
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:8009';
     }
