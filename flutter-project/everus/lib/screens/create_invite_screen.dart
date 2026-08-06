@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import '../utils/auth_helper.dart';
 
 class InviteTemplate {
@@ -414,29 +414,28 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
       isCreating = true;
     });
 
-    final client = HttpClient();
     try {
       final dateDisplay = "${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}";
       final uri = Uri.parse('${AuthHelper.baseUrl}/api/invitations');
-      final request = await client.postUrl(uri);
       
-      request.headers.contentType = ContentType.json;
-      request.write(json.encode({
-        'plan_id': widget.planId,
-        'activity_key': widget.activityKey,
-        'template_id': templateId,
-        'sender_name': senderName,
-        'receiver_name': receiverName,
-        'date': dateDisplay,
-        'time': timeStr,
-        'location': locationStr,
-        'duration': widget.duration,
-        'custom_text': customText,
-      }));
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'plan_id': widget.planId,
+          'activity_key': widget.activityKey,
+          'template_id': templateId,
+          'sender_name': senderName,
+          'receiver_name': receiverName,
+          'date': dateDisplay,
+          'time': timeStr,
+          'location': locationStr,
+          'duration': widget.duration,
+          'custom_text': customText,
+        }),
+      );
 
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
-      final Map<String, dynamic> responseData = json.decode(responseBody);
+      final Map<String, dynamic> responseData = json.decode(utf8.decode(response.bodyBytes));
 
       if (response.statusCode >= 400) {
         throw Exception(responseData['detail'] ?? 'Tạo lời mời không thành công.');
@@ -452,7 +451,6 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
         );
       }
     } finally {
-      client.close();
       if (mounted) {
         setState(() {
           isCreating = false;

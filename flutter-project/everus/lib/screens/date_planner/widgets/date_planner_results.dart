@@ -5,11 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../models/activity.dart'; // For ActivityTheme
 import '../../../models/date_plan.dart';
 import '../../../utils/auth_helper.dart';
-import '../../login_screen.dart';
 import '../../saved_plans_screen.dart';
-import '../../create_invite_screen.dart';
 import '../date_planner_controller.dart';
-import '../../../utils/notification_manager.dart';
 
 /// Renders the generated date plan itinerary, with timeline stages and maps links.
 class DatePlannerResults extends StatefulWidget {
@@ -255,153 +252,6 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
             const SizedBox(height: 24),
           ],
 
-          const SizedBox(height: 12),
-
-          // Invitation status
-          if (AuthHelper.isLoggedIn && widget.controller.existingInviteUrl != null) ...[
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: widget.controller.inviteAccepted ? Colors.green.withValues(alpha: 0.05) : plan.theme.primary.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: widget.controller.inviteAccepted ? Colors.green.withValues(alpha: 0.2) : plan.theme.primary.withValues(alpha: 0.2)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (widget.controller.inviteAccepted) ...[
-                    Row(
-                      children: [
-                        const Icon(Icons.check_circle_rounded, color: Colors.green, size: 22),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            "Lời mời hẹn hò đã được chấp nhận! 🎉",
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green.shade800,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Đối phương đã đồng ý tham gia buổi hẹn hò này. Hãy cùng chuẩn bị nhé! 💕",
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: Colors.black87,
-                        height: 1.4,
-                      ),
-                    ),
-                  ] else ...[
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.mail_outline, 
-                          color: plan.theme.primary, 
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Đã tạo thư mời hẹn hò 💖",
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: plan.theme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            widget.controller.existingInviteUrl!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.copy, size: 18),
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: widget.controller.existingInviteUrl!));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Đã sao chép liên kết lời mời!')),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    if (widget.controller.inviteExpiresAt != null) ...[
-                      const SizedBox(height: 8),
-                      Builder(
-                        builder: (context) {
-                          try {
-                            final exp = DateTime.parse(widget.controller.inviteExpiresAt!).toLocal();
-                            final diff = exp.difference(DateTime.now());
-                            if (diff.isNegative) {
-                              return Text(
-                                "Thư mời đã hết hạn ⚠️",
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.redAccent,
-                                ),
-                              );
-                            } else {
-                              final days = diff.inDays;
-                              final hours = diff.inHours % 24;
-                              final timeText = days > 0
-                                  ? "Hết hạn sau $days ngày $hours giờ ⏳"
-                                  : "Hết hạn sau $hours giờ ⏳";
-                              return Text(
-                                timeText,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: Colors.black54,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              );
-                            }
-                          } catch (_) {
-                            return const SizedBox.shrink();
-                          }
-                        },
-                      ),
-                    ],
-                  ],
-                ],
-              ),
-            ),
-          ] else if (!widget.controller.inviteAccepted) ...[
-            ElevatedButton.icon(
-              onPressed: () => _handleSendInvite(context, plan),
-              icon: const Icon(Icons.mail_outline, size: 20),
-              label: Text(
-                'GỬI LỜI MỜI HẸN HÒ',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: plan.theme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                minimumSize: const Size.fromHeight(56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 2,
-              ),
-            ),
-          ],
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -438,47 +288,6 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
     );
   }
 
-  void _handleSendInvite(BuildContext context, DatePlan plan) async {
-    if (!AuthHelper.isLoggedIn) {
-      await LoginScreen.showGentleLoginModal(
-        context,
-        onLoginSuccess: () async {
-          await NotificationManager.instance.fetchNotifications();
-          await widget.controller.syncLocalPlanToServer();
-        },
-      );
-      if (!mounted || !AuthHelper.isLoggedIn) return;
-    }
-    
-    String activityKey = 'traveler';
-    if (plan.vibe == 'romantic') {
-      activityKey = 'cooking';
-    } else if (plan.vibe == 'adventure') {
-      activityKey = 'mapper';
-    }
-    
-    if (!context.mounted) return;
-    final newInviteUrl = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CreateInviteScreen(
-          activityKey: activityKey,
-          activityName: plan.dateType,
-          initialDate: widget.controller.selectedDate,
-          initialTime: "${widget.controller.startTime.hour.toString().padLeft(2, '0')}:${widget.controller.startTime.minute.toString().padLeft(2, '0')}",
-          initialLocation: widget.controller.areaController.text.trim().isEmpty ? "Quận 1" : widget.controller.areaController.text.trim(),
-          duration: "~${widget.controller.durationHours.toStringAsFixed(1)} giờ",
-          primaryColor: plan.theme.primary,
-          secondaryColor: plan.theme.secondary,
-          planId: widget.controller.generatedPlan?.id ?? plan.id,
-        ),
-      ),
-    );
-    if (!mounted) return;
-    if (newInviteUrl != null) {
-      widget.controller.checkExistingInvitation(widget.controller.generatedPlan?.id ?? plan.id ?? '');
-    }
-  }
 
   Widget _buildCompactActionButton({
     required IconData icon,

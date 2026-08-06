@@ -1,7 +1,6 @@
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'file_helper/file_helper.dart';
 
 class LoveCounterHelper {
   static const String _keyUserName = 'love_user_name';
@@ -88,37 +87,15 @@ class LoveCounterHelper {
     await prefs.setBool(_keyUseDetailedView, useDetailed);
   }
 
-  /// Pick an image from gallery or camera, copy it to the local app documents directory, delete old image if exists, and return its local path
+  /// Pick an image from gallery or camera and save it using cross-platform AppFileHelper
   static Future<String?> pickAndSaveImage(ImageSource source, String? oldPath) async {
     try {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(source: source, imageQuality: 85);
       if (pickedFile == null) return null;
 
-      final appDir = await getApplicationDocumentsDirectory();
-      final String originalPath = pickedFile.path;
-      final String extension = originalPath.split('.').last;
-      
-      // Generate a unique file name to avoid collision
-      final String fileName = 'love_profile_${DateTime.now().microsecondsSinceEpoch}.$extension';
-      final String newPath = '${appDir.path}/$fileName';
-      
-      // Clean up the old file to prevent storage/memory leaks
-      if (oldPath != null) {
-        try {
-          final oldFile = File(oldPath);
-          if (await oldFile.exists()) {
-            await oldFile.delete();
-          }
-        } catch (e) {
-          // Ignore errors deleting old files
-        }
-      }
-
-      final File savedImage = await File(originalPath).copy(newPath);
-      return savedImage.path;
+      return await AppFileHelper.savePickedImage(pickedFile, oldPath);
     } catch (e) {
-      // Return null if any exception occurs (e.g. permission denied)
       return null;
     }
   }

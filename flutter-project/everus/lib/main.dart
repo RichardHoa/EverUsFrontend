@@ -27,6 +27,24 @@ class EverUsApp extends StatelessWidget {
       title: 'EverUs - Couple Vibe',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        if (screenWidth > 600) {
+          return Container(
+            color: const Color(0xFF1E1B2E),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 414),
+                child: ClipRect(
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
+            ),
+          );
+        }
+        return child ?? const SizedBox.shrink();
+      },
+
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF8B5CF6),

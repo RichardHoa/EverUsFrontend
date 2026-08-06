@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utils/love_counter_helper.dart';
+import '../utils/file_helper/file_helper.dart';
+import '../widgets/app_avatar.dart';
 import '../widgets/heart_mascot.dart';
 import '../widgets/everus_footer.dart';
 
@@ -30,8 +31,6 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
   // Async file cache to prevent main-thread jank
   bool _userImageExists = false;
   bool _loverImageExists = false;
-  File? _userFile;
-  File? _loverFile;
 
   // Live calculation
   Timer? _timer;
@@ -83,8 +82,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     final loverPath = data['loverImagePath'] as String?;
 
     // Asynchronous file checks to avoid blocking the main UI thread
-    final userExists = userPath != null && await File(userPath).exists();
-    final loverExists = loverPath != null && await File(loverPath).exists();
+    final userExists = userPath != null && await AppFileHelper.fileExists(userPath);
+    final loverExists = loverPath != null && await AppFileHelper.fileExists(loverPath);
     
     if (mounted) {
       setState(() {
@@ -96,8 +95,6 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         _loverImagePath = loverPath;
         _userImageExists = userExists;
         _loverImageExists = loverExists;
-        _userFile = userExists ? File(userPath) : null;
-        _loverFile = loverExists ? File(loverPath) : null;
         _useDetailedView = data['useDetailedView'];
 
         if (_isSetup && _anniversaryDate != null) {
@@ -180,16 +177,14 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                         targetKey == 'user' ? _setupUserImagePath : _setupLoverImagePath,
                       );
                       if (path != null) {
-                        final exists = await File(path).exists();
+                        final exists = await AppFileHelper.fileExists(path);
                         setState(() {
                           if (targetKey == 'user') {
                             _setupUserImagePath = path;
                             _userImageExists = exists;
-                            _userFile = exists ? File(path) : null;
                           } else {
                             _setupLoverImagePath = path;
                             _loverImageExists = exists;
-                            _loverFile = exists ? File(path) : null;
                           }
                         });
                       }
@@ -205,16 +200,14 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                         targetKey == 'user' ? _setupUserImagePath : _setupLoverImagePath,
                       );
                       if (path != null) {
-                        final exists = await File(path).exists();
+                        final exists = await AppFileHelper.fileExists(path);
                         setState(() {
                           if (targetKey == 'user') {
                             _setupUserImagePath = path;
                             _userImageExists = exists;
-                            _userFile = exists ? File(path) : null;
                           } else {
                             _setupLoverImagePath = path;
                             _loverImageExists = exists;
-                            _loverFile = exists ? File(path) : null;
                           }
                         });
                       }
@@ -309,8 +302,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
       _timer?.cancel();
       _pulseController.repeat(reverse: true);
 
-      final userExists = _setupUserImagePath != null && await File(_setupUserImagePath!).exists();
-      final loverExists = _setupLoverImagePath != null && await File(_setupLoverImagePath!).exists();
+      final userExists = _setupUserImagePath != null && await AppFileHelper.fileExists(_setupUserImagePath!);
+      final loverExists = _setupLoverImagePath != null && await AppFileHelper.fileExists(_setupLoverImagePath!);
 
       setState(() {
         _userName = _userController.text.trim();
@@ -320,8 +313,6 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
         _loverImagePath = _setupLoverImagePath;
         _userImageExists = userExists;
         _loverImageExists = loverExists;
-        _userFile = userExists ? File(_setupUserImagePath!) : null;
-        _loverFile = loverExists ? File(_setupLoverImagePath!) : null;
         _elapsedNotifier.value = DateTime.now().difference(_anniversaryDate!);
         _isSetup = true;
       });
@@ -579,7 +570,6 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
 
   Widget _buildProfileAvatar(String name, String? imagePath, bool exists) {
     final size = 100.0;
-    final cachedFile = (imagePath == _userImagePath) ? _userFile : _loverFile;
     return Column(
       children: [
         Container(
@@ -596,33 +586,28 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
               )
             ],
           ),
-          child: ClipOval(
-            child: exists && cachedFile != null
-                ? Image.file(
-                    cachedFile,
-                    width: size,
-                    height: size,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFF3E8FF), Color(0xFFFCE7F3)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        name.isNotEmpty ? name[0].toUpperCase() : '♥',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF8B5CF6),
-                        ),
-                      ),
-                    ),
+          child: AppAvatar(
+            imagePath: exists ? imagePath : null,
+            radius: size / 2,
+            fallback: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF3E8FF), Color(0xFFFCE7F3)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  name.isNotEmpty ? name[0].toUpperCase() : '♥',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF8B5CF6),
                   ),
+                ),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -900,7 +885,6 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
 
   Widget _buildSetupProfileButton(String key, String label, String? imagePath, bool exists) {
     final size = 110.0;
-    final cachedFile = (key == 'user') ? _userFile : _loverFile;
 
     return Column(
       children: [
@@ -927,33 +911,28 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                     )
                   ],
                 ),
-                child: ClipOval(
-                  child: exists && cachedFile != null
-                      ? Image.file(
-                          cachedFile,
-                          width: size,
-                          height: size,
-                          fit: BoxFit.cover,
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_a_photo_outlined,
-                              color: key == 'user' ? const Color(0xFF8B5CF6) : const Color(0xFFEC4899),
-                              size: 28,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Thêm ảnh',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: key == 'user' ? const Color(0xFF8B5CF6) : const Color(0xFFEC4899),
-                              ),
-                            ),
-                          ],
+                child: AppAvatar(
+                  imagePath: exists ? imagePath : null,
+                  radius: size / 2,
+                  fallback: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_a_photo_outlined,
+                        color: key == 'user' ? const Color(0xFF8B5CF6) : const Color(0xFFEC4899),
+                        size: 28,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Thêm ảnh',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: key == 'user' ? const Color(0xFF8B5CF6) : const Color(0xFFEC4899),
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               if (exists && imagePath != null)

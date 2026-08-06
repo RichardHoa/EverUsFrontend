@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,7 +21,7 @@ class NotificationManager with WidgetsBindingObserver {
   bool _isInitialized = false;
 
   StreamSubscription<String>? _sseSubscription;
-  HttpClient? _sseClient;
+  http.Client? _sseHttpClient;
   bool _isConnectingSse = false;
   Timer? _reconnectTimer;
 
@@ -39,29 +39,31 @@ class NotificationManager with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     AuthHelper.sessionNotifier.addListener(_onAuthStateChanged);
 
-    // Initialize Local Notifications
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings iOSSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+    if (!kIsWeb) {
+      // Initialize Local Notifications on native platforms
+      const AndroidInitializationSettings androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const DarwinInitializationSettings iOSSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
 
-    const InitializationSettings initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iOSSettings,
-    );
+      const InitializationSettings initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iOSSettings,
+      );
 
-    await _localNotifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse details) {
-        // When notification is clicked, navigate to planner screen
-        if (details.payload != null) {
-          _navigateToPlanner();
-        }
-      },
-    );
+      await _localNotifications.initialize(
+        settings: initSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse details) {
+          // When notification is clicked, navigate to planner screen
+          if (details.payload != null) {
+            _navigateToPlanner();
+          }
+        },
+      );
+    }
 
     _isInitialized = true;
     startMonitoring();
@@ -129,23 +131,22 @@ class NotificationManager with WidgetsBindingObserver {
         return;
       }
 
-      _sseClient?.close(force: true);
+      _sseHttpClient?.close();
       
-      final client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 15);
-      _sseClient = client;
+      final client = http.Client();
+      _sseHttpClient = client;
 
       final sseUri = Uri.parse('${AuthHelper.baseUrl}/api/notifications/sse');
-      final request = await client.getUrl(sseUri);
-      request.headers.set('Authorization', 'Bearer $token');
-      request.headers.set('Accept', 'text/event-stream');
-      request.headers.set('Cache-Control', 'no-cache');
+      final request = http.Request('GET', sseUri);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'text/event-stream';
+      request.headers['Cache-Control'] = 'no-cache';
 
-      final response = await request.close();
+      final streamedResponse = await client.send(request);
       _isConnectingSse = false;
 
-      if (response.statusCode == 200) {
-        _sseSubscription = response
+      if (streamedResponse.statusCode == 200) {
+        _sseSubscription = streamedResponse.stream
             .transform(utf8.decoder)
             .transform(const LineSplitter())
             .listen(
@@ -173,7 +174,7 @@ class NotificationManager with WidgetsBindingObserver {
           cancelOnError: true,
         );
       } else {
-        debugPrint("Failed to establish SSE: status ${response.statusCode}");
+        debugPrint("Failed to establish SSE: status ${streamedResponse.statusCode}");
         stopSseConnection();
         _retrySseConnection();
       }
@@ -202,8 +203,8 @@ class NotificationManager with WidgetsBindingObserver {
     _reconnectTimer = null;
     _sseSubscription?.cancel();
     _sseSubscription = null;
-    _sseClient?.close(force: true);
-    _sseClient = null;
+    _sseHttpClient?.close();
+    _sseHttpClient = null;
     _isConnectingSse = false;
   }
 
@@ -321,6 +322,7 @@ class NotificationManager with WidgetsBindingObserver {
     required String body,
     required String payload,
   }) async {
+    if (kIsWeb) return;
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'everus_invitations_channel',
       'Lời mời EverUs',
@@ -340,10 +342,10 @@ class NotificationManager with WidgetsBindingObserver {
     );
 
     await _localNotifications.show(
-      999, // notification id
-      title,
-      body,
-      platformDetails,
+      id: 999,
+      title: title,
+      body: body,
+      notificationDetails: platformDetails,
       payload: payload,
     );
   }

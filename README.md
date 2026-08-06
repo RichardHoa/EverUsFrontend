@@ -56,6 +56,8 @@ git config commit.template d
 
 ---
 
+flutter run -d chrome --web-port=8008
+
 ## TODO list
 
 Regarding the thiết kế hẹn hò, we have some big structural change
@@ -443,3 +445,10 @@ search: quán cà phê giá rẻ quận 7
   ],
   "credits": 3
 }
+
+
+
+if user has 2 plans, then the 2 plans inviation get accepted, it still display the links.
+
+When the inviattion is accepted, the bell button still ring first, and there is NO MODAL AT ALL. ALso the bell button in the home page and the date planner page have 2 different color and position, fix it, one universal bell button in the whole design.
+

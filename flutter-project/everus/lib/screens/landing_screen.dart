@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/heart_mascot.dart';
 import '../widgets/everus_footer.dart';
+import '../widgets/app_avatar.dart';
+import '../utils/file_helper/file_helper.dart';
 import 'love_counter_screen.dart';
 import 'login_screen.dart';
 import 'date_planner_screen.dart';
@@ -28,8 +29,8 @@ class _LandingScreenState extends State<LandingScreen> {
   int _loveDays = 0;
   bool _userImageExists = false;
   bool _loverImageExists = false;
-  File? _userFile;
-  File? _loverFile;
+  String? _userImagePath;
+  String? _loverImagePath;
 
   // Mascot Interactive State
   String _mascotEmotion = 'excited';
@@ -94,20 +95,18 @@ class _LandingScreenState extends State<LandingScreen> {
       int days = 0;
       bool userExists = false;
       bool loverExists = false;
-      File? userFile;
-      File? loverFile;
+      String? userPath;
+      String? loverPath;
       if (isConfigured) {
         settings = await LoveCounterHelper.loadSettings();
         final anniversary = settings['anniversaryDate'] as DateTime?;
         if (anniversary != null) {
           days = DateTime.now().difference(anniversary).inDays;
         }
-        final userPath = settings['userImagePath'] as String?;
-        final loverPath = settings['loverImagePath'] as String?;
-        userExists = userPath != null && await File(userPath).exists();
-        loverExists = loverPath != null && await File(loverPath).exists();
-        if (userExists) userFile = File(userPath);
-        if (loverExists) loverFile = File(loverPath);
+        userPath = settings['userImagePath'] as String?;
+        loverPath = settings['loverImagePath'] as String?;
+        userExists = userPath != null && await AppFileHelper.fileExists(userPath);
+        loverExists = loverPath != null && await AppFileHelper.fileExists(loverPath);
       }
       if (mounted) {
         setState(() {
@@ -116,8 +115,8 @@ class _LandingScreenState extends State<LandingScreen> {
           _loveDays = days;
           _userImageExists = userExists;
           _loverImageExists = loverExists;
-          _userFile = userFile;
-          _loverFile = loverFile;
+          _userImagePath = userPath;
+          _loverImagePath = loverPath;
           _loading = false;
         });
       }
@@ -613,7 +612,7 @@ class _LandingScreenState extends State<LandingScreen> {
     );
   }
 
-  Widget _buildAvatarCircle(String name, File? file, bool exists, {double size = 32.0}) {
+  Widget _buildAvatarCircle(String name, String? imagePath, bool exists, {double size = 32.0}) {
     return Container(
       width: size,
       height: size,
@@ -628,27 +627,22 @@ class _LandingScreenState extends State<LandingScreen> {
           ),
         ],
       ),
-      child: ClipOval(
-        child: exists && file != null
-            ? Image.file(
-                file,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-              )
-            : Container(
-                color: const Color(0xFFF3E8FF),
-                child: Center(
-                  child: Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '♥',
-                    style: GoogleFonts.inter(
-                      fontSize: size * 0.375,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF8B5CF6),
-                    ),
-                  ),
-                ),
+      child: AppAvatar(
+        imagePath: exists ? imagePath : null,
+        radius: size / 2,
+        fallback: Container(
+          color: const Color(0xFFF3E8FF),
+          child: Center(
+            child: Text(
+              name.isNotEmpty ? name[0].toUpperCase() : '♥',
+              style: GoogleFonts.inter(
+                fontSize: size * 0.375,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF8B5CF6),
               ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -682,7 +676,7 @@ class _LandingScreenState extends State<LandingScreen> {
         children: [
           _buildAvatarCircle(
             _loveSettings['loverName'] ?? 'Em',
-            _loverFile,
+            _loverImagePath,
             _loverImageExists,
             size: size,
           ),
@@ -696,7 +690,7 @@ class _LandingScreenState extends State<LandingScreen> {
           ),
           _buildAvatarCircle(
             _loveSettings['userName'] ?? 'Bạn',
-            _userFile,
+            _userImagePath,
             _userImageExists,
             size: size,
           ),
