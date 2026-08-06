@@ -16,20 +16,19 @@ class AuthException implements Exception {
 }
 
 class AuthHelper {
+  // Constant to switch application mode (dev or prod)
+  static const AppMode mode = AppMode.prod;
+
   static const String _prodUrl = 'https://everus-backend.richardhoa.io.vn';
 
-  static String get baseUrl {
-    if (kIsWeb) {
-      final host = Uri.base.host;
-      if (host.contains('richardhoa.io.vn')) {
-        return _prodUrl;
-      }
-    }
+  static String get _devUrl {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:8009';
     }
     return 'http://127.0.0.1:8009';
   }
+
+  static String get baseUrl => mode == AppMode.prod ? _prodUrl : _devUrl;
 
   // Session state notifier
   static final ValueNotifier<Map<String, dynamic>?> sessionNotifier = ValueNotifier(null);
