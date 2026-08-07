@@ -88,10 +88,9 @@ class AuthHelper {
   static Future<void> _clearPersistedSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('auth_session');
-      await prefs.remove('auth_login_time');
+      await prefs.clear();
     } catch (e) {
-      debugPrint("Failed to clear persisted session: $e");
+      debugPrint("Failed to clear persona data cache: $e");
     }
   }
 
@@ -182,16 +181,20 @@ class AuthHelper {
   static Future<void> signOut() async {
     try {
       final uri = Uri.parse('$baseUrl/auth/signout');
-      await http.post(uri);
-      
-      // Also sign out from Google if logged in
-      await GoogleSignIn.instance.signOut();
-    } catch (_) {
-      // Ignore network errors on signout
-    } finally {
-      await _clearPersistedSession();
-      sessionNotifier.value = null;
+      await http.post(uri).timeout(const Duration(seconds: 5), onTimeout: () => http.Response('', 408));
+    } catch (e) {
+      debugPrint("Signout network request failed or timed out: $e");
     }
+
+    try {
+      // Safely attempt Google sign-out with timeout to prevent hanging on Web when uninitialized
+      await GoogleSignIn.instance.signOut().timeout(const Duration(seconds: 2), onTimeout: () => null);
+    } catch (e) {
+      debugPrint("Google signout failed or skipped: $e");
+    }
+
+    await _clearPersistedSession();
+    sessionNotifier.value = null;
   }
 
   /// Signs in a user using Google OAuth.
