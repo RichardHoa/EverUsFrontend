@@ -57,6 +57,7 @@ class CreateInviteScreen extends StatefulWidget {
   final Color primaryColor;
   final Color secondaryColor;
   final String? planId;
+  final String? existingInviteUrl;
 
   const CreateInviteScreen({
     super.key,
@@ -69,6 +70,7 @@ class CreateInviteScreen extends StatefulWidget {
     required this.primaryColor,
     required this.secondaryColor,
     this.planId,
+    this.existingInviteUrl,
   });
 
   @override
@@ -104,6 +106,10 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
     customText = '';
     customTextController = TextEditingController();
     
+    if (widget.existingInviteUrl != null && widget.existingInviteUrl!.isNotEmpty) {
+      generatedUrl = widget.existingInviteUrl;
+    }
+
     _updateText();
   }
 

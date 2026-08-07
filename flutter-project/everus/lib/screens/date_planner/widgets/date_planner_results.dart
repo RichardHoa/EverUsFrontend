@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../models/activity.dart'; // For ActivityTheme
 import '../../../models/date_plan.dart';
 import '../../../utils/auth_helper.dart';
+import '../../create_invite_screen.dart';
 import '../../saved_plans_screen.dart';
 import '../date_planner_controller.dart';
 
@@ -249,9 +250,10 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                 elevation: 2,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
           ],
 
+          _buildInvitationSection(plan),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -284,6 +286,123 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
           ),
           const SizedBox(height: 48),
         ],
+      ),
+    );
+  }
+
+  void _openCreateInviteScreen(DatePlan plan) async {
+    final firstStage = plan.stages.isNotEmpty ? plan.stages.first : null;
+    final locationName = firstStage?.options.isNotEmpty == true
+        ? firstStage!.options.first.name
+        : ((plan.area != null && plan.area!.isNotEmpty)
+            ? plan.area!
+            : widget.controller.areaController.text.trim());
+    final startTimeStr = firstStage?.startTime ?? '18:00';
+
+    final resultUrl = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateInviteScreen(
+          activityKey: plan.vibe,
+          activityName: plan.dateType,
+          initialDate: widget.controller.selectedDate,
+          initialTime: startTimeStr,
+          initialLocation: locationName.isNotEmpty ? locationName : "Khu vực trung tâm",
+          duration: "${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)} tiếng",
+          primaryColor: plan.theme.primary,
+          secondaryColor: plan.theme.secondary,
+          planId: plan.id,
+          existingInviteUrl: widget.controller.existingInviteUrl,
+        ),
+      ),
+    );
+
+    if (resultUrl != null && plan.id != null) {
+      widget.controller.checkExistingInvitation(plan.id!);
+    }
+  }
+
+  Widget _buildInvitationSection(DatePlan plan) {
+    if (widget.controller.inviteAccepted) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0xFF10B981),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Lời mời đã được chấp nhận! 🎉',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF065F46),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Đối phương đã đồng ý tham gia buổi hẹn hò này.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: const Color(0xFF047857),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final bool hasInvite = widget.controller.existingInviteUrl != null && widget.controller.existingInviteUrl!.isNotEmpty;
+
+    return ElevatedButton.icon(
+      onPressed: () => _openCreateInviteScreen(plan),
+      icon: Icon(hasInvite ? Icons.mark_email_read_outlined : Icons.favorite_rounded, size: 20),
+      label: Text(
+        hasInvite ? 'XEM / GỬI LẠI LỜI MỜI HẸN HÒ' : 'GỬI LỜI MỜI HẸN HÒ 💌',
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: hasInvite ? const Color(0xFF10B981) : const Color(0xFFEC4899),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        minimumSize: const Size.fromHeight(52),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        elevation: 2,
       ),
     );
   }
