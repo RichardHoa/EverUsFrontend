@@ -99,9 +99,9 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
       };
     }).toList();
 
-    String topKey = ranked[0]['key'];
-    Activity topActivity = activities[topKey]!;
-    int matchPercentage = ranked[0]['pct'];
+    String topKey = ranked.isNotEmpty ? ranked[0]['key'] : 'cooking';
+    Activity topActivity = activities[topKey] ?? activities.values.first;
+    int matchPercentage = ranked.isNotEmpty ? ranked[0]['pct'] : 0;
 
     widget.onMatch(
       MatcherResult(

@@ -1,0 +1,21 @@
+::1 - - [06/Aug/2026 22:13:46] "GET / HTTP/1.1" 200 -
+::1 - - [06/Aug/2026 22:13:46] "GET /flutter_bootstrap.js HTTP/1.1" 200 -
+::1 - - [06/Aug/2026 22:13:46] "GET /manifest.json HTTP/1.1" 200 -
+::1 - - [06/Aug/2026 22:13:46] "GET /main.dart.js HTTP/1.1" 200 -
+::1 - - [06/Aug/2026 22:13:46] "GET /assets/FontManifest.json HTTP/1.1" 200 -
+::1 - - [06/Aug/2026 22:13:46] "GET /assets/fonts/MaterialIcons-Regular.otf HTTP/1.1" 200 -
+::1 - - [06/Aug/2026 22:13:46] "GET /assets/packages/cupertino_icons/assets/CupertinoIcons.ttf HTTP/1.1" 200 -
+::1 - - [06/Aug/2026 22:13:46] code 404, message File not found
+::1 - - [06/Aug/2026 22:13:46] code 404, message File not found
+::1 - - [06/Aug/2026 22:13:46] "GET /icons/Icon-192.png HTTP/1.1" 404 -
+::1 - - [06/Aug/2026 22:13:46] "GET /favicon.png HTTP/1.1" 404 -
+::1 - - [06/Aug/2026 22:13:46] "GET /assets/AssetManifest.bin.json HTTP/1.1" 200 -
+  return super().server_bind()
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 148, in server_bind
+    socketserver.TCPServer.server_bind(self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 478, in server_bind
+    self.socket.bind(self.server_address)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 48] Address already in use

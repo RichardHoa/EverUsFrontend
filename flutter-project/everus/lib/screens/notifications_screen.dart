@@ -115,7 +115,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _loadAndDirectToPlan(String planId, String notifId) async {
-    // Show a loading dialog
+    bool isDialogShowing = true;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -126,10 +126,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
     );
 
-    // Mark as read
     await _markAsRead(notifId);
-
     final token = AuthHelper.currentAccessToken;
+
     try {
       final response = await http.get(
         Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans/$planId'),
@@ -139,9 +138,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         },
       );
 
-      // Dismiss loading dialog
-      if (mounted) {
+      if (mounted && isDialogShowing) {
         Navigator.of(context).pop();
+        isDialogShowing = false;
       }
 
       if (response.statusCode == 200) {
@@ -152,7 +151,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         final plan = DatePlan.fromJson(mutableData);
         
         if (mounted) {
-          Navigator.of(context).pop(plan); // Return plan to planner screen
+          Navigator.of(context).pop(plan);
         }
       } else {
         if (mounted) {
@@ -162,9 +161,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         }
       }
     } catch (e) {
-      // Dismiss loading dialog if error
-      if (mounted) {
+      if (mounted && isDialogShowing) {
         Navigator.of(context).pop();
+        isDialogShowing = false;
+      }
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi tải kế hoạch: $e')),
         );

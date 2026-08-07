@@ -111,9 +111,9 @@ class LoginScreen extends StatefulWidget {
                       ),
                       child: ElevatedButton(
                         onPressed: () async {
-                          Navigator.pop(context); // close modal
-                          final loggedIn = await Navigator.push<bool>(
-                            context,
+                          final nav = Navigator.of(context);
+                          nav.pop(); // close modal
+                          final loggedIn = await nav.push<bool>(
                             MaterialPageRoute(
                               builder: (context) => const LoginScreen(isProfileMode: false),
                             ),
@@ -205,12 +205,14 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('AuthException: ', '');
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('AuthException: ', '');
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -227,12 +229,14 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await AuthHelper.signOut();
       if (mounted) {
-        Navigator.of(context).pop(); // Go back after signing out
+        Navigator.of(context).pop(true); // Go back after signing out
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Đăng xuất thất bại: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Đăng xuất thất bại: $e';
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -251,12 +255,14 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await AuthHelper.signInWithGoogle();
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('AuthException: ', '');
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('AuthException: ', '');
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {

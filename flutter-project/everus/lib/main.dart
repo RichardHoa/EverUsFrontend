@@ -36,7 +36,12 @@ class EverUsApp extends StatelessWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 414),
                 child: ClipRect(
-                  child: child ?? const SizedBox.shrink(),
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      size: Size(414, MediaQuery.of(context).size.height),
+                    ),
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             ),

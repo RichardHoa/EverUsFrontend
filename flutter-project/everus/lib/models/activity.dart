@@ -58,11 +58,21 @@ class ActivityTheme {
 
 
   static Color parseHexColor(String hex) {
-    hex = hex.replaceFirst('#', '');
-    if (hex.length == 6) {
-      hex = 'FF$hex';
+    try {
+      hex = hex.replaceFirst('#', '').trim();
+      if (hex.length == 3) {
+        hex = hex.split('').map((c) => '$c$c').join();
+      }
+      if (hex.length == 6) {
+        hex = 'FF$hex';
+      }
+      if (hex.length == 8) {
+        return Color(int.parse(hex, radix: 16));
+      }
+      return const Color(0xFF8B5CF6);
+    } catch (_) {
+      return const Color(0xFF8B5CF6);
     }
-    return Color(int.parse(hex, radix: 16));
   }
 
   factory ActivityTheme.fromHex({

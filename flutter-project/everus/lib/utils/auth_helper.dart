@@ -16,8 +16,8 @@ class AuthException implements Exception {
 }
 
 class AuthHelper {
-  // Constant to switch application mode (dev or prod)
-  static const AppMode mode = AppMode.prod;
+  // Manual override (set to null for auto-detection, or AppMode.dev / AppMode.prod to force)
+  static const AppMode? manualMode = null;
 
   static const String _prodUrl = 'https://everus-backend.richardhoa.io.vn';
 
@@ -28,7 +28,21 @@ class AuthHelper {
     return 'http://127.0.0.1:8009';
   }
 
-  static String get baseUrl => mode == AppMode.prod ? _prodUrl : _devUrl;
+  static String get baseUrl {
+    if (manualMode == AppMode.prod) return _prodUrl;
+    if (manualMode == AppMode.dev) return _devUrl;
+
+    // Auto-detection logic:
+    // If running in release mode OR hosted on a public domain (not localhost/127.0.0.1)
+    if (kReleaseMode) return _prodUrl;
+    if (kIsWeb) {
+      final host = Uri.base.host;
+      if (host.isNotEmpty && !host.contains('localhost') && !host.contains('127.0.0.1')) {
+        return _prodUrl;
+      }
+    }
+    return _devUrl;
+  }
 
   // Session state notifier
   static final ValueNotifier<Map<String, dynamic>?> sessionNotifier = ValueNotifier(null);
@@ -85,21 +99,22 @@ class AuthHelper {
   static Map<String, dynamic> _normalizeSession(Map<String, dynamic> data) {
     // If it is the signup response, it contains nested 'session' and 'user' keys
     if (data.containsKey('session') && data['session'] != null) {
-      final user = data['user'] as Map<String, dynamic>;
-      final session = data['session'] as Map<String, dynamic>;
+      final user = data['user'] as Map<String, dynamic>? ?? {};
+      final session = data['session'] as Map<String, dynamic>? ?? {};
       return {
         'access_token': session['access_token'] as String?,
         'email': user['email'] as String?,
-        'name': user['name'] as String?,
+        'name': user['name'] as String? ?? (user['user_metadata'] is Map ? (user['user_metadata']['name'] as String?) : null) ?? '',
       };
     }
     // If it is the signin response, it contains top-level access_token and user keys
-    final user = data['user'] as Map<String, dynamic>;
-    final metadata = user['user_metadata'] as Map<String, dynamic>?;
+    final user = data['user'] as Map<String, dynamic>? ?? {};
+    final metadata = user['user_metadata'] is Map<String, dynamic> ? user['user_metadata'] as Map<String, dynamic> : null;
+    final String? nameFromMetadata = metadata != null ? (metadata['name'] as String? ?? metadata['full_name'] as String?) : null;
     return {
       'access_token': data['access_token'] as String?,
       'email': user['email'] as String?,
-      'name': metadata != null ? metadata['name'] as String? : '',
+      'name': nameFromMetadata ?? user['name'] as String? ?? '',
     };
   }
 

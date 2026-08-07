@@ -481,7 +481,11 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                           const Icon(Icons.monetization_on_outlined, size: 14, color: Colors.green),
                           const SizedBox(width: 2),
                           Text(
-                            _formatBudget(int.parse(planData['budgetPerPerson'].toString())),
+                            _formatBudget(
+                              int.tryParse(planData['budgetPerPerson'].toString().replaceAll('.0', '')) ??
+                              double.tryParse(planData['budgetPerPerson'].toString())?.toInt() ??
+                              0,
+                            ),
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: const Color(0xFF6B7280),

@@ -3,6 +3,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'file_helper/file_helper.dart';
 
 class LoveCounterHelper {
+  /// Calculates exact calendar days between an anniversary date and target date (defaults to today).
+  static int calculateLoveDays(DateTime anniversaryDate, [DateTime? targetDate]) {
+    final now = targetDate ?? DateTime.now();
+    final aDate = DateTime(anniversaryDate.year, anniversaryDate.month, anniversaryDate.day);
+    final cDate = DateTime(now.year, now.month, now.day);
+    final diff = cDate.difference(aDate).inDays;
+    return diff >= 0 ? diff + 1 : 0;
+  }
+
   static const String _keyUserName = 'love_user_name';
   static const String _keyLoverName = 'love_lover_name';
   static const String _keyAnniversaryDate = 'love_anniversary_date';

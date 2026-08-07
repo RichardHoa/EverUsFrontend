@@ -16,7 +16,7 @@ class LoveCounterScreen extends StatefulWidget {
   State<LoveCounterScreen> createState() => _LoveCounterScreenState();
 }
 
-class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProviderStateMixin {
+class _LoveCounterScreenState extends State<LoveCounterScreen> {
   bool _loading = true;
   bool _isSetup = false;
 
@@ -345,16 +345,21 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
     }
 
     return PopScope<Object?>(
-      canPop: _isSetup,
+      canPop: _isSetup || !widget.isForceSetup,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) return;
-        if (!_isSetup) {
+        if (!_isSetup && widget.isForceSetup) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Vui lòng hoàn thành thiết lập để tiếp tục! 💖'),
               duration: Duration(seconds: 2),
             ),
           );
+        } else if (!_isSetup && !widget.isForceSetup) {
+          setState(() {
+            _isSetup = true;
+          });
+          _startTimer();
         }
       },
       child: Scaffold(
@@ -499,7 +504,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with TickerProvid
                       end: Alignment.bottomRight,
                     ).createShader(bounds),
                     child: Text(
-                      '${elapsed.inDays}',
+                      '${_anniversaryDate != null ? LoveCounterHelper.calculateLoveDays(_anniversaryDate!) : elapsed.inDays}',
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 72,
                         fontWeight: FontWeight.w900,

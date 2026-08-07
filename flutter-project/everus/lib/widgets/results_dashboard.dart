@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/activity.dart';
-import '../utils/auth_helper.dart';
-import '../screens/create_invite_screen.dart';
 import 'preference_matcher.dart';
 import 'spider_graph.dart';
 
@@ -289,44 +287,6 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                 ],
                               ),
                             ),
-                            if (AuthHelper.isLoggedIn) ...[
-                              const SizedBox(height: 10),
-                              OutlinedButton.icon(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => CreateInviteScreen(
-                                        activityKey: selectedActivity.key,
-                                        activityName: selectedActivity.name,
-                                        initialDate: DateTime.now().add(const Duration(days: 1)),
-                                        initialTime: '19:00',
-                                        initialLocation: selectedActivity.name,
-                                        duration: selectedActivity.duration,
-                                        primaryColor: selectedActivity.theme.primary,
-                                        secondaryColor: selectedActivity.theme.secondary,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: selectedActivity.theme.primary,
-                                  side: BorderSide(color: selectedActivity.theme.primary, width: 2),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                icon: const Icon(Icons.mail_outline, size: 18),
-                                label: const Text(
-                                  "Gửi Lời Mời Hẹn Hò",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ),
@@ -416,7 +376,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                     const SizedBox(height: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: widget.result.ranked.map((item) {
+                      children: widget.result.ranked.where((item) => activities.containsKey(item['key'])).map((item) {
                         final key = item['key'] as String;
                         final act = activities[key]!;
                         final isSelected = key == _selectedKey;
@@ -544,14 +504,17 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                       ),
                     ),
                   ),
-                  // Selected Activity bar (in front, selected theme gradient)
+                  // Selected Activity bar (in front, selected theme gradient with alpha transparency)
                   FractionallySizedBox(
                     widthFactor: activityVal / 10.0,
                     child: Container(
                       height: 10,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [selectedTheme.secondary, selectedTheme.primary],
+                          colors: [
+                            selectedTheme.secondary.withValues(alpha: 0.85),
+                            selectedTheme.primary.withValues(alpha: 0.85),
+                          ],
                         ),
                       ),
                     ),

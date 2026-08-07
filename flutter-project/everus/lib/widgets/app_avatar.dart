@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'app_avatar_io.dart' if (dart.library.html) 'app_avatar_web.dart';
+import 'app_avatar_web.dart' if (dart.library.io) 'app_avatar_io.dart';
 
 class AppAvatar extends StatelessWidget {
   final String? imagePath;

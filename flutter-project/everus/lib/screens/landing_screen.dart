@@ -101,7 +101,7 @@ class _LandingScreenState extends State<LandingScreen> {
         settings = await LoveCounterHelper.loadSettings();
         final anniversary = settings['anniversaryDate'] as DateTime?;
         if (anniversary != null) {
-          days = DateTime.now().difference(anniversary).inDays;
+          days = LoveCounterHelper.calculateLoveDays(anniversary);
         }
         userPath = settings['userImagePath'] as String?;
         loverPath = settings['loverImagePath'] as String?;
@@ -122,12 +122,13 @@ class _LandingScreenState extends State<LandingScreen> {
       }
       if (!isConfigured && mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const LoveCounterScreen(isForceSetup: true),
             ),
           ).then((_) {
-            _loadLoveStatus();
+            if (mounted) _loadLoveStatus();
           });
         });
       }
@@ -156,7 +157,7 @@ class _LandingScreenState extends State<LandingScreen> {
         builder: (context) => const LoveCounterScreen(),
       ),
     );
-    _loadLoveStatus();
+    if (mounted) _loadLoveStatus();
   }
 
   Future<void> _navigateToDatePlanner() async {
@@ -165,7 +166,7 @@ class _LandingScreenState extends State<LandingScreen> {
         builder: (context) => const EverUsHomePage(),
       ),
     );
-    _loadLoveStatus();
+    if (mounted) _loadLoveStatus();
   }
 
   Future<void> _navigateToCustomDatePlanner() async {
@@ -174,7 +175,7 @@ class _LandingScreenState extends State<LandingScreen> {
         builder: (context) => const DatePlannerScreen(),
       ),
     );
-    _loadLoveStatus();
+    if (mounted) _loadLoveStatus();
   }
 
   Future<void> _navigateToNotifications() async {
@@ -183,16 +184,15 @@ class _LandingScreenState extends State<LandingScreen> {
         builder: (context) => const NotificationsScreen(),
       ),
     );
+    if (!mounted) return;
     if (selectedPlan != null) {
-      if (mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => DatePlannerScreen(initialPlan: selectedPlan),
-          ),
-        );
-      }
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => DatePlannerScreen(initialPlan: selectedPlan),
+        ),
+      );
     }
-    _loadLoveStatus();
+    if (mounted) _loadLoveStatus();
   }
 
   void _handleNotiTap() {
@@ -202,7 +202,7 @@ class _LandingScreenState extends State<LandingScreen> {
       LoginScreen.showGentleLoginModal(
         context,
         onLoginSuccess: () {
-          _navigateToNotifications();
+          if (mounted) _navigateToNotifications();
         },
       );
     }

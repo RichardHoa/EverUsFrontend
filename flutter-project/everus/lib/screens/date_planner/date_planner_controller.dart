@@ -306,15 +306,41 @@ class DatePlannerController extends ChangeNotifier {
   }
 
   /// Updates the priority location order of a stage if backup is clicked.
+  /// Updates the priority location order of a stage if backup is clicked.
   void selectBackupLocation(DateStage stage, LocationOption opt) {
-    final index = stage.options.indexOf(opt);
+    if (_generatedPlan == null) return;
+    final stageIdx = _generatedPlan!.stages.indexOf(stage);
+    if (stageIdx == -1) return;
+
+    final optionsCopy = List<LocationOption>.from(stage.options);
+    final index = optionsCopy.indexOf(opt);
     if (index > 0) {
-      final selectedOpt = stage.options.removeAt(index);
-      stage.options.insert(0, selectedOpt);
-      
+      final selectedOpt = optionsCopy.removeAt(index);
+      optionsCopy.insert(0, selectedOpt);
+
+      final updatedStage = DateStage(
+        stageNum: stage.stageNum,
+        title: stage.title,
+        purpose: stage.purpose,
+        category: stage.category,
+        durationMinutes: stage.durationMinutes,
+        startTime: stage.startTime,
+        endTime: stage.endTime,
+        tasks: stage.tasks,
+        tips: stage.tips,
+        options: optionsCopy,
+        transitDistanceKm: stage.transitDistanceKm,
+        transitDurationMinutes: stage.transitDurationMinutes,
+      );
+
+      final updatedStages = List<DateStage>.from(_generatedPlan!.stages);
+      updatedStages[stageIdx] = updatedStage;
+
+      _generatedPlan = _generatedPlan!.copyWith(stages: updatedStages);
+
       recalculateRouteUrl();
       expandedStageBackups.remove(stage.stageNum);
-      
+
       if (_generatedPlan != null) {
         savePlan(_generatedPlan!);
         _updatePlanOnServer(_generatedPlan!);
@@ -339,27 +365,27 @@ class DatePlannerController extends ChangeNotifier {
       mode = "walking";
     }
     
-    String getPlaceLoc(LocationOption p) {
+    String getRawPlaceLoc(LocationOption p) {
       if (p.latitude != null && p.longitude != null) {
         return "${p.latitude},${p.longitude}";
       }
-      return Uri.encodeComponent("${p.name} ${p.address}");
+      return "${p.name} ${p.address}";
     }
     
-    final origin = getPlaceLoc(places.first);
-    final destination = getPlaceLoc(places.last);
+    final origin = Uri.encodeComponent(getRawPlaceLoc(places.first));
+    final destination = Uri.encodeComponent(getRawPlaceLoc(places.last));
     
     List<String> waypoints = [];
     if (places.length > 2) {
       for (int i = 1; i < places.length - 1; i++) {
-        waypoints.add(getPlaceLoc(places[i]));
+        waypoints.add(Uri.encodeComponent(getRawPlaceLoc(places[i])));
       }
     }
     
     String url = "https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$destination&travelmode=$mode";
     if (waypoints.isNotEmpty) {
-      final waypointsStr = waypoints.join("|");
-      url += "&waypoints=${Uri.encodeComponent(waypointsStr)}";
+      final waypointsStr = waypoints.join("%7C");
+      url += "&waypoints=$waypointsStr";
     }
     
     _generatedPlan = _generatedPlan!.copyWith(googleMapsRouteUrl: url);

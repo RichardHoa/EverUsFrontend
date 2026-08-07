@@ -48,12 +48,12 @@ class LocationOption {
     return LocationOption(
       name: json['name'] ?? '',
       address: json['address'] ?? '',
-      rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
-      ratingCount: json['ratingCount'],
-      mapsUrl: json['maps_url'] ?? '',
+      rating: json['rating'] != null ? double.tryParse(json['rating'].toString()) : null,
+      ratingCount: json['ratingCount'] != null ? int.tryParse(json['ratingCount'].toString()) : null,
+      mapsUrl: json['maps_url'] ?? json['mapsUrl'] ?? '',
       thumbnailUrl: json['thumbnail_url'] ?? json['thumbnailUrl'],
-      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
-      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
+      latitude: json['latitude'] != null ? double.tryParse(json['latitude'].toString()) : null,
+      longitude: json['longitude'] != null ? double.tryParse(json['longitude'].toString()) : null,
       priceLevel: json['price_level'] ?? json['priceLevel'],
     );
   }
@@ -130,23 +130,23 @@ class DateStage {
 
   /// Decodes a JSON object into a [DateStage] model instance.
   factory DateStage.fromJson(Map<String, dynamic> json) {
-    var optionsList = json['options'] as List? ?? [];
-    var tasksList = json['tasks'] as List? ?? [];
-    var tipsList = json['tips'] as List? ?? [];
+    var optionsList = json['options'] is List ? json['options'] as List : [];
+    var tasksList = json['tasks'] is List ? json['tasks'] as List : [];
+    var tipsList = json['tips'] is List ? json['tips'] as List : [];
 
     return DateStage(
-      stageNum: json['stageNum'] ?? json['stage_num'] ?? 0,
+      stageNum: int.tryParse((json['stageNum'] ?? json['stage_num'] ?? 0).toString()) ?? 0,
       title: json['title'] ?? '',
       purpose: json['purpose'] ?? '',
       category: json['category'] ?? '',
-      durationMinutes: json['durationMinutes'] ?? json['duration_minutes'] ?? 0,
+      durationMinutes: int.tryParse((json['durationMinutes'] ?? json['duration_minutes'] ?? 0).toString()) ?? 0,
       startTime: json['startTime'] ?? json['start_time'] ?? '',
       endTime: json['endTime'] ?? json['end_time'] ?? '',
-      options: optionsList.map((e) => LocationOption.fromJson(e)).toList(),
+      options: optionsList.whereType<Map<String, dynamic>>().map((e) => LocationOption.fromJson(e)).toList(),
       tasks: tasksList.map((e) => e.toString()).toList(),
       tips: tipsList.map((e) => e.toString()).toList(),
-      transitDistanceKm: json['transit_distance_km'] != null ? (json['transit_distance_km'] as num).toDouble() : null,
-      transitDurationMinutes: json['transit_duration_minutes'],
+      transitDistanceKm: json['transit_distance_km'] != null ? double.tryParse(json['transit_distance_km'].toString()) : null,
+      transitDurationMinutes: json['transit_duration_minutes'] != null ? int.tryParse(json['transit_duration_minutes'].toString()) : null,
     );
   }
 
@@ -250,7 +250,7 @@ class DatePlan {
 
   /// Decodes a JSON object into a [DatePlan] model instance.
   factory DatePlan.fromJson(Map<String, dynamic> json) {
-    var stagesList = json['stages'] as List? ?? [];
+    var stagesList = json['stages'] is List ? json['stages'] as List : [];
     
     // Recover theme based on vibe
     ActivityTheme theme;
@@ -269,17 +269,19 @@ class DatePlan {
         break;
     }
 
+    final rawBudget = json['budgetPerPerson'] ?? json['budget_per_person'];
+
     return DatePlan(
       id: json['id']?.toString(),
-      dateType: json['dateType'] ?? '',
+      dateType: json['dateType'] ?? json['date_type'] ?? '',
       vibe: json['vibe'] ?? 'casual',
       emoji: json['emoji'] ?? '📅',
-      totalDurationMinutes: json['totalDurationMinutes'] ?? 0,
+      totalDurationMinutes: int.tryParse((json['totalDurationMinutes'] ?? json['total_duration_minutes'] ?? 0).toString()) ?? 0,
       theme: theme,
-      stages: stagesList.map((e) => DateStage.fromJson(e)).toList(),
+      stages: stagesList.whereType<Map<String, dynamic>>().map((e) => DateStage.fromJson(e)).toList(),
       purpose: json['purpose'] ?? '',
       googleMapsRouteUrl: json['google_maps_route_url'] ?? json['googleMapsRouteUrl'],
-      budgetPerPerson: json['budgetPerPerson'] != null ? int.tryParse(json['budgetPerPerson'].toString()) : null,
+      budgetPerPerson: rawBudget != null ? int.tryParse(rawBudget.toString().replaceAll('.0', '')) : null,
       area: json['area']?.toString(),
     );
   }

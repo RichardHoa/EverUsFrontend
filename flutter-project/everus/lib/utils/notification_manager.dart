@@ -98,6 +98,7 @@ class NotificationManager with WidgetsBindingObserver {
       fetchAndShowUnreadNotification();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
       stopSseConnection();
+      stopPolling();
     }
   }
 
@@ -350,11 +351,12 @@ class NotificationManager with WidgetsBindingObserver {
     );
   }
 
-  void _showForegroundModal(Map<String, dynamic> inviteData) {
+  void _showForegroundModal(Map<String, dynamic> inviteData, [int retryCount = 0]) {
     final context = navigatorKey.currentContext;
     if (context == null) {
+      if (retryCount >= 3) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showForegroundModal(inviteData);
+        _showForegroundModal(inviteData, retryCount + 1);
       });
       return;
     }
@@ -667,11 +669,12 @@ class NotificationManager with WidgetsBindingObserver {
     }
   }
 
-  void _showGlobalNotificationDialog(Map<String, dynamic> notif) {
+  void _showGlobalNotificationDialog(Map<String, dynamic> notif, [int retryCount = 0]) {
     final context = navigatorKey.currentContext;
     if (context == null) {
+      if (retryCount >= 3) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showGlobalNotificationDialog(notif);
+        _showGlobalNotificationDialog(notif, retryCount + 1);
       });
       return;
     }

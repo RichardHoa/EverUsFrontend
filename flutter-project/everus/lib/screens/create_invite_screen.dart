@@ -441,9 +441,11 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
         throw Exception(responseData['detail'] ?? 'Tạo lời mời không thành công.');
       }
 
-      setState(() {
-        generatedUrl = responseData['url'] as String;
-      });
+      if (mounted) {
+        setState(() {
+          generatedUrl = responseData['url'] as String;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
