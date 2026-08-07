@@ -16,7 +16,7 @@ class LoveCounterScreen extends StatefulWidget {
   State<LoveCounterScreen> createState() => _LoveCounterScreenState();
 }
 
-class _LoveCounterScreenState extends State<LoveCounterScreen> {
+class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTickerProviderStateMixin {
   bool _loading = true;
   bool _isSetup = false;
 
