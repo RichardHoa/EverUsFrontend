@@ -13,6 +13,7 @@ import '../utils/love_counter_helper.dart';
 import '../utils/auth_helper.dart';
 import '../utils/notification_manager.dart';
 import '../models/date_plan.dart';
+import 'reflection/reflection_home_screen.dart';
 import '../main.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -173,6 +174,16 @@ class _LandingScreenState extends State<LandingScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const DatePlannerScreen(),
+      ),
+    );
+    if (mounted) _loadLoveStatus();
+  }
+
+  Future<void> _navigateToReflection() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ReflectionHomeScreen(),
+        settings: const RouteSettings(name: 'reflection_home'),
       ),
     );
     if (mounted) _loadLoveStatus();
@@ -367,6 +378,37 @@ class _LandingScreenState extends State<LandingScreen> {
                           const Color(0xFF6366F1)
                         ],
                         onTap: _navigateToDatePlanner,
+                      ),
+
+                      _buildActionCard(
+                        context: context,
+                        title: 'EverUs Reflection',
+                        subtitle: 'Thấu cảm & phản chiếu mối quan hệ',
+                        icon: Icons.spa_rounded,
+                        gradientColors: [
+                          const Color(0xFF8B5CF6),
+                          const Color(0xFFEC4899)
+                        ],
+                        onTap: _navigateToReflection,
+                        customIcon: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x1F8B5CF6),
+                                blurRadius: 8,
+                                offset: Offset(0, 3),
+                              )
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.auto_awesome_rounded,
+                            color: Color(0xFF8B5CF6),
+                            size: 24,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 32),
                     ],
