@@ -5,6 +5,7 @@ import '../../utils/reflection_helper.dart';
 import 'reflection_topic_screen.dart';
 import 'reflection_summary_screen.dart';
 import 'reflection_diary_screen.dart';
+import 'deep_talk_screen.dart';
 import 'widgets/personal_sanctuary_tab.dart';
 import 'widgets/us_insights_tab.dart';
 
@@ -55,6 +56,15 @@ class _ReflectionHomeScreenState extends State<ReflectionHomeScreen>
           ),
         )
         .then((_) => _loadData());
+  }
+
+  void _openDeepTalkCards() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const DeepTalkScreen(),
+        settings: const RouteSettings(name: 'deep_talk_cards'),
+      ),
+    );
   }
 
   void _viewReflectionDetail(ReflectionItem item) {
@@ -243,10 +253,12 @@ class _ReflectionHomeScreenState extends State<ReflectionHomeScreen>
                             onStartReflection: _startReflection,
                             onViewDetail: _viewReflectionDetail,
                             onViewAllReflections: _openDiaryPage,
+                            onOpenDeepTalk: _openDeepTalkCards,
                           ),
                           UsInsightsTab(
                             sharedInsights: _sharedInsights,
                             onStartReflection: _startReflection,
+                            onOpenDeepTalk: _openDeepTalkCards,
                           ),
                         ],
                       ),

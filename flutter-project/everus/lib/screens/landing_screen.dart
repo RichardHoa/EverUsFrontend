@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/heart_mascot.dart';
@@ -255,7 +256,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 72), // space for top bar
+                      const SizedBox(height: 28), // space for top bar
                       
                       // App title & brand
                       Center(
@@ -288,7 +289,7 @@ class _LandingScreenState extends State<LandingScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 14),
 
                       // Mascot Container
                       Center(
@@ -303,7 +304,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                 comment: _mascotComment,
                                 showComment: _showMascotComment,
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 10),
                               Text(
                                 'Chạm vào tớ nhé! 💖',
                                 style: GoogleFonts.inter(
@@ -317,99 +318,13 @@ class _LandingScreenState extends State<LandingScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 24),
 
                       // Quick-view Love Counter (If Anniversary Date configured)
                       if (_isConfigured) _buildMiniLoveCounter(),
 
-                      // Action Cards List
-                      _buildActionCard(
-                        context: context,
-                        title: 'Đếm Ngày Yêu',
-                        subtitle: _isConfigured
-                            ? 'Theo dõi & lưu giữ kỉ niệm yêu'
-                            : 'Bắt đầu ghi lại mốc kỉ niệm',
-                        icon: Icons.favorite_rounded,
-                        gradientColors: [
-                          const Color(0xFFEC4899),
-                          const Color(0xFFF43F5E)
-                        ],
-                        onTap: _navigateToLoveCounter,
-                        customIcon: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x1F8B5CF6),
-                                blurRadius: 8,
-                                offset: Offset(0, 3),
-                              )
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.favorite,
-                            color: Color(0xFFEC4899),
-                            size: 24,
-                          ),
-                        ),
-                      ),
-
-                      _buildActionCard(
-                        context: context,
-                        title: 'Thiết Kế Hẹn Hò',
-                        subtitle: 'Tự tạo lộ trình chi tiết cho buổi hẹn',
-                        icon: Icons.map_rounded,
-                        gradientColors: [
-                          const Color(0xFFF59E0B),
-                          const Color(0xFFEC4899)
-                        ],
-                        onTap: _navigateToCustomDatePlanner,
-                      ),
-
-                      _buildActionCard(
-                        context: context,
-                        title: 'Ý Tưởng Hẹn Hò',
-                        subtitle: 'Lên kế hoạch phù hợp với cả hai',
-                        icon: Icons.explore_rounded,
-                        gradientColors: [
-                          const Color(0xFF8B5CF6),
-                          const Color(0xFF6366F1)
-                        ],
-                        onTap: _navigateToDatePlanner,
-                      ),
-
-                      _buildActionCard(
-                        context: context,
-                        title: 'EverUs Reflection',
-                        subtitle: 'Thấu cảm & phản chiếu mối quan hệ',
-                        icon: Icons.spa_rounded,
-                        gradientColors: [
-                          const Color(0xFF8B5CF6),
-                          const Color(0xFFEC4899)
-                        ],
-                        onTap: _navigateToReflection,
-                        customIcon: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x1F8B5CF6),
-                                blurRadius: 8,
-                                offset: Offset(0, 3),
-                              )
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.auto_awesome_rounded,
-                            color: Color(0xFF8B5CF6),
-                            size: 24,
-                          ),
-                        ),
-                      ),
+                      // Side-by-Side Action Cards (Date Planner & Relationship Reflection)
+                      _buildSideBySideCards(context),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -567,19 +482,158 @@ class _LandingScreenState extends State<LandingScreen> {
     );
   }
 
-  Widget _buildActionCard({
+  void _showDatePlannerOptions(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Date Planner',
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      transitionDuration: const Duration(milliseconds: 250),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: anim1, curve: Curves.easeOut),
+          child: ScaleTransition(
+            scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+            child: child,
+          ),
+        );
+      },
+      pageBuilder: (ctx, anim1, anim2) {
+        return BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Center(
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 360),
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                      blurRadius: 36,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header Icon Badge
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.calendar_month_rounded,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Date Planner',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF1F2937),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Chọn trải nghiệm bạn muốn cùng thực hiện',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF6B7280),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Button 1: Lên kế hoạch hẹn hò (the planning page)
+                    _buildCenteredDialogButton(
+                      context: ctx,
+                      title: 'Lên kế hoạch hẹn hò',
+                      subtitle: 'Tự tạo lộ trình chi tiết cho buổi hẹn',
+                      icon: Icons.edit_calendar_rounded,
+                      gradientColors: [const Color(0xFF8B5CF6), const Color(0xFF6366F1)],
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _navigateToCustomDatePlanner();
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Button 2: Thử thách hẹn hò (the challenge page)
+                    _buildCenteredDialogButton(
+                      context: ctx,
+                      title: 'Thử thách hẹn hò',
+                      subtitle: 'Khám phá ý tưởng & thử thách thú vị',
+                      icon: Icons.sports_esports_rounded,
+                      gradientColors: [const Color(0xFFEC4899), const Color(0xFFF43F5E)],
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _navigateToDatePlanner();
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Close / Cancel Button
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(
+                        'Đóng',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCenteredDialogButton({
     required BuildContext context,
     required String title,
     required String subtitle,
     required IconData icon,
     required List<Color> gradientColors,
     required VoidCallback onTap,
-    Widget? customIcon,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
           colors: gradientColors,
           begin: Alignment.topLeft,
@@ -587,8 +641,132 @@ class _LandingScreenState extends State<LandingScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: gradientColors[0].withValues(alpha: 0.3),
-            blurRadius: 12,
+            color: gradientColors[0].withValues(alpha: 0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSideBySideCards(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Date Planner Card (Left)
+          Expanded(
+            child: _buildGridCard(
+              context: context,
+              title: 'Date Planner',
+              subtitle: 'Lên kế hoạch &\nthử thách hẹn hò',
+              actionText: 'Khám phá',
+              icon: Icons.calendar_today_rounded,
+              backgroundColor: const Color(0xFFFFF3EC),
+              accentColor: const Color(0xFFF97316),
+              onTap: () => _showDatePlannerOptions(context),
+            ),
+          ),
+          const SizedBox(width: 14),
+          // Relationship Reflection Card (Right)
+          Expanded(
+            child: _buildGridCard(
+              context: context,
+              title: 'Relationship\nReflection',
+              subtitle: 'Thấu cảm & phản chiếu\nmối quan hệ',
+              actionText: 'Khám phá',
+              icon: Icons.auto_awesome_rounded,
+              backgroundColor: const Color(0xFFF3E8FF),
+              accentColor: const Color(0xFF8B5CF6),
+              onTap: _navigateToReflection,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGridCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required String actionText,
+    required IconData icon,
+    required Color backgroundColor,
+    required Color accentColor,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: accentColor.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.08),
+            blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
@@ -600,50 +778,73 @@ class _LandingScreenState extends State<LandingScreen> {
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  customIcon ?? Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icon,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF1F2937),
+                                height: 1.2,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withValues(alpha: 0.85),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: accentColor.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              icon,
+                              color: accentColor,
+                              size: 17,
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF6B7280),
+                          height: 1.35,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white70,
-                    size: 18,
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        actionText,
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1F2937),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Color(0xFF1F2937),
+                        size: 16,
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -341,20 +341,23 @@ class _PreferenceMatcherState extends State<PreferenceMatcher> {
             data: ThemeData(
               unselectedWidgetColor: const Color(0xFFD1D5DB),
             ),
-            child: CheckboxListTile(
-              value: _isCouple,
-              onChanged: (val) => setState(() => _isCouple = val ?? false),
-              title: Text(
-                'Thêm sở thích của Người ấy',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF374151),
+            child: Material(
+              color: Colors.transparent,
+              child: CheckboxListTile(
+                value: _isCouple,
+                onChanged: (val) => setState(() => _isCouple = val ?? false),
+                title: Text(
+                  'Thêm sở thích của Người ấy',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF374151),
+                  ),
                 ),
+                activeColor: const Color(0xFF8B5CF6),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
               ),
-              activeColor: const Color(0xFF8B5CF6),
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
             ),
           ),
           if (_isCouple) ...[
@@ -719,7 +722,10 @@ class GlassCard extends StatelessWidget {
         ],
       ),
       padding: padding,
-      child: child,
+      child: Material(
+        color: Colors.transparent,
+        child: child,
+      ),
     );
 
     if (enableBlur) {

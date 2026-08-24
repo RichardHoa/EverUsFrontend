@@ -257,34 +257,40 @@ class DatePlannerForm extends StatelessWidget {
                     final info = entry.value;
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
-                      decoration: BoxDecoration(
+                      child: Material(
                         color: isSelected ? const Color(0xFFFDF4FF) : Colors.white,
-                        border: Border.all(
-                          color: isSelected ? const Color(0xFFEC4899) : const Color(0xFFE5E7EB),
-                          width: isSelected ? 1.8 : 1.0,
-                        ),
                         borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        onTap: () {
-                          controller.setSelectedVibe(entry.key);
-                        },
-                        leading: Text(info['emoji']!, style: const TextStyle(fontSize: 24)),
-                        title: Text(
-                          info['label']!,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF1F2937),
+                        clipBehavior: Clip.antiAlias,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFFEC4899) : const Color(0xFFE5E7EB),
+                              width: isSelected ? 1.8 : 1.0,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        subtitle: Text(
-                          info['desc']!,
-                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
-                        ),
-                        trailing: Radio<String>(
-                          value: entry.key,
-                          activeColor: const Color(0xFFEC4899),
+                          child: ListTile(
+                            onTap: () {
+                              controller.setSelectedVibe(entry.key);
+                            },
+                            leading: Text(info['emoji']!, style: const TextStyle(fontSize: 24)),
+                            title: Text(
+                              info['label']!,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF1F2937),
+                              ),
+                            ),
+                            subtitle: Text(
+                              info['desc']!,
+                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+                            ),
+                            trailing: Radio<String>(
+                              value: entry.key,
+                              activeColor: const Color(0xFFEC4899),
+                            ),
+                          ),
                         ),
                       ),
                     );

@@ -10,6 +10,7 @@ class PersonalSanctuaryTab extends StatelessWidget {
   final VoidCallback onStartReflection;
   final ValueChanged<ReflectionItem> onViewDetail;
   final VoidCallback? onViewAllReflections;
+  final VoidCallback? onOpenDeepTalk;
 
   const PersonalSanctuaryTab({
     super.key,
@@ -18,6 +19,7 @@ class PersonalSanctuaryTab extends StatelessWidget {
     required this.onStartReflection,
     required this.onViewDetail,
     this.onViewAllReflections,
+    this.onOpenDeepTalk,
   });
 
   @override
@@ -138,6 +140,42 @@ class PersonalSanctuaryTab extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                if (onOpenDeepTalk != null) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: onOpenDeepTalk,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF8B5CF6),
+                        side: const BorderSide(
+                          color: Color(0xFFE9D5FF),
+                          width: 1.5,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        backgroundColor: Colors.white.withValues(alpha: 0.7),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.style_rounded, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Deep Talk Cards (Rút thẻ mở lòng)',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
