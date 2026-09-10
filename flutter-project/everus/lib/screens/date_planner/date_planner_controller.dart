@@ -32,6 +32,10 @@ class DatePlannerController extends ChangeNotifier {
   bool _inviteAccepted = false;
   final Set<int> expandedStageBackups = {};
 
+  // History of generated place names to ensure different locations on regeneration
+  final List<String> _recentPlaceNames = [];
+  final List<String> _recentPlaceIds = [];
+
   /// Notifier driving the progress percentage on the generating view page.
   final ValueNotifier<double> progressNotifier = ValueNotifier<double>(0.0);
   Timer? _progressTimer;
@@ -107,6 +111,18 @@ class DatePlannerController extends ChangeNotifier {
     _existingInviteUrl = null;
     _inviteExpiresAt = null;
     _inviteAccepted = false;
+    if (plan != null) {
+      for (final stage in plan.stages) {
+        for (final opt in stage.options) {
+          if (!_recentPlaceNames.contains(opt.name)) {
+            _recentPlaceNames.add(opt.name);
+          }
+        }
+      }
+      if (_recentPlaceNames.length > 40) {
+        _recentPlaceNames.removeRange(0, _recentPlaceNames.length - 40);
+      }
+    }
     notifyListeners();
     if (plan != null && plan.id != null) {
       checkExistingInvitation(plan.id!);
@@ -169,13 +185,13 @@ class DatePlannerController extends ChangeNotifier {
     }
   }
 
-  /// Triggers a simulated counting progress indicator matching the generator wait-time.
+  /// Triggers a simulated counting progress indicator matching the generator wait-time (~5 seconds).
   void _startProgressTimer() {
     progressNotifier.value = 0.0;
     _progressTimer?.cancel();
     
     const duration = Duration(milliseconds: 100);
-    const totalTime = Duration(seconds: 25);
+    const totalTime = Duration(seconds: 5);
     final increment = 1.0 / (totalTime.inMilliseconds / duration.inMilliseconds);
     
     _progressTimer = Timer.periodic(duration, (timer) {
@@ -203,12 +219,92 @@ class DatePlannerController extends ChangeNotifier {
     await Future.delayed(const Duration(milliseconds: 200));
   }
 
+  /// List of supported districts in Ho Chi Minh City.
+  static const List<String> hcmcDistricts = [
+    "Thủ Đức",
+    "Quận 1",
+    "Quận 3",
+    "Quận 4",
+    "Quận 5",
+    "Quận 6",
+    "Quận 7",
+    "Quận 8",
+    "Quận 10",
+    "Quận 11",
+    "Quận 12",
+    "Quận Bình Tân",
+    "Quận Tân Bình",
+    "Quận Tân Phú",
+    "Quận Phú Nhuận",
+    "Quận Bình Thạnh",
+    "Quận Gò Vấp",
+  ];
+
+  /// List of currently active/enabled districts for date planning.
+  static const Set<String> enabledDistricts = {
+    "Quận 1",
+    "Quận 7",
+    "Quận 10",
+    "Quận Bình Thạnh",
+  };
+
+  /// Helper to strip Vietnamese accents for fuzzy matching.
+  static String removeDiacritics(String str) {
+    const withDia = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ';
+    const withoutDia = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyydAAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYYD';
+    var result = str;
+    for (int i = 0; i < withDia.length; i++) {
+      result = result.replaceAll(withDia[i], withoutDia[i]);
+    }
+    return result;
+  }
+
+  /// Match user input string to canonical HCMC district name.
+  static String? findMatchingDistrict(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return null;
+
+    final normalizedInput = removeDiacritics(trimmed.toLowerCase())
+        .replaceAll(RegExp(r'^(q\.|q\s+|quan\s+|district\s+|tp\s+|thanh pho\s+|tp\.\s+)'), '')
+        .trim();
+
+    for (final district in hcmcDistricts) {
+      final normDistrict = removeDiacritics(district.toLowerCase())
+          .replaceAll(RegExp(r'^(q\.|q\s+|quan\s+|district\s+|tp\s+|thanh pho\s+|tp\.\s+)'), '')
+          .trim();
+      if (normalizedInput == normDistrict || district.toLowerCase() == trimmed.toLowerCase()) {
+        return district;
+      }
+    }
+
+    for (final district in hcmcDistricts) {
+      final normDistrict = removeDiacritics(district.toLowerCase());
+      if (normDistrict.contains(normalizedInput) || normalizedInput.contains(normDistrict)) {
+        return district;
+      }
+    }
+    return null;
+  }
+
   /// Generates a new date plan by requesting the backend API.
   Future<void> generatePlan() async {
-    final areaText = areaController.text.trim();
-    if (areaText.isEmpty) {
-      throw Exception('Vui lòng nhập khu vực muốn hẹn hò!');
+    final rawArea = areaController.text.trim();
+    if (rawArea.isEmpty) {
+      throw Exception('Vui lòng chọn khu vực/quận muốn hẹn hò!');
     }
+
+    final matchedDistrict = findMatchingDistrict(rawArea);
+    if (matchedDistrict == null) {
+      throw Exception('Vui lòng chọn một quận từ danh sách gợi ý!');
+    }
+
+    if (!enabledDistricts.contains(matchedDistrict)) {
+      throw Exception('Khu vực $matchedDistrict hiện chưa khả dụng. Vui lòng chọn Quận 1, Quận 7, Quận 10 hoặc Quận Bình Thạnh!');
+    }
+
+    // Standardize to official district name
+    areaController.text = matchedDistrict;
+    final areaText = matchedDistrict;
 
     _isGenerating = true;
     progressNotifier.value = 0.0;
@@ -226,6 +322,8 @@ class DatePlannerController extends ChangeNotifier {
       stageCount: _stageCount,
       transportation: _transportation,
       preferences: const [],
+      excludePlaceIds: _recentPlaceIds.isNotEmpty ? List.from(_recentPlaceIds) : null,
+      excludePlaceNames: _recentPlaceNames.isNotEmpty ? List.from(_recentPlaceNames) : null,
     );
 
     try {

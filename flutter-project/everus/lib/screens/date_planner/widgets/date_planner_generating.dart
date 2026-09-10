@@ -25,21 +25,21 @@ class DatePlannerGenerating extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: const Color(0xFFFDF2F8),
+                color: Colors.white.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFFBCFE8), width: 2),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFEC4899).withValues(alpha: 0.1),
+                    color: const Color(0xFF5A384C).withValues(alpha: 0.08),
                     blurRadius: 20,
-                    spreadRadius: 5,
+                    spreadRadius: 4,
                   ),
                 ],
               ),
               child: const Center(
                 child: Text(
                   "🧭",
-                  style: TextStyle(fontSize: 60),
+                  style: TextStyle(fontSize: 56),
                 ),
               ),
             ),
@@ -49,7 +49,7 @@ class DatePlannerGenerating extends StatelessWidget {
               style: GoogleFonts.playfairDisplay(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF1F2937),
+                color: const Color(0xFF5A384C),
               ),
             ),
             const SizedBox(height: 12),
@@ -60,7 +60,7 @@ class DatePlannerGenerating extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  color: const Color(0xFF4B5563),
+                  color: const Color(0xFF7C6E79),
                   height: 1.4,
                 ),
               ),
@@ -78,7 +78,7 @@ class DatePlannerGenerating extends StatelessWidget {
                           Container(
                             height: 10,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF3E8FF),
+                              color: const Color(0xFFE2D6E0),
                               borderRadius: BorderRadius.circular(5),
                             ),
                           ),
@@ -90,13 +90,11 @@ class DatePlannerGenerating extends StatelessWidget {
                                 width: width,
                                 height: 10,
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
-                                  ),
+                                  color: const Color(0xFF653851),
                                   borderRadius: BorderRadius.circular(5),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFFEC4899).withValues(alpha: 0.3),
+                                      color: const Color(0xFF5A384C).withValues(alpha: 0.2),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     )
@@ -113,7 +111,7 @@ class DatePlannerGenerating extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFFEC4899),
+                          color: const Color(0xFF653851),
                           letterSpacing: 0.5,
                         ),
                       ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -50,12 +51,26 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
     return "$day/$month/$year";
   }
 
+  String _formatBudget(int val) {
+    if (val >= 1000000) {
+      return "${(val / 1000000).toStringAsFixed(1).replaceAll('.0', '')}M VND";
+    }
+    return "${(val / 1000).toStringAsFixed(0)}K VND";
+  }
+
   void _sharePlanText(DatePlan plan) {
     final buffer = StringBuffer();
     buffer.writeln("✨ KẾ HOẠCH HẸN HÒ: ${plan.dateType} ${plan.emoji} ✨");
     buffer.writeln("📅 Ngày hẹn: ${_formatDate(widget.controller.selectedDate)}");
     buffer.writeln("⏱️ Tổng thời lượng: ${plan.totalDurationMinutes} phút (~${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)} tiếng)");
-    buffer.writeln("📍 Khu vực: ${widget.controller.areaController.text}");
+    final budgetVal = plan.budgetPerPerson ?? widget.controller.budgetPerPerson;
+    if (budgetVal > 0) {
+      buffer.writeln("💰 Ngân sách: ${_formatBudget(budgetVal)} / người");
+    }
+    final areaText = widget.controller.areaController.text.trim().isNotEmpty
+        ? widget.controller.areaController.text.trim()
+        : (plan.area ?? 'Khu vực trung tâm');
+    buffer.writeln("📍 Khu vực: $areaText");
     buffer.writeln("🏍️ Phương tiện: ${widget.controller.transportation == 'walking' ? 'Đi bộ' : widget.controller.transportation == 'motorbike' ? 'Xe máy' : 'Taxi'}\n");
     buffer.writeln("🎯 Mục tiêu buổi hẹn: ${plan.purpose}\n");
     buffer.writeln("-----------------------------------------");
@@ -64,21 +79,28 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
       buffer.writeln("📍 Chặng ${stage.stageNum}: ${stage.title}");
       buffer.writeln("⏰ Thời gian: ${stage.startTime} - ${stage.endTime} (${stage.durationMinutes} phút)");
       buffer.writeln("🎯 Mục tiêu: ${stage.purpose}");
-      buffer.writeln("🍴 Thể loại gợi ý: ${stage.category}");
+      buffer.writeln("🍴 Thể loại: ${stage.category}");
       
       if (stage.options.isNotEmpty) {
-        buffer.writeln("📍 Địa điểm gợi ý:");
-        for (var opt in stage.options) {
-          buffer.writeln("  • ${opt.name} - ${opt.address}");
+        final pickedOpt = stage.options.first;
+        final priceText = pickedOpt.formattedPriceRange.isNotEmpty ? " (${pickedOpt.formattedPriceRange})" : "";
+        buffer.writeln("📍 Địa điểm: ${pickedOpt.name}$priceText");
+        if (pickedOpt.address.isNotEmpty) {
+          buffer.writeln("   Địa chỉ: ${pickedOpt.address}");
+        }
+        if (pickedOpt.mapsUrl.isNotEmpty) {
+          buffer.writeln("   🗺️ Google Maps: ${pickedOpt.mapsUrl}");
         }
       }
       buffer.writeln("✨ Hoạt động gợi ý:");
       for (var task in stage.tasks) {
         buffer.writeln("  • $task");
       }
-      buffer.writeln("💡 Mách nhỏ:");
-      for (var tip in stage.tips) {
-        buffer.writeln("  • $tip");
+      if (stage.tips.isNotEmpty) {
+        buffer.writeln("💡 Mách nhỏ:");
+        for (var tip in stage.tips) {
+          buffer.writeln("  • $tip");
+        }
       }
       buffer.writeln("-----------------------------------------");
     }
@@ -88,7 +110,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('📋 Đã sao chép lộ trình vào bộ nhớ tạm!'),
-        backgroundColor: Color(0xFF8B5CF6),
+        backgroundColor: Color(0xFF653851),
       ),
     );
   }
@@ -190,7 +212,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF7C7289),
+                color: const Color(0xFF5A384C),
                 letterSpacing: 1.5,
               ),
             ),
@@ -240,7 +262,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8B5CF6),
+                backgroundColor: const Color(0xFF653851),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 minimumSize: const Size.fromHeight(56),
@@ -261,7 +283,17 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
               _buildCompactActionButton(
                 icon: Icons.restart_alt,
                 label: 'Tạo lại',
-                onTap: widget.controller.clearPlan,
+                onTap: () async {
+                  try {
+                    await widget.controller.generatePlan();
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Không thể tạo lại kế hoạch: $e')),
+                      );
+                    }
+                  }
+                },
               ),
               _buildCompactActionButton(
                 icon: Icons.content_copy,
@@ -284,7 +316,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                 ),
             ],
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 100), // Space for floating bottom bar
         ],
       ),
     );
@@ -395,7 +427,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
         ),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: hasInvite ? const Color(0xFF10B981) : const Color(0xFFEC4899),
+        backgroundColor: hasInvite ? const Color(0xFF10B981) : const Color(0xFF653851),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         minimumSize: const Size.fromHeight(52),
@@ -406,7 +438,6 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
       ),
     );
   }
-
 
   Widget _buildCompactActionButton({
     required IconData icon,
@@ -424,11 +455,15 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.white.withValues(alpha: 0.85),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.06),
+                    color: const Color(0xFF5A384C).withValues(alpha: 0.06),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -436,7 +471,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF8B5CF6),
+                color: const Color(0xFF653851),
                 size: 20,
               ),
             ),
@@ -446,7 +481,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF4B5563),
+                color: const Color(0xFF5A384C),
               ),
             ),
           ],
@@ -568,13 +603,13 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
               padding: const EdgeInsets.only(bottom: 24.0),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 12,
+                      color: const Color(0xFF5A384C).withValues(alpha: 0.04),
+                      blurRadius: 14,
                       offset: const Offset(0, 6),
                     ),
                   ],
@@ -676,21 +711,18 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.assistant_navigation, size: 16, color: theme.accent),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            "Lựa chọn dự phòng khác (${stage.options.length - 1})",
-                                            style: GoogleFonts.inter(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: theme.accent,
-                                            ),
+                                      Icon(Icons.assistant_navigation, size: 16, color: theme.accent),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          "Lựa chọn dự phòng khác (${stage.options.length - 1})",
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.accent,
                                           ),
-                                        ],
+                                        ),
                                       ),
                                       Icon(
                                         widget.controller.expandedStageBackups.contains(stage.stageNum)
@@ -783,37 +815,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),
             ),
-            child: (opt.thumbnailUrl != null && opt.thumbnailUrl!.isNotEmpty)
-              ? Image.network(
-                  opt.thumbnailUrl!,
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      height: 150,
-                      color: const Color(0xFFF3F4F6),
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8B5CF6)),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 150,
-                    color: const Color(0xFFF3F4F6),
-                    child: Center(
-                      child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey[400]),
-                    ),
-                  ),
-                )
-              : Container(
-                  height: 150,
-                  color: const Color(0xFFF3F4F6),
-                  child: Center(
-                    child: Icon(Icons.image, size: 40, color: Colors.grey[400]),
-                  ),
-                ),
+            child: _buildThumbnailWidget(opt, theme),
           ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -850,9 +852,12 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                   children: [
                     Icon(Icons.sell, color: theme.accent, size: 14),
                     const SizedBox(width: 4),
-                    Text(
-                      "Khoảng giá: ${opt.priceLevel != null && opt.priceLevel!.isNotEmpty ? opt.priceLevel : 'Chưa cập nhật'}",
-                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[800]),
+                    Expanded(
+                      child: Text(
+                        "Khoảng giá: ${opt.formattedPriceRange}",
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[800]),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -862,15 +867,21 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
-                      Text(
-                        "${opt.rating} (${opt.ratingCount ?? 0} đánh giá)",
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[800]),
+                      Expanded(
+                        child: Text(
+                          "${opt.rating} (${opt.ratingCount ?? 0} đánh giá)",
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[800]),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
                 ],
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     ElevatedButton.icon(
                       onPressed: () async {
@@ -879,41 +890,149 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                           await launchUrl(url);
                         }
                       },
-                      icon: const Icon(Icons.map, size: 16),
-                      label: const Text('Mở bản đồ'),
+                      icon: const Icon(Icons.map, size: 15),
+                      label: Text(
+                        'Mở bản đồ',
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[700],
+                        backgroundColor: const Color(0xFF374151),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        visualDensity: VisualDensity.compact,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
+                        elevation: 0,
                       ),
                     ),
-                    if (isBackup) ...[
-                      const SizedBox(width: 8),
+                    if (isBackup)
                       ElevatedButton.icon(
                         onPressed: () {
                           widget.controller.selectBackupLocation(stage, opt);
                         },
-                        icon: const Icon(Icons.check_circle_outline, size: 16),
-                        label: const Text('Đặt làm chính'),
+                        icon: const Icon(Icons.check_circle_outline, size: 15),
+                        label: Text(
+                          'Đặt làm chính',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          visualDensity: VisualDensity.compact,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
+                          elevation: 0,
                         ),
                       ),
-                    ],
                   ],
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildThumbnailWidget(LocationOption opt, ActivityTheme theme) {
+    String? cleanUrl;
+    if (opt.thumbnailUrl != null) {
+      final trimmed = opt.thumbnailUrl!.trim();
+      if (trimmed.isNotEmpty) {
+        cleanUrl = trimmed.startsWith('http://')
+            ? 'https://${trimmed.substring(7)}'
+            : trimmed;
+      }
+    }
+
+    if (cleanUrl == null) {
+      return _buildFallbackThumbnail(theme);
+    }
+
+    // On Web, CanvasKit blocks cross-origin images that don't have CORS headers (e.g. Google Maps thumbnails).
+    // We proxy via EverUsBackend /api/date-planner/image-proxy, and provide seamless fallback to public CDN proxy (wsrv.nl).
+    final String targetUrl = kIsWeb
+        ? '${AuthHelper.baseUrl}/api/date-planner/image-proxy?url=${Uri.encodeComponent(cleanUrl)}'
+        : cleanUrl;
+
+    return Image.network(
+      targetUrl,
+      height: 150,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          height: 150,
+          color: const Color(0xFFF3F4F6),
+          child: const Center(
+            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8B5CF6)),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        final fallbackCdnUrl = 'https://images.weserv.nl/?url=${Uri.encodeComponent(cleanUrl!)}';
+        if (targetUrl != fallbackCdnUrl && targetUrl != cleanUrl) {
+          return Image.network(
+            cleanUrl,
+            height: 150,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (context, err2, st2) => Image.network(
+              fallbackCdnUrl,
+              height: 150,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, err3, st3) => _buildFallbackThumbnail(theme),
+            ),
+          );
+        } else if (targetUrl != fallbackCdnUrl) {
+          return Image.network(
+            fallbackCdnUrl,
+            height: 150,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (context, err3, st3) => _buildFallbackThumbnail(theme),
+          );
+        }
+        return _buildFallbackThumbnail(theme);
+      },
+    );
+  }
+
+  Widget _buildFallbackThumbnail(ActivityTheme theme) {
+    return Container(
+      height: 150,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.light.withValues(alpha: 0.8),
+            theme.primary.withValues(alpha: 0.15),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.location_city_rounded, size: 40, color: theme.primary.withValues(alpha: 0.7)),
+            const SizedBox(height: 6),
+            Text(
+              "EverUs Date Spot",
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: theme.dark.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -957,12 +1076,14 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                       children: [
                         Text(transportEmoji, style: const TextStyle(fontSize: 14)),
                         const SizedBox(width: 6),
-                        Text(
-                          "Di chuyển: ~ ${distance.toStringAsFixed(1)} km (~$duration phút)",
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: theme.dark,
+                        Flexible(
+                          child: Text(
+                            "Di chuyển: ~ ${distance.toStringAsFixed(1)} km (~$duration phút)",
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: theme.dark,
+                            ),
                           ),
                         ),
                       ],

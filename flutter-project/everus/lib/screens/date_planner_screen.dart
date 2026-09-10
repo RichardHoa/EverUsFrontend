@@ -69,107 +69,118 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, child) {
-        Widget body;
-
-        if (_controller.isGenerating) {
-          body = DatePlannerGenerating(controller: _controller);
-        } else if (_controller.isLoadingPlan) {
-          body = const DatePlannerLoading();
-        } else if (_controller.generatedPlan != null) {
-          body = DatePlannerResults(controller: _controller);
-        } else {
-          body = DatePlannerForm(controller: _controller);
-        }
-
-        return Scaffold(
-          extendBody: true,
-          backgroundColor: const Color(0xFFFFF7F7),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFFF0F3),
-                  Colors.white,
-                  Color(0xFFF3E8FF),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  _buildAppBar(),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: body,
-                    ),
-                  ),
-                ],
+    return Scaffold(
+      extendBody: true,
+      body: Stack(
+        children: [
+          // EverUs Background Image (Isolated with RepaintBoundary)
+          const Positioned.fill(
+            child: RepaintBoundary(
+              child: Image(
+                image: AssetImage('assets/images/bg_everus.png'),
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          bottomNavigationBar: const EverUsFooter(currentTab: 'other'),
-        );
-      },
+
+          // Main content
+          SafeArea(
+            child: Column(
+              children: [
+                _buildAppBar(),
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: _controller,
+                    builder: (context, child) {
+                      Widget body;
+                      if (_controller.isGenerating) {
+                        body = DatePlannerGenerating(controller: _controller);
+                      } else if (_controller.isLoadingPlan) {
+                        body = const DatePlannerLoading();
+                      } else if (_controller.generatedPlan != null) {
+                        body = DatePlannerResults(controller: _controller);
+                      } else {
+                        body = DatePlannerForm(controller: _controller);
+                      }
+
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child: body,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: const EverUsFooter(currentTab: 'other'),
     );
   }
 
   Widget _buildAppBar() {
-    final bool isViewingResult = _controller.generatedPlan != null && !_controller.isGenerating;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        final bool isViewingResult = _controller.generatedPlan != null && !_controller.isGenerating;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    width: 1.5,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x145A384C),
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF8B5CF6)),
-              onPressed: () {
-                if (isViewingResult) {
-                  _controller.clearPlan();
-                } else {
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          Text(
-            isViewingResult ? 'Lộ Trình Hẹn Hò' : 'Thiết Kế Hẹn Hò',
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1F2937),
-            ),
-          ),
-          const Spacer(),
-          if (AuthHelper.isLoggedIn) ...[
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFF5A384C)),
+                  onPressed: () {
+                    if (isViewingResult) {
+                      _controller.clearPlan();
+                    } else {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 14),
+              Text(
+                isViewingResult ? 'Lộ Trình Hẹn Hò' : 'Thiết Kế Hẹn Hò',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF5A384C),
+                ),
+              ),
+              const Spacer(),
+              if (AuthHelper.isLoggedIn) ...[
             Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withValues(alpha: 0.85),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      width: 1.5,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
+                        color: const Color(0xFF5A384C).withValues(alpha: 0.08),
+                        blurRadius: 14,
                         offset: const Offset(0, 4),
                       ),
                     ],
@@ -179,7 +190,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                       NotificationManager.instance.notifications.any((n) => n['is_read'] == false)
                           ? Icons.notifications_active_outlined
                           : Icons.notifications_none_outlined,
-                      color: const Color(0xFFEC4899),
+                      color: const Color(0xFF5A384C),
                     ),
                     onPressed: () async {
                       final selectedPlan = await Navigator.push<DatePlan>(
@@ -202,7 +213,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                       width: 10,
                       height: 10,
                       decoration: const BoxDecoration(
-                        color: Colors.red,
+                        color: Color(0xFFC62828),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -211,7 +222,8 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             ),
           ],
         ],
-      ),
-    );
-  }
+      );
+    },
+  );
+}
 }

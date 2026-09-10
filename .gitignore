@@ -1,3 +1,5 @@
 node_modules
 .DS_Store
 .agents
+/google-maps-reviews-scraper
+Landing page/

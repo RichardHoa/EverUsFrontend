@@ -305,19 +305,45 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
       final userExists = _setupUserImagePath != null && await AppFileHelper.fileExists(_setupUserImagePath!);
       final loverExists = _setupLoverImagePath != null && await AppFileHelper.fileExists(_setupLoverImagePath!);
 
-      setState(() {
-        _userName = _userController.text.trim();
-        _loverName = _loverController.text.trim();
-        _anniversaryDate = _setupAnniversaryDate;
-        _userImagePath = _setupUserImagePath;
-        _loverImagePath = _setupLoverImagePath;
-        _userImageExists = userExists;
-        _loverImageExists = loverExists;
-        _elapsedNotifier.value = DateTime.now().difference(_anniversaryDate!);
-        _isSetup = true;
-      });
+      if (mounted) {
+        setState(() {
+          _userName = _userController.text.trim();
+          _loverName = _loverController.text.trim();
+          _anniversaryDate = _setupAnniversaryDate;
+          _userImagePath = _setupUserImagePath;
+          _loverImagePath = _setupLoverImagePath;
+          _userImageExists = userExists;
+          _loverImageExists = loverExists;
+          _elapsedNotifier.value = DateTime.now().difference(_anniversaryDate!);
+          _isSetup = true;
+        });
 
-      _startTimer();
+        _startTimer();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Đã lưu thông tin kỷ niệm thành công! 💖',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF8B5CF6),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 

@@ -42,6 +42,7 @@ class DatePlannerGenerator {
         }
 
         var stagesList = data['stages'] as List? ?? [];
+        final rawBudget = data['budgetPerPerson'] ?? data['budget_per_person'] ?? input.budgetPerPerson;
         
         return DatePlan(
           id: data['id']?.toString(),
@@ -53,6 +54,8 @@ class DatePlannerGenerator {
           stages: stagesList.map((e) => DateStage.fromJson(e)).toList(),
           purpose: data['purpose'] ?? '',
           googleMapsRouteUrl: data['google_maps_route_url'] ?? data['googleMapsRouteUrl'],
+          budgetPerPerson: rawBudget != null ? int.tryParse(rawBudget.toString().replaceAll('.0', '')) : input.budgetPerPerson,
+          area: data['area']?.toString() ?? input.area,
         );
       } else {
         throw Exception('Failed to generate date plan from server: ${response.statusCode}');

@@ -18,12 +18,12 @@ class DatePlannerLoading extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F3FF),
+                color: Colors.white.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFDDD6FE), width: 2),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                    color: const Color(0xFF5A384C).withValues(alpha: 0.08),
                     blurRadius: 15,
                     spreadRadius: 3,
                   ),
@@ -34,7 +34,7 @@ class DatePlannerLoading extends StatelessWidget {
                   width: 40,
                   height: 40,
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF653851)),
                     strokeWidth: 3,
                   ),
                 ),
@@ -46,7 +46,7 @@ class DatePlannerLoading extends StatelessWidget {
               style: GoogleFonts.playfairDisplay(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF1F2937),
+                color: const Color(0xFF5A384C),
               ),
             ),
             const SizedBox(height: 8),
@@ -55,7 +55,7 @@ class DatePlannerLoading extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: const Color(0xFF6B7280),
+                color: const Color(0xFF7C6E79),
                 height: 1.4,
               ),
             ),

@@ -246,19 +246,32 @@ class _MascotPainter extends CustomPainter {
   final double legAnim;
   final String emotion;
 
+  static final Paint _legPaint = Paint()
+    ..color = Colors.red.shade300
+    ..strokeWidth = 4
+    ..strokeCap = StrokeCap.round
+    ..style = PaintingStyle.stroke;
+
+  static final Paint _armPaint = Paint()
+    ..color = Colors.red.shade300
+    ..strokeWidth = 4
+    ..strokeCap = StrokeCap.round
+    ..style = PaintingStyle.stroke;
+
+  static final Paint _heartPaint = Paint()
+    ..color = Colors.red.shade400
+    ..style = PaintingStyle.fill;
+
+  static final Paint _shadowPaint = Paint()
+    ..color = const Color(0x14000000)
+    ..style = PaintingStyle.fill;
+
   _MascotPainter({required this.legAnim, required this.emotion});
 
   @override
   void paint(Canvas canvas, Size size) {
     final double width = size.width;
     final double height = size.height;
-
-    // Draw legs
-    final legPaint = Paint()
-      ..color = Colors.red.shade300
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
 
     final double leftLegAngle = math.sin(legAnim * math.pi * 2) * 0.3;
     final double rightLegAngle = math.cos(legAnim * math.pi * 2) * 0.3;
@@ -273,7 +286,7 @@ class _MascotPainter extends CustomPainter {
         leftLegX + leftLegLength * math.sin(leftLegAngle - 0.05),
         leftLegY + leftLegLength * math.cos(leftLegAngle - 0.05),
       ),
-      legPaint,
+      _legPaint,
     );
 
     // Right leg origin (approx 56, 80)
@@ -286,15 +299,8 @@ class _MascotPainter extends CustomPainter {
         rightLegX + rightLegLength * math.sin(rightLegAngle + 0.05),
         rightLegY + rightLegLength * math.cos(rightLegAngle + 0.05),
       ),
-      legPaint,
+      _legPaint,
     );
-
-    // Draw arms
-    final armPaint = Paint()
-      ..color = Colors.red.shade300
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
 
     // Left arm: sways based on emotion
     final double leftArmAngle = emotion == 'excited' || emotion == 'celebrating'
@@ -305,7 +311,7 @@ class _MascotPainter extends CustomPainter {
     canvas.drawLine(
       Offset(leftArmX, leftArmY),
       Offset(leftArmX - 22 * math.cos(leftArmAngle), leftArmY + 22 * math.sin(leftArmAngle)),
-      armPaint,
+      _armPaint,
     );
 
     // Right arm
@@ -317,18 +323,8 @@ class _MascotPainter extends CustomPainter {
     canvas.drawLine(
       Offset(rightArmX, rightArmY),
       Offset(rightArmX + 22 * math.cos(rightArmAngle), rightArmY + 22 * math.sin(rightArmAngle)),
-      armPaint,
+      _armPaint,
     );
-
-    // Draw heart body with a scale to fit (React SVG: size 100, ours is width/height)
-    final heartPaint = Paint()
-      ..color = Colors.red.shade400
-      ..style = PaintingStyle.fill;
-
-    // Draw shadow
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.08)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
     final Path heartPath = Path();
 
@@ -345,9 +341,9 @@ class _MascotPainter extends CustomPainter {
     heartPath.cubicTo(mapX(95), mapY(60), mapX(80), mapY(75), mapX(50), mapY(95));
     heartPath.close();
 
-    // Draw shadow path slightly offset
-    canvas.drawPath(heartPath.shift(const Offset(0, 4)), shadowPaint);
-    canvas.drawPath(heartPath, heartPaint);
+    // Draw shadow path slightly offset without expensive CPU blur filter
+    canvas.drawPath(heartPath.shift(const Offset(0, 3)), _shadowPaint);
+    canvas.drawPath(heartPath, _heartPaint);
   }
 
   @override

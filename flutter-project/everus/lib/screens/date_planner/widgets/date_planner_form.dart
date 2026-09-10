@@ -59,7 +59,7 @@ class DatePlannerForm extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF374151),
+                        color: const Color(0xFF5A384C),
                       ),
                     ),
                   ),
@@ -68,21 +68,21 @@ class DatePlannerForm extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        color: Colors.white.withValues(alpha: 0.8),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFE2D6E0)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.calendar_month_outlined, size: 18, color: Color(0xFF8B5CF6)),
+                          const Icon(Icons.calendar_month_outlined, size: 18, color: Color(0xFF653851)),
                           const SizedBox(width: 8),
                           Text(
                             _formatDate(controller.selectedDate),
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1F2937),
+                              color: const Color(0xFF5A384C),
                             ),
                           ),
                         ],
@@ -102,7 +102,7 @@ class DatePlannerForm extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF374151),
+                        color: const Color(0xFF5A384C),
                       ),
                     ),
                   ),
@@ -111,21 +111,21 @@ class DatePlannerForm extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        color: Colors.white.withValues(alpha: 0.8),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFE2D6E0)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.access_time_rounded, size: 18, color: Color(0xFF8B5CF6)),
+                          const Icon(Icons.access_time_rounded, size: 18, color: Color(0xFF653851)),
                           const SizedBox(width: 8),
                           Text(
                             controller.startTime.format(context),
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1F2937),
+                              color: const Color(0xFF5A384C),
                             ),
                           ),
                         ],
@@ -148,7 +148,7 @@ class DatePlannerForm extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF374151),
+                            color: const Color(0xFF5A384C),
                           ),
                         ),
                       ),
@@ -158,7 +158,7 @@ class DatePlannerForm extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFEC4899),
+                          color: const Color(0xFF653851),
                         ),
                       ),
                     ],
@@ -168,8 +168,8 @@ class DatePlannerForm extends StatelessWidget {
                     min: 2.0,
                     max: 6.0,
                     divisions: 8,
-                    activeColor: const Color(0xFFEC4899),
-                    inactiveColor: const Color(0xFFFBCFE8),
+                    activeColor: const Color(0xFF653851),
+                    inactiveColor: const Color(0xFFE2D6E0),
                     onChanged: (val) {
                       controller.setDurationHours(val);
                     },
@@ -187,43 +187,11 @@ class DatePlannerForm extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF374151),
+                      color: const Color(0xFF5A384C),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
-                    controller: controller.areaController,
-                    decoration: InputDecoration(
-                      hintText: "Ví dụ: Quận 1, TP. HCM",
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF8B5CF6)),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "Lưu ý: EverUs hiện tại hỗ trợ tốt nhất các địa điểm thuộc khu vực TP. Hồ Chí Minh. Vui lòng nhập khu vực để tụi mình lên lộ trình chính xác nhất nhé!",
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: const Color(0xFF7C7289),
-                      fontStyle: FontStyle.italic,
-                      height: 1.4,
-                    ),
-                  ),
+                  _DistrictAutocompleteInput(controller: controller.areaController),
                 ],
               ),
             ],
@@ -239,11 +207,10 @@ class DatePlannerForm extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF374151),
+                  color: const Color(0xFF5A384C),
                 ),
               ),
               const SizedBox(height: 10),
-              // Render vibes custom list instead of RadioGroup widget to avoid dependency compiler issues
               RadioGroup<String>(
                 groupValue: controller.selectedVibe,
                 onChanged: (val) {
@@ -258,16 +225,16 @@ class DatePlannerForm extends StatelessWidget {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: Material(
-                        color: isSelected ? const Color(0xFFFDF4FF) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        color: isSelected ? const Color(0xFFF7EFF5) : Colors.white.withValues(alpha: 0.8),
+                        borderRadius: BorderRadius.circular(14),
                         clipBehavior: Clip.antiAlias,
                         child: Container(
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: isSelected ? const Color(0xFFEC4899) : const Color(0xFFE5E7EB),
+                              color: isSelected ? const Color(0xFF653851) : const Color(0xFFE2D6E0),
                               width: isSelected ? 1.8 : 1.0,
                             ),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: ListTile(
                             onTap: () {
@@ -279,16 +246,16 @@ class DatePlannerForm extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1F2937),
+                                color: const Color(0xFF5A384C),
                               ),
                             ),
                             subtitle: Text(
                               info['desc']!,
-                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF7C6E79)),
                             ),
                             trailing: Radio<String>(
                               value: entry.key,
-                              activeColor: const Color(0xFFEC4899),
+                              activeColor: const Color(0xFF653851),
                             ),
                           ),
                         ),
@@ -308,7 +275,7 @@ class DatePlannerForm extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF374151),
+                        color: const Color(0xFF5A384C),
                       ),
                     ),
                   ),
@@ -318,7 +285,7 @@ class DatePlannerForm extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF8B5CF6),
+                      color: const Color(0xFF653851),
                     ),
                   ),
                 ],
@@ -328,8 +295,8 @@ class DatePlannerForm extends StatelessWidget {
                 min: 100000,
                 max: 1000000,
                 divisions: 9,
-                activeColor: const Color(0xFF8B5CF6),
-                inactiveColor: const Color(0xFFDDD6FE),
+                activeColor: const Color(0xFF653851),
+                inactiveColor: const Color(0xFFE2D6E0),
                 onChanged: (val) {
                   controller.setBudgetPerPerson(val.round());
                 },
@@ -345,20 +312,20 @@ class DatePlannerForm extends StatelessWidget {
                       controller.setBudgetPerPerson(budget);
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFFEDE9FE) : Colors.white,
+                        color: isSelected ? const Color(0xFF653851) : Colors.white.withValues(alpha: 0.8),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFE5E7EB),
+                          color: isSelected ? const Color(0xFF653851) : const Color(0xFFE2D6E0),
                         ),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         _formatBudget(budget),
                         style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? const Color(0xFF6D28D9) : const Color(0xFF4B5563),
+                          fontSize: 11.5,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected ? Colors.white : const Color(0xFF5A384C),
                         ),
                       ),
                     ),
@@ -378,7 +345,7 @@ class DatePlannerForm extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF374151),
+                  color: const Color(0xFF5A384C),
                 ),
               ),
               const SizedBox(height: 8),
@@ -408,12 +375,12 @@ class DatePlannerForm extends StatelessWidget {
                     controller.setGeneratedPlan(selectedPlan);
                   }
                 },
-                icon: const Icon(Icons.history, color: Color(0xFF8B5CF6), size: 18),
+                icon: const Icon(Icons.history, color: Color(0xFF653851), size: 18),
                 label: Text(
                   'Xem kế hoạch trước đây',
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF8B5CF6),
+                    color: const Color(0xFF653851),
                   ),
                 ),
               ),
@@ -425,12 +392,12 @@ class DatePlannerForm extends StatelessWidget {
                 onPressed: () {
                   controller.setGeneratedPlan(controller.savedPlan);
                 },
-                icon: const Icon(Icons.history, color: Color(0xFF8B5CF6), size: 18),
+                icon: const Icon(Icons.history, color: Color(0xFF653851), size: 18),
                 label: Text(
                   'Xem lại kế hoạch gần nhất',
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF8B5CF6),
+                    color: const Color(0xFF653851),
                   ),
                 ),
               ),
@@ -444,8 +411,8 @@ class DatePlannerForm extends StatelessWidget {
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
-                  blurRadius: 15,
+                  color: const Color(0xFF5A384C).withValues(alpha: 0.2),
+                  blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
               ],
@@ -453,7 +420,7 @@ class DatePlannerForm extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () => _handleSubmit(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8B5CF6),
+                backgroundColor: const Color(0xFF653851),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
@@ -469,16 +436,16 @@ class DatePlannerForm extends StatelessWidget {
                   Text(
                     'LẬP KẾ HOẠCH HẸN HÒ',
                     style: GoogleFonts.inter(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w800,
-                      letterSpacing: 1.0,
+                      letterSpacing: 0.8,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 100), // Space for floating bottom bar
         ],
       ),
     );
@@ -509,10 +476,10 @@ class DatePlannerForm extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFEDE9FE) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            color: isSelected ? const Color(0xFF653851) : Colors.white.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFE5E7EB),
+              color: isSelected ? const Color(0xFF653851) : const Color(0xFFE2D6E0),
               width: isSelected ? 1.8 : 1.0,
             ),
           ),
@@ -522,7 +489,7 @@ class DatePlannerForm extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected ? const Color(0xFF6D28D9) : const Color(0xFF4B5563),
+              color: isSelected ? Colors.white : const Color(0xFF5A384C),
             ),
           ),
         ),
@@ -534,16 +501,16 @@ class DatePlannerForm extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: const Color(0xFF653851),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.35),
+          width: 1.5,
         ),
-        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
-            blurRadius: 12,
+            color: const Color(0xFF5A384C).withValues(alpha: 0.15),
+            blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
@@ -577,7 +544,7 @@ class DatePlannerForm extends StatelessWidget {
           const SizedBox(width: 12),
           const Text(
             "🧭",
-            style: TextStyle(fontSize: 48),
+            style: TextStyle(fontSize: 44),
           ),
         ],
       ),
@@ -585,9 +552,23 @@ class DatePlannerForm extends StatelessWidget {
   }
 
   Widget _buildSectionCard({required String title, required List<Widget> children}) {
-    return GlassCard(
-      enableBlur: false,
+    return Container(
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.7),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5A384C).withValues(alpha: 0.05),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -596,7 +577,7 @@ class DatePlannerForm extends StatelessWidget {
             style: GoogleFonts.playfairDisplay(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF111827),
+              color: const Color(0xFF5A384C),
             ),
           ),
           const SizedBox(height: 16),
@@ -616,9 +597,9 @@ class DatePlannerForm extends StatelessWidget {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF8B5CF6),
+              primary: Color(0xFF653851),
               onPrimary: Colors.white,
-              onSurface: Colors.black87,
+              onSurface: Color(0xFF5A384C),
             ),
           ),
           child: child!,
@@ -638,9 +619,9 @@ class DatePlannerForm extends StatelessWidget {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF8B5CF6),
+              primary: Color(0xFF653851),
               onPrimary: Colors.white,
-              onSurface: Colors.black87,
+              onSurface: Color(0xFF5A384C),
             ),
           ),
           child: child!,
@@ -650,5 +631,248 @@ class DatePlannerForm extends StatelessWidget {
     if (picked != null) {
       controller.setStartTime(picked);
     }
+  }
+}
+
+/// Autocomplete and quick selection widget for HCMC districts.
+class _DistrictAutocompleteInput extends StatefulWidget {
+  final TextEditingController controller;
+
+  const _DistrictAutocompleteInput({required this.controller});
+
+  @override
+  State<_DistrictAutocompleteInput> createState() => _DistrictAutocompleteInputState();
+}
+
+class _DistrictAutocompleteInputState extends State<_DistrictAutocompleteInput> {
+  late TextEditingController _textController;
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(text: widget.controller.text);
+    widget.controller.addListener(_onExternalControllerChange);
+  }
+
+  void _onExternalControllerChange() {
+    if (_textController.text != widget.controller.text) {
+      _textController.text = widget.controller.text;
+      if (mounted) setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onExternalControllerChange);
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _selectDistrict(String district) {
+    if (!DatePlannerController.enabledDistricts.contains(district)) {
+      return;
+    }
+    _textController.text = district;
+    widget.controller.text = district;
+    _focusNode.unfocus();
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        RawAutocomplete<String>(
+          textEditingController: _textController,
+          focusNode: _focusNode,
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            final query = textEditingValue.text.trim();
+            if (query.isEmpty) {
+              return DatePlannerController.hcmcDistricts;
+            }
+            final normQuery = DatePlannerController.removeDiacritics(query.toLowerCase());
+            return DatePlannerController.hcmcDistricts.where((district) {
+              final normDistrict = DatePlannerController.removeDiacritics(district.toLowerCase());
+              return normDistrict.contains(normQuery) || district.toLowerCase().contains(query.toLowerCase());
+            });
+          },
+          onSelected: (String selection) {
+            _selectDistrict(selection);
+          },
+          fieldViewBuilder: (
+            BuildContext context,
+            TextEditingController fieldController,
+            FocusNode fieldFocusNode,
+            VoidCallback onFieldSubmitted,
+          ) {
+            return ValueListenableBuilder<TextEditingValue>(
+              valueListenable: fieldController,
+              builder: (context, value, child) {
+                final hasText = value.text.isNotEmpty;
+                return TextField(
+                  controller: fieldController,
+                  focusNode: fieldFocusNode,
+                  onChanged: (val) {
+                    widget.controller.text = val;
+                  },
+                  decoration: InputDecoration(
+                    hintText: "Chọn địa điểm",
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF653851)),
+                    suffixIcon: hasText
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18, color: Color(0xFF9CA3AF)),
+                            onPressed: () {
+                              fieldController.clear();
+                              widget.controller.clear();
+                              setState(() {});
+                            },
+                          )
+                        : const Icon(Icons.keyboard_arrow_down, color: Color(0xFF653851)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2D6E0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2D6E0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF653851), width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+                );
+              },
+            );
+          },
+          optionsViewBuilder: (
+            BuildContext context,
+            AutocompleteOnSelected<String> onSelected,
+            Iterable<String> options,
+          ) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 6.0,
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+                child: Container(
+                  constraints: const BoxConstraints(maxHeight: 260, maxWidth: 330),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2D6E0)),
+                  ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                    itemBuilder: (BuildContext context, int index) {
+                      final option = options.elementAt(index);
+                      final isEnabled = DatePlannerController.enabledDistricts.contains(option);
+                      final isCurrent = widget.controller.text.trim() == option;
+                      return InkWell(
+                        onTap: isEnabled
+                            ? () {
+                                onSelected(option);
+                              }
+                            : null,
+                        child: Container(
+                          color: isCurrent && isEnabled ? const Color(0xFFF7EFF5) : Colors.transparent,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isEnabled ? Icons.location_city_rounded : Icons.lock_outline_rounded,
+                                size: 18,
+                                color: !isEnabled
+                                    ? const Color(0xFFD1D5DB)
+                                    : (isCurrent ? const Color(0xFF653851) : const Color(0xFF7C6E79)),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  option,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                                    color: !isEnabled
+                                        ? const Color(0xFF9CA3AF)
+                                        : (isCurrent ? const Color(0xFF653851) : const Color(0xFF5A384C)),
+                                  ),
+                                ),
+                              ),
+                              if (isEnabled)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF7EFF5),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    "Khả dụng",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF653851),
+                                    ),
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3F4F6),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    "Sắp hỗ trợ",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF9CA3AF),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+
+        // Informative note
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline, size: 13, color: Color(0xFF653851)),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Text(
+                "Hiện tại EverUs hỗ trợ Quận 1, Quận 7, Quận 10 và Quận Bình Thạnh. Các quận khác sẽ được cập nhật trong thời gian tới.",
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: const Color(0xFF6B7280),
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

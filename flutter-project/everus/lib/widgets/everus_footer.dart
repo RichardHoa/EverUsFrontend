@@ -43,14 +43,14 @@ class EverUsFooter extends StatelessWidget {
           ),
           height: 64,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: Colors.white.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: const Color(0xFFF3E8FF), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: const Color(0xFF5A384C).withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -59,40 +59,7 @@ class EverUsFooter extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Account/Profile Button
-                InkWell(
-                  onTap: () => _navigateToProfile(context),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isLoggedIn ? Icons.account_circle : Icons.account_circle_outlined,
-                          color: currentTab == 'account' ? const Color(0xFF8B5CF6) : const Color(0xFF9CA3AF),
-                          size: 24,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Tài khoản',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: currentTab == 'account' ? const Color(0xFF8B5CF6) : const Color(0xFF9CA3AF),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Vertical divider
-                Container(
-                  width: 1.5,
-                  height: 28,
-                  color: const Color(0xFFF3E8FF),
-                ),
-                // Home Button
+                // Home Button (First)
                 InkWell(
                   onTap: () => _navigateToHome(context),
                   borderRadius: BorderRadius.circular(20),
@@ -103,7 +70,7 @@ class EverUsFooter extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.home_rounded,
-                          color: currentTab == 'home' ? const Color(0xFFEC4899) : const Color(0xFF9CA3AF),
+                          color: currentTab == 'home' ? const Color(0xFF653851) : const Color(0xFF9E8E9B),
                           size: 24,
                         ),
                         const SizedBox(height: 2),
@@ -112,7 +79,40 @@ class EverUsFooter extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: currentTab == 'home' ? const Color(0xFFEC4899) : const Color(0xFF9CA3AF),
+                            color: currentTab == 'home' ? const Color(0xFF653851) : const Color(0xFF9E8E9B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Vertical divider
+                Container(
+                  width: 1.5,
+                  height: 28,
+                  color: const Color(0xFFE2D6E0),
+                ),
+                // Account/Profile Button (Second)
+                InkWell(
+                  onTap: () => _navigateToProfile(context),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isLoggedIn ? Icons.account_circle : Icons.account_circle_outlined,
+                          color: currentTab == 'account' ? const Color(0xFF653851) : const Color(0xFF9E8E9B),
+                          size: 24,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Tài khoản',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: currentTab == 'account' ? const Color(0xFF653851) : const Color(0xFF9E8E9B),
                           ),
                         ),
                       ],

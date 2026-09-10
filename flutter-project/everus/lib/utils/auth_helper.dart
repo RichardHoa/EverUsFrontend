@@ -20,6 +20,20 @@ class AuthHelper {
   static const AppMode? manualMode = null;
 
   static const String _prodUrl = 'https://everus-backend.richardhoa.io.vn';
+  static const String _envBaseUrl = String.fromEnvironment('BACKEND_URL');
+
+  static bool _isLocalHost(String host) {
+    if (host.isEmpty) return true;
+    final lower = host.toLowerCase();
+    if (lower == 'localhost' || lower == '127.0.0.1' || lower == '0.0.0.0' || lower == '::1') {
+      return true;
+    }
+    // Check private LAN IP ranges (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    if (lower.startsWith('192.168.') || lower.startsWith('10.') || RegExp(r'^172\.(1[6-9]|2[0-9]|3[0-1])\.').hasMatch(lower)) {
+      return true;
+    }
+    return false;
+  }
 
   static String get _devUrl {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
@@ -29,18 +43,28 @@ class AuthHelper {
   }
 
   static String get baseUrl {
+    // 1. Environment variable override (--dart-define=BACKEND_URL=https://...)
+    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
+
+    // 2. Manual override in code
     if (manualMode == AppMode.prod) return _prodUrl;
     if (manualMode == AppMode.dev) return _devUrl;
 
-    // Auto-detection logic:
-    // If running in release mode OR hosted on a public domain (not localhost/127.0.0.1)
+    // 3. Auto-detection:
+    // When built for release (flutter build / flutter run --release), always use Production
     if (kReleaseMode) return _prodUrl;
+
+    // On Web
     if (kIsWeb) {
       final host = Uri.base.host;
-      if (host.isNotEmpty && !host.contains('localhost') && !host.contains('127.0.0.1')) {
+      // If deployed on a real public domain, use Production
+      if (host.isNotEmpty && !_isLocalHost(host)) {
         return _prodUrl;
       }
+      return _devUrl;
     }
+
+    // Default for native local development (iOS Simulator / Android Emulator / Desktop)
     return _devUrl;
   }
 
@@ -202,7 +226,7 @@ class AuthHelper {
     try {
       await GoogleSignIn.instance.initialize(
         clientId: kIsWeb ? '935315479839-f6rtlci4779ivfni4tm5hg1ko46uqa4r.apps.googleusercontent.com' : null,
-        serverClientId: '935315479839-f6rtlci4779ivfni4tm5hg1ko46uqa4r.apps.googleusercontent.com',
+        serverClientId: kIsWeb ? null : '935315479839-f6rtlci4779ivfni4tm5hg1ko46uqa4r.apps.googleusercontent.com',
       );
 
       String? idToken;

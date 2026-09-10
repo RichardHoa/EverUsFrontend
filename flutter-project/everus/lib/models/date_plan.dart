@@ -27,8 +27,17 @@ class LocationOption {
   /// Longitude of the location.
   final double? longitude;
 
-  /// Price level tier (e.g., "$", "$$").
+  /// Price level tier or formatted price string.
   final String? priceLevel;
+
+  /// Minimum price in VND.
+  final double? minPrice;
+
+  /// Maximum price in VND.
+  final double? maxPrice;
+
+  /// Numeric price value in VND.
+  final double? priceValue;
 
   /// Const constructor for [LocationOption].
   const LocationOption({
@@ -41,7 +50,22 @@ class LocationOption {
     this.latitude,
     this.longitude,
     this.priceLevel,
+    this.minPrice,
+    this.maxPrice,
+    this.priceValue,
   });
+
+  /// Formatted min-max price range string.
+  String get formattedPriceRange {
+    if (priceLevel != null && priceLevel!.isNotEmpty && priceLevel!.contains('-')) {
+      return priceLevel!;
+    }
+    final min = minPrice ?? 0.0;
+    final max = maxPrice ?? 50000.0;
+    final minStr = min.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+    final maxStr = max.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+    return '$minStr ₫ - $maxStr ₫';
+  }
 
   /// Decodes a JSON object into a [LocationOption] model instance.
   factory LocationOption.fromJson(Map<String, dynamic> json) {
@@ -55,6 +79,9 @@ class LocationOption {
       latitude: json['latitude'] != null ? double.tryParse(json['latitude'].toString()) : null,
       longitude: json['longitude'] != null ? double.tryParse(json['longitude'].toString()) : null,
       priceLevel: json['price_level'] ?? json['priceLevel'],
+      minPrice: json['min_price'] != null ? double.tryParse(json['min_price'].toString()) : (json['minPrice'] != null ? double.tryParse(json['minPrice'].toString()) : 0.0),
+      maxPrice: json['max_price'] != null ? double.tryParse(json['max_price'].toString()) : (json['maxPrice'] != null ? double.tryParse(json['maxPrice'].toString()) : 50000.0),
+      priceValue: json['price_value'] != null ? double.tryParse(json['price_value'].toString()) : 0.0,
     );
   }
 
@@ -70,6 +97,9 @@ class LocationOption {
       'latitude': latitude,
       'longitude': longitude,
       'price_level': priceLevel,
+      'min_price': minPrice,
+      'max_price': maxPrice,
+      'price_value': priceValue,
     };
   }
 }
@@ -332,6 +362,12 @@ class DatePlannerInput {
   /// User tags.
   final List<String> preferences;
 
+  /// Optional list of place IDs to exclude (for regeneration diversity).
+  final List<String>? excludePlaceIds;
+
+  /// Optional list of place names to exclude (for regeneration diversity).
+  final List<String>? excludePlaceNames;
+
   /// Const constructor for [DatePlannerInput].
   const DatePlannerInput({
     required this.date,
@@ -343,6 +379,8 @@ class DatePlannerInput {
     required this.stageCount,
     required this.transportation,
     required this.preferences,
+    this.excludePlaceIds,
+    this.excludePlaceNames,
   });
   
   /// Encodes parameters into JSON mapping for transmission to backend API.
@@ -350,7 +388,7 @@ class DatePlannerInput {
     final hourStr = startTime.hour.toString().padLeft(2, '0');
     final minStr = startTime.minute.toString().padLeft(2, '0');
     final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-    return {
+    final data = <String, dynamic>{
       'date': dateStr,
       'startTime': '$hourStr:$minStr',
       'totalDurationHours': totalDurationHours,
@@ -361,5 +399,12 @@ class DatePlannerInput {
       'transportation': transportation,
       'preferences': preferences,
     };
+    if (excludePlaceIds != null && excludePlaceIds!.isNotEmpty) {
+      data['excludePlaceIds'] = excludePlaceIds;
+    }
+    if (excludePlaceNames != null && excludePlaceNames!.isNotEmpty) {
+      data['excludePlaceNames'] = excludePlaceNames;
+    }
+    return data;
   }
 }
