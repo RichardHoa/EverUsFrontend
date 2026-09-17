@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../utils/auth_helper.dart';
 import '../screens/login_screen.dart';
+import '../utils/auth_helper.dart';
 
 class EverUsFooter extends StatelessWidget {
   final String currentTab; // 'home' | 'account' | 'other'
@@ -29,101 +28,91 @@ class EverUsFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Map<String, dynamic>?>(
-      valueListenable: AuthHelper.sessionNotifier,
-      builder: (context, session, child) {
-        final isLoggedIn = session != null;
-        return Container(
-          margin: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            bottom: MediaQuery.of(context).padding.bottom > 0
-                ? MediaQuery.of(context).padding.bottom + 8
-                : 24,
-          ),
-          height: 64,
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final bool isHome = currentTab == 'home';
+    final bool isAccount = currentTab == 'account';
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 52,
+        margin: EdgeInsets.only(
+          bottom: bottomInset > 0 ? 8.0 : 20.0,
+        ),
+        alignment: Alignment.center,
+        child: Container(
+          height: 52,
+          width: 230,
+          padding: const EdgeInsets.symmetric(horizontal: 36.0),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.5),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.95),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF5A384C).withValues(alpha: 0.08),
-                blurRadius: 16,
+                color: const Color(0xFF5A384C).withValues(alpha: 0.10),
+                blurRadius: 18,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Home Button (First)
-                InkWell(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Home icon button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
                   onTap: () => _navigateToHome(context),
-                  borderRadius: BorderRadius.circular(20),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.home_rounded,
-                          color: currentTab == 'home' ? const Color(0xFF653851) : const Color(0xFF9E8E9B),
-                          size: 24,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Trang chủ',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: currentTab == 'home' ? const Color(0xFF653851) : const Color(0xFF9E8E9B),
-                          ),
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+                    child: Image.asset(
+                      'assets/images/home_bullet.png',
+                      width: 26,
+                      height: 26,
+                      color: isHome ? const Color(0xFF5A384C) : const Color(0xFFB0A2AC),
+                      colorBlendMode: BlendMode.srcIn,
+                      errorBuilder: (_, __, ___) => Icon(
+                        isHome ? Icons.home_rounded : Icons.home_outlined,
+                        color: isHome ? const Color(0xFF5A384C) : const Color(0xFFB0A2AC),
+                        size: 26,
+                      ),
                     ),
                   ),
                 ),
-                // Vertical divider
-                Container(
-                  width: 1.5,
-                  height: 28,
-                  color: const Color(0xFFE2D6E0),
-                ),
-                // Account/Profile Button (Second)
-                InkWell(
+              ),
+              // Profile / Account icon button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
                   onTap: () => _navigateToProfile(context),
-                  borderRadius: BorderRadius.circular(20),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isLoggedIn ? Icons.account_circle : Icons.account_circle_outlined,
-                          color: currentTab == 'account' ? const Color(0xFF653851) : const Color(0xFF9E8E9B),
-                          size: 24,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Tài khoản',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: currentTab == 'account' ? const Color(0xFF653851) : const Color(0xFF9E8E9B),
-                          ),
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+                    child: Image.asset(
+                      'assets/images/personal_bullet.png',
+                      width: 26,
+                      height: 26,
+                      color: isAccount ? const Color(0xFF5A384C) : const Color(0xFFB0A2AC),
+                      colorBlendMode: BlendMode.srcIn,
+                      errorBuilder: (_, __, ___) => Icon(
+                        isAccount ? Icons.person : Icons.person_outline,
+                        color: isAccount ? const Color(0xFF5A384C) : const Color(0xFFB0A2AC),
+                        size: 26,
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
+

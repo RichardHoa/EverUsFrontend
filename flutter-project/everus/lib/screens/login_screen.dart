@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/auth_helper.dart';
+import '../widgets/everus_footer.dart';
 import 'login/widgets/auth_input_field.dart';
 import 'login/widgets/gentle_login_modal.dart';
 import 'login/widgets/google_sign_in_button.dart';
@@ -150,9 +151,15 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           // Background Image
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/bg_everus.png',
-              fit: BoxFit.cover,
+            child: RepaintBoundary(
+              child: Image(
+                image: const ResizeImage(
+                  AssetImage('assets/images/bg_everus.png'),
+                  width: 800,
+                ),
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.low,
+              ),
             ),
           ),
 
@@ -219,96 +226,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // Floating Bottom Bar
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _buildBottomBar(context),
-          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBottomBar(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 30.0),
-        child: Center(
-          child: Container(
-            height: 52,
-            width: 215,
-            padding: const EdgeInsets.symmetric(horizontal: 35.0),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.75),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.9),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF5A384C).withValues(alpha: 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Home icon button
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Image.asset(
-                        'assets/images/home_bullet.png',
-                        width: 26,
-                        height: 26,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.home_rounded,
-                          color: Color(0xFF9E8E9B),
-                          size: 26,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // Profile icon button
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      // Already on auth / profile screen
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Image.asset(
-                        'assets/images/personal_bullet.png',
-                        width: 26,
-                        height: 26,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.person,
-                          color: Color(0xFF653851),
-                          size: 26,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      bottomNavigationBar: const EverUsFooter(currentTab: 'account'),
     );
   }
 

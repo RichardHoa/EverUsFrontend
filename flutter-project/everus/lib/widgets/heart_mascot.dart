@@ -266,6 +266,26 @@ class _MascotPainter extends CustomPainter {
     ..color = const Color(0x14000000)
     ..style = PaintingStyle.fill;
 
+  static final Path _cachedHeartPath = () {
+    const double width = 120.0;
+    const double height = 120.0;
+    double mapX(double x) => x * (width / 100);
+    double mapY(double y) => y * (height / 100) - 10;
+
+    final Path path = Path();
+    path.moveTo(mapX(50), mapY(95));
+    path.cubicTo(mapX(20), mapY(75), mapX(5), mapY(60), mapX(5), mapY(45));
+    path.cubicTo(mapX(5), mapY(30), mapX(15), mapY(20), mapX(25), mapY(20));
+    path.cubicTo(mapX(35), mapY(20), mapX(45), mapY(28), mapX(50), mapY(35));
+    path.cubicTo(mapX(55), mapY(28), mapX(65), mapY(20), mapX(75), mapY(20));
+    path.cubicTo(mapX(85), mapY(20), mapX(95), mapY(30), mapX(95), mapY(45));
+    path.cubicTo(mapX(95), mapY(60), mapX(80), mapY(75), mapX(50), mapY(95));
+    path.close();
+    return path;
+  }();
+
+  static final Path _cachedShadowPath = _cachedHeartPath.shift(const Offset(0, 3));
+
   _MascotPainter({required this.legAnim, required this.emotion});
 
   @override
@@ -326,24 +346,9 @@ class _MascotPainter extends CustomPainter {
       _armPaint,
     );
 
-    final Path heartPath = Path();
-
-    // Map 0..100 coordinates to canvas size
-    double mapX(double x) => x * (width / 100);
-    double mapY(double y) => y * (height / 100) - 10; // offset up slightly for legs
-
-    heartPath.moveTo(mapX(50), mapY(95));
-    heartPath.cubicTo(mapX(20), mapY(75), mapX(5), mapY(60), mapX(5), mapY(45));
-    heartPath.cubicTo(mapX(5), mapY(30), mapX(15), mapY(20), mapX(25), mapY(20));
-    heartPath.cubicTo(mapX(35), mapY(20), mapX(45), mapY(28), mapX(50), mapY(35));
-    heartPath.cubicTo(mapX(55), mapY(28), mapX(65), mapY(20), mapX(75), mapY(20));
-    heartPath.cubicTo(mapX(85), mapY(20), mapX(95), mapY(30), mapX(95), mapY(45));
-    heartPath.cubicTo(mapX(95), mapY(60), mapX(80), mapY(75), mapX(50), mapY(95));
-    heartPath.close();
-
-    // Draw shadow path slightly offset without expensive CPU blur filter
-    canvas.drawPath(heartPath.shift(const Offset(0, 3)), _shadowPaint);
-    canvas.drawPath(heartPath, _heartPaint);
+    // Draw shadow and heart body from precomputed paths
+    canvas.drawPath(_cachedShadowPath, _shadowPaint);
+    canvas.drawPath(_cachedHeartPath, _heartPaint);
   }
 
   @override

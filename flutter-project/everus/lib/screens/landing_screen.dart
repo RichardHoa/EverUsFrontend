@@ -50,17 +50,11 @@ class _LandingScreenState extends State<LandingScreen> {
       NotificationManager.instance.initialize();
       NotificationManager.instance.fetchNotifications();
     }
-    NotificationManager.refreshNotifier.addListener(_onNotificationRefresh);
   }
 
   @override
   void dispose() {
-    NotificationManager.refreshNotifier.removeListener(_onNotificationRefresh);
     super.dispose();
-  }
-
-  void _onNotificationRefresh() {
-    if (mounted) setState(() {});
   }
 
   Future<void> _loadLoveStatus() async {
@@ -199,19 +193,20 @@ class _LandingScreenState extends State<LandingScreen> {
       );
     }
 
-    final bool hasUnreadNoti =
-        AuthHelper.isLoggedIn && NotificationManager.instance.notifications.any((n) => n['is_read'] == false);
-
     return Scaffold(
       extendBody: true,
       body: Stack(
         children: [
           // EverUs Background Image (Isolated with RepaintBoundary)
-          const Positioned.fill(
+          Positioned.fill(
             child: RepaintBoundary(
               child: Image(
-                image: AssetImage('assets/images/bg_everus.png'),
+                image: const ResizeImage(
+                  AssetImage('assets/images/bg_everus.png'),
+                  width: 800,
+                ),
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.low,
               ),
             ),
           ),
@@ -301,54 +296,61 @@ class _LandingScreenState extends State<LandingScreen> {
                   ),
                 ),
 
-                // Top action bar (Notification button)
+                // Top action bar (Notification button - listens to refreshNotifier directly)
                 Positioned(
                   top: 8,
                   right: 16,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF5A384C).withValues(alpha: 0.08),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            hasUnreadNoti
-                                ? Icons.notifications_active_outlined
-                                : Icons.notifications_none_outlined,
-                            color: const Color(0xFF5A384C),
-                            size: 26,
-                          ),
-                          onPressed: _handleNotiTap,
-                        ),
-                      ),
-                      if (hasUnreadNoti)
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFC62828),
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: NotificationManager.refreshNotifier,
+                    builder: (context, _, __) {
+                      final bool hasUnreadNoti = AuthHelper.isLoggedIn &&
+                          NotificationManager.instance.notifications.any((n) => n['is_read'] == false);
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.85),
                               shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF5A384C).withValues(alpha: 0.08),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                hasUnreadNoti
+                                    ? Icons.notifications_active_outlined
+                                    : Icons.notifications_none_outlined,
+                                color: const Color(0xFF5A384C),
+                                size: 26,
+                              ),
+                              onPressed: _handleNotiTap,
                             ),
                           ),
-                        ),
-                    ],
+                          if (hasUnreadNoti)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFC62828),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],
