@@ -132,7 +132,7 @@ class _DoubleAvatar extends StatelessWidget {
   final bool loverImageExists;
   final String? userImagePath;
   final String? loverImagePath;
-  final double size;
+  static const double size = 48.0;
 
   const _DoubleAvatar({
     required this.isConfigured,
@@ -142,7 +142,6 @@ class _DoubleAvatar extends StatelessWidget {
     required this.loverImageExists,
     required this.userImagePath,
     required this.loverImagePath,
-    this.size = 48.0,
   });
 
   @override

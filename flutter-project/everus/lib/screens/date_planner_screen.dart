@@ -222,8 +222,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
             ),
           ],
         ],
-      );
-    },
-  );
-}
+          ),
+        );
+      },
+    );
+  }
 }

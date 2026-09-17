@@ -251,7 +251,6 @@ class ReflectionChatBubble extends StatelessWidget {
         );
 
       case MessageType.ai:
-      default:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

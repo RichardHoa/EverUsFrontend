@@ -37,7 +37,6 @@ class _ReflectionChatScreenState extends State<ReflectionChatScreen> {
   // Collected reflection state
   String _situation = '';
   String _selectedEmotion = '';
-  String _memoryValidation = '';
   String _selectedFact = '';
   String _underlyingNeed = '';
 
@@ -127,7 +126,6 @@ class _ReflectionChatScreenState extends State<ReflectionChatScreen> {
         );
       } else if (_currentStep == 2) {
         // Memory validation chosen -> Perspective Reframing (Step 3)
-        _memoryValidation = userResponse;
         if (userResponse.contains('Không')) {
           ReflectionHelper.adjustPatternConfidence('pat_1', -0.15);
         } else {
