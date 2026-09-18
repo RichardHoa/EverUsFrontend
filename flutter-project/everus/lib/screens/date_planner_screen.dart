@@ -166,62 +166,62 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
               ),
               const Spacer(),
               if (AuthHelper.isLoggedIn) ...[
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF5A384C).withValues(alpha: 0.08),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      NotificationManager.instance.notifications.any((n) => n['is_read'] == false)
-                          ? Icons.notifications_active_outlined
-                          : Icons.notifications_none_outlined,
-                      color: const Color(0xFF5A384C),
-                    ),
-                    onPressed: () async {
-                      final selectedPlan = await Navigator.push<DatePlan>(
-                        context,
-                        MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-                      );
-                      if (selectedPlan != null) {
-                        _controller.setGeneratedPlan(selectedPlan);
-                      } else {
-                        _onNotificationRefresh();
-                      }
-                    },
-                  ),
-                ),
-                if (NotificationManager.instance.notifications.any((n) => n['is_read'] == false))
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFC62828),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.85),
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF5A384C).withValues(alpha: 0.08),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          NotificationManager.instance.notifications.any((n) => n['is_read'] == false)
+                              ? Icons.notifications_active_outlined
+                              : Icons.notifications_none_outlined,
+                          color: const Color(0xFF5A384C),
+                        ),
+                        onPressed: () async {
+                          final selectedPlan = await Navigator.push<DatePlan>(
+                            context,
+                            MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                          );
+                          if (selectedPlan != null) {
+                            _controller.setGeneratedPlan(selectedPlan);
+                          } else {
+                            _onNotificationRefresh();
+                          }
+                        },
                       ),
                     ),
-                  ),
+                    if (NotificationManager.instance.notifications.any((n) => n['is_read'] == false))
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFC62828),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
-            ),
-          ],
-        ],
+            ],
           ),
         );
       },
