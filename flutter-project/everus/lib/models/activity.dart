@@ -160,7 +160,7 @@ final Map<String, Activity> activities = {
       light: '#FFF3E0',
       dark: '#5D4037',
     ),
-    musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    musicUrl: 'https://everus-backend.richardhoa.io.vn/api/audio/glue_song',
     levels: [
       const Level(
         num: 1,
@@ -228,7 +228,7 @@ final Map<String, Activity> activities = {
       light: '#F5EBE0',
       dark: '#5D4037',
     ),
-    musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    musicUrl: 'https://everus-backend.richardhoa.io.vn/api/audio/enchanted',
     levels: [
       const Level(
         num: 1,
@@ -296,7 +296,7 @@ final Map<String, Activity> activities = {
       light: '#EBF4FF',
       dark: '#1A3A52',
     ),
-    musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    musicUrl: 'https://everus-backend.richardhoa.io.vn/api/audio/la_vie_en_rose',
     levels: [
       const Level(
         num: 1,
@@ -364,7 +364,7 @@ final Map<String, Activity> activities = {
       light: '#E8F8F5',
       dark: '#145A32',
     ),
-    musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+    musicUrl: 'https://everus-backend.richardhoa.io.vn/api/audio/every_summertime',
     levels: [
       const Level(
         num: 1,
@@ -432,7 +432,7 @@ final Map<String, Activity> activities = {
       light: '#FADBD8',
       dark: '#78281F',
     ),
-    musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    musicUrl: 'https://everus-backend.richardhoa.io.vn/api/audio/glue_song',
     levels: [
       const Level(
         num: 1,
@@ -500,7 +500,7 @@ final Map<String, Activity> activities = {
       light: '#FCE4EC',
       dark: '#880E4F',
     ),
-    musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
+    musicUrl: 'https://everus-backend.richardhoa.io.vn/api/audio/enchanted',
     levels: [
       const Level(
         num: 1,

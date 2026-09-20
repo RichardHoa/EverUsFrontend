@@ -468,6 +468,57 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                             ),
                           ),
                         ),
+                        if (planMap['invitation_accepted'] == true) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.favorite, size: 12, color: Color(0xFF10B981)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Đã nhận lời 💖',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF047857),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (planMap['invitation_slug'] != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEC4899).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFEC4899).withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.mail_outline, size: 12, color: Color(0xFFEC4899)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Đã gửi lời mời 💌',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFBE185D),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(width: 8),
                         Text(
                           '${planData['stages']?.length ?? 0} chặng',

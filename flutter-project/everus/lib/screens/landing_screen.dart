@@ -59,6 +59,14 @@ class _LandingScreenState extends State<LandingScreen> {
 
   Future<void> _loadLoveStatus() async {
     try {
+      if (AuthHelper.isLoggedIn) {
+        final isConfig = await LoveCounterHelper.isConfigured();
+        if (!isConfig) {
+          await LoveCounterHelper.fetchAndRestoreFromBackend();
+        } else {
+          LoveCounterHelper.syncWithBackend();
+        }
+      }
       final isConfigured = await LoveCounterHelper.isConfigured();
       Map<String, dynamic> settings = {};
       int days = 0;
@@ -213,12 +221,13 @@ class _LandingScreenState extends State<LandingScreen> {
 
           // Main content
           SafeArea(
+            bottom: false,
             child: Stack(
               children: [
                 Positioned.fill(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 90.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -290,7 +299,6 @@ class _LandingScreenState extends State<LandingScreen> {
                             onReflectionTap: _navigateToReflection,
                           ),
                         ),
-                        const SizedBox(height: 100), // Space for floating bottom bar
                       ],
                     ),
                   ),

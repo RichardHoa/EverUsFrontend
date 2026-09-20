@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'auth_helper.dart';
 import 'file_helper/file_helper.dart';
 
 class LoveCounterHelper {
@@ -55,7 +59,7 @@ class LoveCounterHelper {
     };
   }
 
-  /// Save love counter configuration settings
+  /// Save love counter configuration settings (to local storage and backend if logged in)
   static Future<void> saveSettings({
     required String userName,
     required String loverName,
@@ -63,6 +67,7 @@ class LoveCounterHelper {
     String? userImagePath,
     String? loverImagePath,
     bool? useDetailedView,
+    bool syncToBackend = true,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyUserName, userName);
@@ -78,6 +83,104 @@ class LoveCounterHelper {
     if (useDetailedView != null) {
       await prefs.setBool(_keyUseDetailedView, useDetailedView);
     }
+
+    if (syncToBackend && AuthHelper.isLoggedIn) {
+      syncWithBackend();
+    }
+  }
+
+  /// Upload local date counter configuration to backend database
+  static Future<bool> syncWithBackend() async {
+    if (!AuthHelper.isLoggedIn) return false;
+    final token = AuthHelper.currentAccessToken;
+    if (token == null) return false;
+
+    try {
+      final settings = await loadSettings();
+      final userName = settings['userName'] as String?;
+      final loverName = settings['loverName'] as String?;
+      final annivDate = settings['anniversaryDate'] as DateTime?;
+
+      if (userName == null || userName.isEmpty || loverName == null || loverName.isEmpty || annivDate == null) {
+        return false;
+      }
+
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/date-counter');
+      final response = await http.put(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'user_name': userName,
+          'lover_name': loverName,
+          'anniversary_date': annivDate.toUtc().toIso8601String(),
+          'use_detailed_view': settings['useDetailedView'] ?? false,
+          'user_image_path': settings['userImagePath'],
+          'lover_image_path': settings['loverImagePath'],
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint("Error syncing date counter to backend: $e");
+      return false;
+    }
+  }
+
+  /// Fetch date counter configuration from backend and restore locally
+  static Future<bool> fetchAndRestoreFromBackend() async {
+    if (!AuthHelper.isLoggedIn) return false;
+    final token = AuthHelper.currentAccessToken;
+    if (token == null) return false;
+
+    try {
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/date-counter');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200 && response.body.isNotEmpty && response.body != 'null') {
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>?;
+        if (data != null && data['anniversary_date'] != null) {
+          final annivDate = DateTime.parse(data['anniversary_date']);
+          await saveSettings(
+            userName: data['user_name'] ?? '',
+            loverName: data['lover_name'] ?? '',
+            anniversaryDate: annivDate,
+            userImagePath: data['user_image_path'],
+            loverImagePath: data['lover_image_path'],
+            useDetailedView: data['use_detailed_view'] ?? false,
+            syncToBackend: false,
+          );
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint("Error fetching date counter from backend: $e");
+      return false;
+    }
+  }
+
+  /// Trigger sync or restore upon authentication change
+  static Future<void> handleAuthChange() async {
+    if (!AuthHelper.isLoggedIn) return;
+    try {
+      final isLocalConfigured = await isConfigured();
+      if (isLocalConfigured) {
+        await syncWithBackend();
+      } else {
+        await fetchAndRestoreFromBackend();
+      }
+    } catch (e) {
+      debugPrint("Error handling auth change in LoveCounterHelper: $e");
+    }
   }
 
   /// Save single image path specifically
@@ -88,12 +191,18 @@ class LoveCounterHelper {
     } else if (key == 'lover') {
       await prefs.setString(_keyLoverImagePath, path);
     }
+    if (AuthHelper.isLoggedIn) {
+      syncWithBackend();
+    }
   }
 
   /// Save the detailed view toggle status
   static Future<void> saveUseDetailedView(bool useDetailed) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyUseDetailedView, useDetailed);
+    if (AuthHelper.isLoggedIn) {
+      syncWithBackend();
+    }
   }
 
   /// Pick an image from gallery or camera and save it using cross-platform AppFileHelper
@@ -109,3 +218,4 @@ class LoveCounterHelper {
     }
   }
 }
+

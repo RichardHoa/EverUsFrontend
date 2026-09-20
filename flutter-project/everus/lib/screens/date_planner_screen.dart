@@ -85,6 +85,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
 
           // Main content
           SafeArea(
+            bottom: false,
             child: Column(
               children: [
                 _buildAppBar(),

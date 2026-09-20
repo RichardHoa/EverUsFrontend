@@ -85,6 +85,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
   late String timeStr;
   late String locationStr;
   late String customText;
+  late String pickupOption;
   
   bool isCreating = false;
   String? generatedUrl;
@@ -103,6 +104,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
     selectedDate = widget.initialDate;
     timeStr = widget.initialTime;
     locationStr = widget.initialLocation;
+    pickupOption = '$senderName qua đón $receiverName';
     customText = '';
     customTextController = TextEditingController();
     
@@ -278,6 +280,24 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
         ),
         const SizedBox(height: 16),
 
+        // Pickup Option Selector
+        const Text(
+          'Ai sẽ đón ai? 🚗',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildPickupChoice('$senderName qua đón $receiverName', '🚗'),
+            _buildPickupChoice('$receiverName qua đón $senderName', '🛵'),
+            _buildPickupChoice('Gặp trực tiếp tại điểm hẹn', '📍'),
+            _buildPickupChoice('Bí mật / Tự do', '✨'),
+          ],
+        ),
+        const SizedBox(height: 16),
+
         // Custom invite text field
         const Text(
           'Nội dung thư mời (Tự do điều chỉnh theo ý muốn):',
@@ -415,6 +435,45 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
     );
   }
 
+  Widget _buildPickupChoice(String label, String icon) {
+    final isSelected = pickupOption == label;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          pickupOption = label;
+        });
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? widget.primaryColor.withValues(alpha: 0.12) : Colors.white,
+          border: Border.all(
+            color: isSelected ? widget.primaryColor : Colors.grey.shade300,
+            width: isSelected ? 1.5 : 1.0,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? widget.primaryColor : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _submitInvitation() async {
     setState(() {
       isCreating = true;
@@ -437,7 +496,9 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
           'time': timeStr,
           'location': locationStr,
           'duration': widget.duration,
+          'pickup_option': pickupOption,
           'custom_text': customText,
+          'base_url': AuthHelper.baseUrl,
         }),
       );
 

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'love_counter_helper.dart';
 
 // Defines the application run mode (can only be dev or prod)
 enum AppMode { dev, prod }
@@ -39,8 +40,10 @@ class AuthHelper {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:8009';
     }
-    return 'http://127.0.0.1:8009';
+    return 'http://localhost:8009';
   }
+
+  static bool get isDevMode => baseUrl.contains('localhost') || baseUrl.contains('127.0.0.1') || baseUrl.contains('10.0.2.2');
 
   static String get baseUrl {
     // 1. Environment variable override (--dart-define=BACKEND_URL=https://...)
@@ -90,6 +93,7 @@ class AuthHelper {
         final difference = DateTime.now().difference(loginTime);
         if (difference.inDays < 14) {
           sessionNotifier.value = Map<String, dynamic>.from(json.decode(sessionJson));
+          LoveCounterHelper.handleAuthChange();
         } else {
           await signOut();
         }
@@ -183,6 +187,7 @@ class AuthHelper {
       final sessionData = _normalizeSession(response);
       sessionNotifier.value = sessionData;
       await _persistSession(sessionData);
+      LoveCounterHelper.handleAuthChange();
     }
   }
 
@@ -199,6 +204,7 @@ class AuthHelper {
     final sessionData = _normalizeSession(response);
     sessionNotifier.value = sessionData;
     await _persistSession(sessionData);
+    LoveCounterHelper.handleAuthChange();
   }
 
   /// Log out current session
@@ -221,13 +227,29 @@ class AuthHelper {
     sessionNotifier.value = null;
   }
 
-  /// Signs in a user using Google OAuth.
-  static Future<void> signInWithGoogle() async {
+  static bool _isGoogleSignInInitialized = false;
+
+  static Future<void> _ensureGoogleSignInInitialized() async {
+    if (_isGoogleSignInInitialized) return;
     try {
       await GoogleSignIn.instance.initialize(
         clientId: kIsWeb ? '935315479839-f6rtlci4779ivfni4tm5hg1ko46uqa4r.apps.googleusercontent.com' : null,
         serverClientId: kIsWeb ? null : '935315479839-f6rtlci4779ivfni4tm5hg1ko46uqa4r.apps.googleusercontent.com',
       );
+      _isGoogleSignInInitialized = true;
+    } catch (e) {
+      if (e.toString().contains('already been called')) {
+        _isGoogleSignInInitialized = true;
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  /// Signs in a user using Google OAuth.
+  static Future<void> signInWithGoogle() async {
+    try {
+      await _ensureGoogleSignInInitialized();
 
       String? idToken;
       String? accessToken;
@@ -264,6 +286,7 @@ class AuthHelper {
       final sessionData = _normalizeSession(response);
       sessionNotifier.value = sessionData;
       await _persistSession(sessionData);
+      LoveCounterHelper.handleAuthChange();
     } catch (e) {
       if (e is GoogleSignInException && e.code == GoogleSignInExceptionCode.canceled) {
         // User cancelled the sign-in

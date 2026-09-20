@@ -10,10 +10,14 @@ import 'login/widgets/profile_view.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool isProfileMode;
+  final bool isOnboardingMode;
+  final VoidCallback? onContinueAsGuest;
 
   const LoginScreen({
     super.key,
     this.isProfileMode = false,
+    this.isOnboardingMode = false,
+    this.onContinueAsGuest,
   });
 
   static Future<void> showGentleLoginModal(
@@ -79,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      if (mounted) {
+      if (mounted && Navigator.canPop(context)) {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
@@ -101,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await AuthHelper.signOut();
-      if (mounted) {
+      if (mounted && Navigator.canPop(context)) {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
@@ -125,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await AuthHelper.signInWithGoogle();
-      if (mounted) {
+      if (mounted && Navigator.canPop(context)) {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
@@ -165,10 +169,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // Main Scrollable Area
           SafeArea(
+            bottom: false,
             child: Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 16.0),
+                padding: const EdgeInsets.only(left: 50.0, right: 50.0, top: 16.0, bottom: 90.0),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 380),
                   child: Column(
@@ -178,13 +183,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
 
                       // Mascot & Brand Header
-                      Hero(
-                        tag: 'everus_brand',
-                        child: Center(
-                          child: Image.asset(
-                            'assets/images/header_mascot_logo.png',
-                            width: 275,
-                            fit: BoxFit.contain,
+                      Center(
+                        child: Text(
+                          widget.isProfileMode ? 'Hồ sơ của bạn' : 'EverUs',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF5A384C),
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Center(
+                        child: Text(
+                          widget.isProfileMode
+                              ? 'Xem & cập nhật thông tin tài khoản'
+                              : 'Kết nối và lưu giữ khoảnh khắc',
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF7C6E79),
                           ),
                         ),
                       ),
@@ -218,7 +237,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               )
                             : _buildAuthForm(),
                       ),
-                      const SizedBox(height: 96), // Space for floating bottom bar
                     ],
                   ),
                 ),
@@ -228,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         ],
       ),
-      bottomNavigationBar: const EverUsFooter(currentTab: 'account'),
+      bottomNavigationBar: widget.isOnboardingMode ? null : const EverUsFooter(currentTab: 'account'),
     );
   }
 
@@ -450,6 +468,29 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+          if (widget.isOnboardingMode) ...[
+            const SizedBox(height: 18),
+            GestureDetector(
+              onTap: () {
+                if (widget.onContinueAsGuest != null) {
+                  widget.onContinueAsGuest!();
+                } else if (Navigator.canPop(context)) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Center(
+                child: Text(
+                  'Bỏ qua & Tiếp tục thiết lập ➔',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: const Color(0xFF8B5CF6),
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

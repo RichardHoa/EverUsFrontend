@@ -351,8 +351,9 @@ class DatePlannerController extends ChangeNotifier {
 
     try {
       final token = AuthHelper.currentAccessToken;
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/invitations/by-plan/$planId?base_url=${Uri.encodeComponent(AuthHelper.baseUrl)}');
       final response = await http.get(
-        Uri.parse('${AuthHelper.baseUrl}/api/invitations/by-plan/$planId'),
+        uri,
         headers: {
           if (token != null) 'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

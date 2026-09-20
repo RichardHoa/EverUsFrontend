@@ -34,10 +34,11 @@ class EverUsFooter extends StatelessWidget {
 
     return SafeArea(
       top: false,
+      maintainBottomViewPadding: true,
       child: Container(
         height: 52,
         margin: EdgeInsets.only(
-          bottom: bottomInset > 0 ? 8.0 : 20.0,
+          bottom: bottomInset > 0 ? 8.0 : 16.0,
         ),
         alignment: Alignment.center,
         child: Container(

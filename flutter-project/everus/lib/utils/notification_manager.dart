@@ -17,7 +17,6 @@ class NotificationManager with WidgetsBindingObserver {
   NotificationManager._internal();
 
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  Timer? _pollingTimer;
   bool _isInitialized = false;
 
   StreamSubscription<String>? _sseSubscription;
@@ -72,7 +71,6 @@ class NotificationManager with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     AuthHelper.sessionNotifier.removeListener(_onAuthStateChanged);
-    stopPolling();
     stopSseConnection();
   }
 
@@ -98,7 +96,6 @@ class NotificationManager with WidgetsBindingObserver {
       fetchAndShowUnreadNotification();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
       stopSseConnection();
-      stopPolling();
     }
   }
 
@@ -106,11 +103,6 @@ class NotificationManager with WidgetsBindingObserver {
     checkInvitationStatus();
     startSseConnection();
     fetchAndShowUnreadNotification();
-  }
-
-  void stopPolling() {
-    _pollingTimer?.cancel();
-    _pollingTimer = null;
   }
 
   void startSseConnection() async {
@@ -217,6 +209,7 @@ class NotificationManager with WidgetsBindingObserver {
         'date': data['date'],
         'time': data['time'],
         'location': data['location'],
+        'pickup_option': data['pickup_option'],
       };
       
       final planId = data['plan_id'] as String?;
@@ -244,7 +237,6 @@ class NotificationManager with WidgetsBindingObserver {
 
   Future<void> checkInvitationStatus({bool forceCheck = false}) async {
     if (!AuthHelper.isLoggedIn) {
-      stopPolling();
       return;
     }
 
@@ -252,19 +244,17 @@ class NotificationManager with WidgetsBindingObserver {
       final prefs = await SharedPreferences.getInstance();
       final planJson = prefs.getString('saved_date_plan');
       if (planJson == null) {
-        stopPolling();
         return;
       }
 
       final planData = jsonDecode(planJson);
       final planId = planData['id'] as String?;
       if (planId == null) {
-        stopPolling();
         return;
       }
 
       final token = AuthHelper.currentAccessToken;
-      final uri = Uri.parse('${AuthHelper.baseUrl}/api/invitations/by-plan/$planId');
+      final uri = Uri.parse('${AuthHelper.baseUrl}/api/invitations/by-plan/$planId?base_url=${Uri.encodeComponent(AuthHelper.baseUrl)}');
       
       final response = await http.get(
         uri,
@@ -278,15 +268,6 @@ class NotificationManager with WidgetsBindingObserver {
         final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         final exists = data['exists'] as bool? ?? false;
         final accepted = data['accepted'] as bool? ?? false;
-
-        if (exists && !accepted) {
-          _pollingTimer ??= Timer.periodic(const Duration(seconds: 15), (timer) {
-            checkInvitationStatus();
-          });
-        } else {
-          // No active unaccepted invitation, stop polling
-          stopPolling();
-        }
 
         if (exists && accepted) {
           final modalShownKey = 'invitation_accepted_modal_shown_$planId';
@@ -380,6 +361,7 @@ class NotificationManager with WidgetsBindingObserver {
     final dateStr = inviteData['date'] ?? '';
     final timeStr = inviteData['time'] ?? '';
     final location = inviteData['location'] ?? '';
+    final pickupOption = inviteData['pickup_option'] ?? '';
 
     return Container(
       padding: const EdgeInsets.all(28), // increased padding from 24 to 28 for elegance
@@ -470,6 +452,8 @@ class NotificationManager with WidgetsBindingObserver {
                   _buildDetailRow(Icons.access_time_rounded, "Giờ", timeStr),
                 if (location.isNotEmpty)
                   _buildDetailRow(Icons.location_on_rounded, "Nơi hẹn", location),
+                if (pickupOption.isNotEmpty)
+                  _buildDetailRow(Icons.directions_car_rounded, "Đón đưa", pickupOption),
               ],
             ),
           ),

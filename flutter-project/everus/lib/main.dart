@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'models/activity.dart';
 import 'widgets/preference_matcher.dart';
 import 'widgets/results_dashboard.dart';
 import 'widgets/activity_flow.dart';
 import 'screens/landing_screen.dart';
+import 'screens/login_screen.dart';
 import 'utils/auth_helper.dart';
 import 'widgets/everus_footer.dart';
 import 'utils/notification_manager.dart';
@@ -13,6 +15,13 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
+  );
   await AuthHelper.initializeSession();
   NotificationManager.instance.initialize();
   runApp(const EverUsApp());
@@ -57,6 +66,10 @@ class EverUsApp extends StatelessWidget {
           secondary: const Color(0xFFEC4899),
         ),
         useMaterial3: true,
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
         textTheme: GoogleFonts.interTextTheme(),
       ),
       home: const AuthWrapper(),
@@ -64,14 +77,33 @@ class EverUsApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _guestBypassed = false;
+
+  void _bypassAsGuest() {
+    setState(() {
+      _guestBypassed = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Map<String, dynamic>?>(
       valueListenable: AuthHelper.sessionNotifier,
       builder: (context, session, child) {
+        if (session == null && !_guestBypassed) {
+          return LoginScreen(
+            isOnboardingMode: true,
+            onContinueAsGuest: _bypassAsGuest,
+          );
+        }
         return const LandingScreen();
       },
     );

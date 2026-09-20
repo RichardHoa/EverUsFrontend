@@ -93,7 +93,7 @@ class GridActionCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -108,16 +108,16 @@ class GridActionCard extends StatelessWidget {
                             child: Text(
                               title,
                               style: GoogleFonts.inter(
-                                fontSize: 14,
+                                fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
                                 color: const Color(0xFF5A384C),
                                 height: 1.2,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.all(7),
+                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               color: badgeBg,
                               shape: BoxShape.circle,
@@ -125,31 +125,31 @@ class GridActionCard extends StatelessWidget {
                             child: Icon(
                               icon,
                               color: accentColor,
-                              size: 16,
+                              size: 15,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Text(
                         subtitle,
                         style: GoogleFonts.inter(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w500,
                           color: const Color(0xFF7C6E79),
-                          height: 1.35,
+                          height: 1.3,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         actionText,
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: accentColor,
                         ),
@@ -157,7 +157,7 @@ class GridActionCard extends StatelessWidget {
                       Icon(
                         Icons.arrow_forward_rounded,
                         color: accentColor,
-                        size: 16,
+                        size: 15,
                       ),
                     ],
                   ),
