@@ -6,7 +6,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_helper.dart';
 
 class QuestionnaireHelper {
-  static const String _keyCompleted = 'has_completed_questionnaire_v1';
+  static const String _keyCompleted = 'has_completed_couple_onboarding_v1';
+
+  /// Reactive notifier for questionnaire completion state
+  static final ValueNotifier<bool> isCompletedNotifier = ValueNotifier<bool>(false);
+
+  static bool get isCompleted => isCompletedNotifier.value;
+
+  /// Call once during main() startup. Reads the persisted flag so users
+  /// who already completed the questionnaire are not asked again.
+  static Future<void> initialize() async {
+    isCompletedNotifier.value = await hasCompletedQuestionnaire();
+  }
 
   static Future<bool> hasCompletedQuestionnaire() async {
     try {
@@ -21,8 +32,21 @@ class QuestionnaireHelper {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyCompleted, true);
+      isCompletedNotifier.value = true;
     } catch (e) {
       debugPrint("Failed to save questionnaire completion status: $e");
+      isCompletedNotifier.value = true;
+    }
+  }
+
+  static Future<void> resetQuestionnaire() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_keyCompleted);
+      isCompletedNotifier.value = false;
+    } catch (e) {
+      debugPrint("Failed to reset questionnaire status: $e");
+      isCompletedNotifier.value = false;
     }
   }
 
@@ -32,7 +56,11 @@ class QuestionnaireHelper {
   }) async {
     String deviceInfo = 'web';
     if (!kIsWeb) {
-      deviceInfo = Platform.operatingSystem;
+      try {
+        deviceInfo = Platform.operatingSystem;
+      } catch (_) {
+        deviceInfo = 'unknown';
+      }
     }
 
     final payload = {
@@ -57,7 +85,7 @@ class QuestionnaireHelper {
         return true;
       } else {
         debugPrint("Backend responded with status: ${response.statusCode}");
-        // Still save locally completed so user is not blocked
+        // Still mark completed locally so the user is never blocked
         await setQuestionnaireCompleted();
         return true;
       }

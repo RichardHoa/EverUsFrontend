@@ -25,6 +25,7 @@ Future<void> main() async {
     ),
   );
   await AuthHelper.initializeSession();
+  await QuestionnaireHelper.initialize();
   NotificationManager.instance.initialize();
   runApp(const EverUsApp());
 }
@@ -88,30 +89,6 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _guestBypassed = false;
-  bool _checkedQuestionnaire = false;
-  bool _hasCompletedQuestionnaire = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkQuestionnaireStatus();
-  }
-
-  Future<void> _checkQuestionnaireStatus() async {
-    final completed = await QuestionnaireHelper.hasCompletedQuestionnaire();
-    if (mounted) {
-      setState(() {
-        _hasCompletedQuestionnaire = completed;
-        _checkedQuestionnaire = true;
-      });
-    }
-  }
-
-  void _onQuestionnaireCompleted() {
-    setState(() {
-      _hasCompletedQuestionnaire = true;
-    });
-  }
 
   void _bypassAsGuest() {
     setState(() {
@@ -120,32 +97,58 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    AuthHelper.sessionNotifier.addListener(_onSessionChanged);
+  }
+
+  @override
+  void dispose() {
+    AuthHelper.sessionNotifier.removeListener(_onSessionChanged);
+    super.dispose();
+  }
+
+  void _onSessionChanged() {
+    if (AuthHelper.sessionNotifier.value == null && _guestBypassed) {
+      setState(() {
+        _guestBypassed = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!_checkedQuestionnaire) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFFFF0F5),
-        body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
-        ),
-      );
-    }
-
-    if (!_hasCompletedQuestionnaire) {
-      return QuestionnaireScreen(
-        onCompleted: _onQuestionnaireCompleted,
-      );
-    }
-
     return ValueListenableBuilder<Map<String, dynamic>?>(
       valueListenable: AuthHelper.sessionNotifier,
       builder: (context, session, child) {
-        if (session == null && !_guestBypassed) {
-          return LoginScreen(
-            isOnboardingMode: true,
-            onContinueAsGuest: _bypassAsGuest,
-          );
+        // If user is already authenticated, go directly to LandingScreen
+        if (session != null) {
+          return const LandingScreen();
         }
-        return const LandingScreen();
+
+        // The first thing an unauthenticated user sees is the QuestionnaireScreen
+        return ValueListenableBuilder<bool>(
+          valueListenable: QuestionnaireHelper.isCompletedNotifier,
+          builder: (context, isCompleted, child) {
+            if (!isCompleted) {
+              return QuestionnaireScreen(
+                onCompleted: () {
+                  QuestionnaireHelper.setQuestionnaireCompleted();
+                },
+              );
+            }
+
+            // After completing or skipping the questionnaire, show LoginScreen with guest option
+            if (!_guestBypassed) {
+              return LoginScreen(
+                isOnboardingMode: true,
+                onContinueAsGuest: _bypassAsGuest,
+              );
+            }
+
+            return const LandingScreen();
+          },
+        );
       },
     );
   }

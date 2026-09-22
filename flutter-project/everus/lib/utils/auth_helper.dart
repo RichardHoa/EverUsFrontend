@@ -116,7 +116,8 @@ class AuthHelper {
   static Future<void> _clearPersistedSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await prefs.remove('auth_session');
+      await prefs.remove('auth_login_time');
     } catch (e) {
       debugPrint("Failed to clear persona data cache: $e");
     }
