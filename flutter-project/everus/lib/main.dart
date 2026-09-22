@@ -7,7 +7,9 @@ import 'widgets/results_dashboard.dart';
 import 'widgets/activity_flow.dart';
 import 'screens/landing_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/questionnaire_screen.dart';
 import 'utils/auth_helper.dart';
+import 'utils/questionnaire_helper.dart';
 import 'widgets/everus_footer.dart';
 import 'utils/notification_manager.dart';
 
@@ -86,6 +88,30 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _guestBypassed = false;
+  bool _checkedQuestionnaire = false;
+  bool _hasCompletedQuestionnaire = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkQuestionnaireStatus();
+  }
+
+  Future<void> _checkQuestionnaireStatus() async {
+    final completed = await QuestionnaireHelper.hasCompletedQuestionnaire();
+    if (mounted) {
+      setState(() {
+        _hasCompletedQuestionnaire = completed;
+        _checkedQuestionnaire = true;
+      });
+    }
+  }
+
+  void _onQuestionnaireCompleted() {
+    setState(() {
+      _hasCompletedQuestionnaire = true;
+    });
+  }
 
   void _bypassAsGuest() {
     setState(() {
@@ -95,6 +121,21 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_checkedQuestionnaire) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFFFF0F5),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+        ),
+      );
+    }
+
+    if (!_hasCompletedQuestionnaire) {
+      return QuestionnaireScreen(
+        onCompleted: _onQuestionnaireCompleted,
+      );
+    }
+
     return ValueListenableBuilder<Map<String, dynamic>?>(
       valueListenable: AuthHelper.sessionNotifier,
       builder: (context, session, child) {

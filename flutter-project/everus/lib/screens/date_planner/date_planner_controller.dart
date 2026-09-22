@@ -265,22 +265,31 @@ class DatePlannerController extends ChangeNotifier {
     if (trimmed.isEmpty) return null;
 
     final normalizedInput = removeDiacritics(trimmed.toLowerCase())
-        .replaceAll(RegExp(r'^(q\.|q\s+|quan\s+|district\s+|tp\s+|thanh pho\s+|tp\.\s+)'), '')
+        .replaceAll(RegExp(r'^(q\.|q\s+|quan\s+|quận\s+|district\s+|tp\s+|thanh pho\s+|thành phố\s+|tp\.\s+)'), '')
         .trim();
 
     for (final district in hcmcDistricts) {
       final normDistrict = removeDiacritics(district.toLowerCase())
-          .replaceAll(RegExp(r'^(q\.|q\s+|quan\s+|district\s+|tp\s+|thanh pho\s+|tp\.\s+)'), '')
+          .replaceAll(RegExp(r'^(q\.|q\s+|quan\s+|quận\s+|district\s+|tp\s+|thanh pho\s+|thành phố\s+|tp\.\s+)'), '')
           .trim();
       if (normalizedInput == normDistrict || district.toLowerCase() == trimmed.toLowerCase()) {
         return district;
       }
     }
 
+    final isNumber = int.tryParse(normalizedInput) != null;
+
     for (final district in hcmcDistricts) {
       final normDistrict = removeDiacritics(district.toLowerCase());
-      if (normDistrict.contains(normalizedInput) || normalizedInput.contains(normDistrict)) {
-        return district;
+      if (isNumber) {
+        final words = normDistrict.split(RegExp(r'[^0-9a-zA-Z]+'));
+        if (words.contains(normalizedInput)) {
+          return district;
+        }
+      } else {
+        if (normDistrict.contains(normalizedInput) || normalizedInput.contains(normDistrict)) {
+          return district;
+        }
       }
     }
     return null;
