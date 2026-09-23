@@ -121,12 +121,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return ValueListenableBuilder<Map<String, dynamic>?>(
       valueListenable: AuthHelper.sessionNotifier,
       builder: (context, session, child) {
-        // If user is already authenticated, go directly to LandingScreen
-        if (session != null) {
-          return const LandingScreen();
+        // 1. If not authenticated and has not chosen guest mode, show Login first
+        if (session == null && !_guestBypassed) {
+          return LoginScreen(
+            isOnboardingMode: true,
+            onContinueAsGuest: _bypassAsGuest,
+          );
         }
 
-        // The first thing an unauthenticated user sees is the QuestionnaireScreen
+        // 2. Once authenticated or in guest mode, present questionnaire if not filled yet
         return ValueListenableBuilder<bool>(
           valueListenable: QuestionnaireHelper.isCompletedNotifier,
           builder: (context, isCompleted, child) {
@@ -138,14 +141,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
               );
             }
 
-            // After completing or skipping the questionnaire, show LoginScreen with guest option
-            if (!_guestBypassed) {
-              return LoginScreen(
-                isOnboardingMode: true,
-                onContinueAsGuest: _bypassAsGuest,
-              );
-            }
-
+            // 3. Questionnaire is completed -> go to LandingScreen
             return const LandingScreen();
           },
         );

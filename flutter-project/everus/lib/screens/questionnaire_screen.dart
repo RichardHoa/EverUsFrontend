@@ -157,27 +157,14 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
                       // Progress indicator
                       Expanded(
-                        child: Column(
-                          children: [
-                            Text(
-                              'Câu ${_currentIndex + 1} / $totalQuestions',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF7C6E79),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                minHeight: 6,
-                                backgroundColor: const Color(0xFFEADBEC),
-                                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
-                              ),
-                            ),
-                          ],
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 6,
+                            backgroundColor: const Color(0xFFEADBEC),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                          ),
                         ),
                       ),
 
@@ -266,7 +253,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       GestureDetector(
                         onTap: _isSubmitting ? null : _skipAll,
                         child: Text(
-                          'Bỏ qua tất cả & Đến trang đăng nhập ➔',
+                          'Bỏ qua tất cả & Bắt đầu trải nghiệm ➔',
                           style: GoogleFonts.inter(
                             fontSize: 12.5,
                             color: const Color(0xFF9E8E9B),
