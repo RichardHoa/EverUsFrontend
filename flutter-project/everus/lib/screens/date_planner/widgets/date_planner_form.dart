@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../models/date_plan.dart';
 import '../../../utils/auth_helper.dart';
+import '../../../utils/distance_preference.dart';
 import '../../saved_plans_screen.dart';
 import '../date_planner_controller.dart';
 
@@ -29,9 +30,9 @@ class DatePlannerForm extends StatelessWidget {
 
   // Vibes metadata
   static const Map<String, Map<String, String>> _vibesInfo = {
-    'casual': {'label': 'Đời thường', 'emoji': '🍃', 'desc': 'Trà chiều, đi dạo & những điều bình dị'},
-    'romantic': {'label': 'Lãng mạn', 'emoji': '💖', 'desc': 'Ánh nến, hoàng hôn & kết nối ngọt ngào'},
-    'adventure': {'label': 'Trải nghiệm', 'emoji': '⚡', 'desc': 'Trò chơi, khám phá & phiêu lưu cùng nhau'},
+    'casual': {'label': 'Đời thường', 'desc': 'Trà chiều, đi dạo & những điều bình dị'},
+    'romantic': {'label': 'Lãng mạn', 'desc': 'Ánh nến, hoàng hôn & kết nối ngọt ngào'},
+    'adventure': {'label': 'Trải nghiệm', 'desc': 'Trò chơi, khám phá & phiêu lưu cùng nhau'},
   };
 
   @override
@@ -47,7 +48,7 @@ class DatePlannerForm extends StatelessWidget {
 
           // Section 1: Thời gian & Địa điểm
           _buildSectionCard(
-            title: "⏱️ Thời Gian & Địa Điểm",
+            title: "Thời Gian & Địa Điểm",
             children: [
               // Date picker
               Row(
@@ -74,8 +75,6 @@ class DatePlannerForm extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.calendar_month_outlined, size: 18, color: Color(0xFF653851)),
-                          const SizedBox(width: 8),
                           Text(
                             _formatDate(controller.selectedDate),
                             style: GoogleFonts.inter(
@@ -117,8 +116,6 @@ class DatePlannerForm extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.access_time_rounded, size: 18, color: Color(0xFF653851)),
-                          const SizedBox(width: 8),
                           Text(
                             controller.startTime.format(context),
                             style: GoogleFonts.inter(
@@ -177,20 +174,24 @@ class DatePlannerForm extends StatelessWidget {
               ),
               const SizedBox(height: 8),
 
-              // Area input
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              // Where the user is, and how far they are willing to go
+              _buildLocationInput(),
+              const SizedBox(height: 16),
+              Text(
+                "Khoảng cách",
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF5A384C),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
                 children: [
-                  Text(
-                    "Khu vực muốn hẹn hò",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF5A384C),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _DistrictAutocompleteInput(controller: controller.areaController),
+                  for (final choice in DistanceChoice.values) ...[
+                    if (choice != DistanceChoice.values.first) const SizedBox(width: 8),
+                    _buildDistanceOption(choice),
+                  ],
                 ],
               ),
             ],
@@ -199,7 +200,7 @@ class DatePlannerForm extends StatelessWidget {
 
           // Section 2: Vibe & Budget
           _buildSectionCard(
-            title: "🎭 Thiết Lập Trải Nghiệm",
+            title: "Thiết Lập Trải Nghiệm",
             children: [
               Text(
                 "Tâm trạng & Vibe của buổi hẹn",
@@ -239,7 +240,6 @@ class DatePlannerForm extends StatelessWidget {
                             onTap: () {
                               controller.setSelectedVibe(entry.key);
                             },
-                            leading: Text(info['emoji']!, style: const TextStyle(fontSize: 24)),
                             title: Text(
                               info['label']!,
                               style: GoogleFonts.inter(
@@ -337,7 +337,7 @@ class DatePlannerForm extends StatelessWidget {
 
           // Section 3: Transport
           _buildSectionCard(
-            title: "🚗 Phương Tiện Di Chuyển",
+            title: "Phương Tiện Di Chuyển",
             children: [
               Text(
                 "Phương tiện di chuyển chính",
@@ -350,11 +350,11 @@ class DatePlannerForm extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  _buildTransportOption('walking', '🚶 Đi bộ'),
+                  _buildTransportOption('walking', 'Đi bộ'),
                   const SizedBox(width: 8),
-                  _buildTransportOption('motorbike', '🏍️ Xe máy'),
+                  _buildTransportOption('motorbike', 'Xe máy'),
                   const SizedBox(width: 8),
-                  _buildTransportOption('taxi', '🚕 Taxi'),
+                  _buildTransportOption('taxi', 'Taxi'),
                 ],
               ),
             ],
@@ -364,7 +364,7 @@ class DatePlannerForm extends StatelessWidget {
           // History/Load previous options
           if (AuthHelper.isLoggedIn) ...[
             Center(
-              child: TextButton.icon(
+              child: TextButton(
                 onPressed: () async {
                   final selectedPlan = await Navigator.push<DatePlan>(
                     context,
@@ -374,8 +374,7 @@ class DatePlannerForm extends StatelessWidget {
                     controller.setGeneratedPlan(selectedPlan);
                   }
                 },
-                icon: const Icon(Icons.history, color: Color(0xFF653851), size: 18),
-                label: Text(
+                child: Text(
                   'Xem kế hoạch trước đây',
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
@@ -387,12 +386,11 @@ class DatePlannerForm extends StatelessWidget {
             const SizedBox(height: 16),
           ] else if (controller.savedPlan != null) ...[
             Center(
-              child: TextButton.icon(
+              child: TextButton(
                 onPressed: () {
                   controller.setGeneratedPlan(controller.savedPlan);
                 },
-                icon: const Icon(Icons.history, color: Color(0xFF653851), size: 18),
-                label: Text(
+                child: Text(
                   'Xem lại kế hoạch gần nhất',
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
@@ -427,20 +425,13 @@ class DatePlannerForm extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.auto_awesome_rounded),
-                  const SizedBox(width: 10),
-                  Text(
-                    'LẬP KẾ HOẠCH HẸN HÒ',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'LẬP KẾ HOẠCH HẸN HÒ',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                ),
               ),
             ),
           ),
@@ -496,6 +487,129 @@ class DatePlannerForm extends StatelessWidget {
     );
   }
 
+  Widget _buildLocationInput() {
+    final location = controller.userLocation;
+    final String status;
+    if (controller.isLocating) {
+      status = 'Đang xác định vị trí...';
+    } else if (location != null) {
+      status = location.label ?? 'Đã lấy vị trí hiện tại của bạn';
+    } else if (controller.locationPermissionDenied) {
+      status = 'Không truy cập được vị trí. Nhập địa chỉ bạn muốn xuất phát nhé!';
+    } else {
+      status = 'EverUs cần vị trí để tìm địa điểm gần bạn.';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                "Vị trí của bạn",
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF5A384C),
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: controller.isLocating ? null : controller.useCurrentLocation,
+              icon: const Icon(Icons.my_location, size: 16, color: Color(0xFF653851)),
+              label: Text(
+                'Dùng vị trí hiện tại',
+                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF653851)),
+              ),
+            ),
+          ],
+        ),
+        Text(
+          status,
+          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF7C6E79), height: 1.4),
+        ),
+        if (controller.locationPermissionDenied) ...[
+          const SizedBox(height: 8),
+          TextField(
+            key: const ValueKey('manual-address-field'),
+            controller: controller.addressController,
+            textInputAction: TextInputAction.search,
+            onSubmitted: controller.setManualAddress,
+            style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5A384C)),
+            decoration: InputDecoration(
+              hintText: 'VD: 45 Lê Lợi, Quận 1',
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.8),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              suffix: TextButton(
+                onPressed: controller.isLocating
+                    ? null
+                    : () => controller.setManualAddress(controller.addressController.text),
+                child: Text('Tìm', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF653851))),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFE2D6E0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFE2D6E0)),
+              ),
+            ),
+          ),
+        ],
+        if (controller.locationError != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            controller.locationError!,
+            style: GoogleFonts.inter(fontSize: 12, color: Colors.red.shade700),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDistanceOption(DistanceChoice choice) {
+    final isSelected = controller.distanceChoice == choice;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => controller.setDistanceChoice(choice),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF653851) : Colors.white.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected ? const Color(0xFF653851) : const Color(0xFFE2D6E0),
+              width: isSelected ? 1.8 : 1.0,
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                choice.label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  color: isSelected ? Colors.white : const Color(0xFF5A384C),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                choice.hint,
+                style: GoogleFonts.inter(
+                  fontSize: 10.5,
+                  color: isSelected ? Colors.white.withValues(alpha: 0.85) : const Color(0xFF7C6E79),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildFormHeaderCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -539,11 +653,6 @@ class DatePlannerForm extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            "🧭",
-            style: TextStyle(fontSize: 44),
           ),
         ],
       ),
@@ -630,248 +739,5 @@ class DatePlannerForm extends StatelessWidget {
     if (picked != null) {
       controller.setStartTime(picked);
     }
-  }
-}
-
-/// Autocomplete and quick selection widget for HCMC districts.
-class _DistrictAutocompleteInput extends StatefulWidget {
-  final TextEditingController controller;
-
-  const _DistrictAutocompleteInput({required this.controller});
-
-  @override
-  State<_DistrictAutocompleteInput> createState() => _DistrictAutocompleteInputState();
-}
-
-class _DistrictAutocompleteInputState extends State<_DistrictAutocompleteInput> {
-  late TextEditingController _textController;
-  final FocusNode _focusNode = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _textController = TextEditingController(text: widget.controller.text);
-    widget.controller.addListener(_onExternalControllerChange);
-  }
-
-  void _onExternalControllerChange() {
-    if (_textController.text != widget.controller.text) {
-      _textController.text = widget.controller.text;
-      if (mounted) setState(() {});
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_onExternalControllerChange);
-    _textController.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  void _selectDistrict(String district) {
-    if (!DatePlannerController.enabledDistricts.contains(district)) {
-      return;
-    }
-    _textController.text = district;
-    widget.controller.text = district;
-    _focusNode.unfocus();
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        RawAutocomplete<String>(
-          textEditingController: _textController,
-          focusNode: _focusNode,
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            final query = textEditingValue.text.trim();
-            if (query.isEmpty) {
-              return DatePlannerController.hcmcDistricts;
-            }
-            final normQuery = DatePlannerController.removeDiacritics(query.toLowerCase());
-            return DatePlannerController.hcmcDistricts.where((district) {
-              final normDistrict = DatePlannerController.removeDiacritics(district.toLowerCase());
-              return normDistrict.contains(normQuery) || district.toLowerCase().contains(query.toLowerCase());
-            });
-          },
-          onSelected: (String selection) {
-            _selectDistrict(selection);
-          },
-          fieldViewBuilder: (
-            BuildContext context,
-            TextEditingController fieldController,
-            FocusNode fieldFocusNode,
-            VoidCallback onFieldSubmitted,
-          ) {
-            return ValueListenableBuilder<TextEditingValue>(
-              valueListenable: fieldController,
-              builder: (context, value, child) {
-                final hasText = value.text.isNotEmpty;
-                return TextField(
-                  controller: fieldController,
-                  focusNode: fieldFocusNode,
-                  onChanged: (val) {
-                    widget.controller.text = val;
-                  },
-                  decoration: InputDecoration(
-                    hintText: "Chọn địa điểm",
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    prefixIcon: const Icon(Icons.location_on_outlined, color: Color(0xFF653851)),
-                    suffixIcon: hasText
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18, color: Color(0xFF9CA3AF)),
-                            onPressed: () {
-                              fieldController.clear();
-                              widget.controller.clear();
-                              setState(() {});
-                            },
-                          )
-                        : const Icon(Icons.keyboard_arrow_down, color: Color(0xFF653851)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2D6E0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2D6E0)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF653851), width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-                );
-              },
-            );
-          },
-          optionsViewBuilder: (
-            BuildContext context,
-            AutocompleteOnSelected<String> onSelected,
-            Iterable<String> options,
-          ) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                elevation: 6.0,
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.white,
-                child: Container(
-                  constraints: const BoxConstraints(maxHeight: 260, maxWidth: 330),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2D6E0)),
-                  ),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
-                    itemBuilder: (BuildContext context, int index) {
-                      final option = options.elementAt(index);
-                      final isEnabled = DatePlannerController.enabledDistricts.contains(option);
-                      final isCurrent = widget.controller.text.trim() == option;
-                      return InkWell(
-                        onTap: isEnabled
-                            ? () {
-                                onSelected(option);
-                              }
-                            : null,
-                        child: Container(
-                          color: isCurrent && isEnabled ? const Color(0xFFF7EFF5) : Colors.transparent,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          child: Row(
-                            children: [
-                              Icon(
-                                isEnabled ? Icons.location_city_rounded : Icons.lock_outline_rounded,
-                                size: 18,
-                                color: !isEnabled
-                                    ? const Color(0xFFD1D5DB)
-                                    : (isCurrent ? const Color(0xFF653851) : const Color(0xFF7C6E79)),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  option,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
-                                    color: !isEnabled
-                                        ? const Color(0xFF9CA3AF)
-                                        : (isCurrent ? const Color(0xFF653851) : const Color(0xFF5A384C)),
-                                  ),
-                                ),
-                              ),
-                              if (isEnabled)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF7EFF5),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    "Khả dụng",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF653851),
-                                    ),
-                                  ),
-                                )
-                              else
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4F6),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    "Sắp hỗ trợ",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF9CA3AF),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 8),
-
-        // Informative note
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.info_outline, size: 13, color: Color(0xFF653851)),
-            const SizedBox(width: 5),
-            Expanded(
-              child: Text(
-                "Hiện tại EverUs hỗ trợ Quận 1, Quận 7, Quận 10 và Quận Bình Thạnh. Các quận khác sẽ được cập nhật trong thời gian tới.",
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: const Color(0xFF6B7280),
-                  height: 1.35,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
   }
 }

@@ -15,8 +15,11 @@ class DatePlannerResults extends StatefulWidget {
   /// The state controller driving the data.
   final DatePlannerController controller;
 
+  /// Opens a maps link; defaults to the platform URL launcher (overridable in tests).
+  final Future<void> Function(Uri url)? openUrl;
+
   /// Const constructor for [DatePlannerResults].
-  const DatePlannerResults({super.key, required this.controller});
+  const DatePlannerResults({super.key, required this.controller, this.openUrl});
 
   @override
   State<DatePlannerResults> createState() => _DatePlannerResultsState();
@@ -29,7 +32,8 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    
+    widget.controller.loadPreferences();
+
     // Auto-scroll to top when loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -43,6 +47,19 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  Future<void> _openUrl(String url) async {
+    if (url.isEmpty) return;
+    final uri = Uri.parse(url);
+    if (widget.openUrl != null) {
+      await widget.openUrl!(uri);
+    } else if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  String _areaLabel(DatePlan plan) =>
+      (plan.area != null && plan.area!.isNotEmpty) ? plan.area! : 'Gần bạn';
 
   String _formatDate(DateTime dt) {
     final day = dt.day.toString().padLeft(2, '0');
@@ -67,10 +84,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
     if (budgetVal > 0) {
       buffer.writeln("💰 Ngân sách: ${_formatBudget(budgetVal)} / người");
     }
-    final areaText = widget.controller.areaController.text.trim().isNotEmpty
-        ? widget.controller.areaController.text.trim()
-        : (plan.area ?? 'Khu vực trung tâm');
-    buffer.writeln("📍 Khu vực: $areaText");
+    buffer.writeln("📍 Khu vực: ${_areaLabel(plan)}");
     buffer.writeln("🏍️ Phương tiện: ${widget.controller.transportation == 'walking' ? 'Đi bộ' : widget.controller.transportation == 'motorbike' ? 'Xe máy' : 'Taxi'}\n");
     buffer.writeln("🎯 Mục tiêu buổi hẹn: ${plan.purpose}\n");
     buffer.writeln("-----------------------------------------");
@@ -179,20 +193,11 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
+                    _buildResultMetaBadge(label: _formatDate(widget.controller.selectedDate)),
                     _buildResultMetaBadge(
-                      icon: Icons.calendar_month_outlined,
-                      label: _formatDate(widget.controller.selectedDate),
-                    ),
-                    _buildResultMetaBadge(
-                      icon: Icons.timer_outlined,
                       label: "${plan.totalDurationMinutes} phút (~${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)}h)",
                     ),
-                    _buildResultMetaBadge(
-                      icon: Icons.location_on_outlined,
-                      label: (plan.area != null && plan.area!.isNotEmpty)
-                          ? plan.area!
-                          : (widget.controller.areaController.text.trim().isEmpty ? "Khu vực tự do" : widget.controller.areaController.text.trim()),
-                    ),
+                    _buildResultMetaBadge(label: _areaLabel(plan)),
                   ],
                 ),
               ],
@@ -246,21 +251,8 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
           const SizedBox(height: 24),
           
           if (plan.googleMapsRouteUrl != null && plan.googleMapsRouteUrl!.isNotEmpty) ...[
-            ElevatedButton.icon(
-              onPressed: () async {
-                final url = Uri.parse(plan.googleMapsRouteUrl!);
-                if (await canLaunchUrl(url)) {
-                  await launchUrl(url);
-                }
-              },
-              icon: const Icon(Icons.map, size: 20),
-              label: Text(
-                'MỞ BẢN ĐỒ TOÀN LỘ TRÌNH',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            ElevatedButton(
+              onPressed: () => _openUrl(plan.googleMapsRouteUrl!),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF653851),
                 foregroundColor: Colors.white,
@@ -270,6 +262,13 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 elevation: 2,
+              ),
+              child: Text(
+                'MỞ BẢN ĐỒ TOÀN LỘ TRÌNH',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -281,7 +280,6 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildCompactActionButton(
-                icon: Icons.restart_alt,
                 label: 'Tạo lại',
                 onTap: () async {
                   try {
@@ -296,13 +294,11 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                 },
               ),
               _buildCompactActionButton(
-                icon: Icons.content_copy,
                 label: 'Sao chép',
                 onTap: () => _sharePlanText(plan),
               ),
               if (AuthHelper.isLoggedIn)
                 _buildCompactActionButton(
-                  icon: Icons.history,
                   label: 'Lịch sử',
                   onTap: () async {
                     final selectedPlan = await Navigator.push<DatePlan>(
@@ -326,9 +322,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
     final firstStage = plan.stages.isNotEmpty ? plan.stages.first : null;
     final locationName = firstStage?.options.isNotEmpty == true
         ? firstStage!.options.first.name
-        : ((plan.area != null && plan.area!.isNotEmpty)
-            ? plan.area!
-            : widget.controller.areaController.text.trim());
+        : _areaLabel(plan);
     final startTimeStr = firstStage?.startTime ?? '18:00';
 
     final resultUrl = await Navigator.push<String>(
@@ -377,21 +371,12 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
         ),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Color(0xFF10B981),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Lời mời đã được chấp nhận! 🎉',
+                    'Lời mời đã được chấp nhận!',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -416,16 +401,8 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
 
     final bool hasInvite = widget.controller.existingInviteUrl != null && widget.controller.existingInviteUrl!.isNotEmpty;
 
-    return ElevatedButton.icon(
+    return ElevatedButton(
       onPressed: () => _openCreateInviteScreen(plan),
-      icon: Icon(hasInvite ? Icons.mark_email_read_outlined : Icons.favorite_rounded, size: 20),
-      label: Text(
-        hasInvite ? 'XEM / GỬI LẠI LỜI MỜI HẸN HÒ' : 'GỬI LỜI MỜI HẸN HÒ 💌',
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: hasInvite ? const Color(0xFF10B981) : const Color(0xFF653851),
         foregroundColor: Colors.white,
@@ -436,81 +413,66 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
         ),
         elevation: 2,
       ),
+      child: Text(
+        hasInvite ? 'XEM / GỬI LẠI LỜI MỜI HẸN HÒ' : 'GỬI LỜI MỜI HẸN HÒ',
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
   Widget _buildCompactActionButton({
-    required IconData icon,
     required String label,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.85),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF5A384C).withValues(alpha: 0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Icon(
-                icon,
-                color: const Color(0xFF653851),
-                size: 20,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF5A384C),
-              ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.9),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF5A384C).withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF5A384C),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildResultMetaBadge({required IconData icon, required String label}) {
+  Widget _buildResultMetaBadge({required String label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 14),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -532,20 +494,13 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("🎯", style: TextStyle(fontSize: 22)),
-              const SizedBox(width: 8),
-              Text(
-                "Mục Tiêu Buổi Hẹn",
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: plan.theme.dark,
-                ),
-              ),
-            ],
+          Text(
+            "Mục Tiêu Buổi Hẹn",
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: plan.theme.dark,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -564,38 +519,45 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
   }
 
   Widget _buildTimelineStageItem(DateStage stage, ActivityTheme theme, bool isLast) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Column(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: theme.light,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: theme.primary, width: 2),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  "${stage.stageNum}",
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: theme.primary,
-                  ),
-                ),
+    // A Stack (instead of IntrinsicHeight) lets the connector line just
+    // stretch to the Row's natural height. IntrinsicHeight forces the Row
+    // to a single precomputed intrinsic height, but the card content below
+    // contains a Wrap (the action buttons), whose intrinsic-height
+    // computation is only an approximation in Flutter and can end up a few
+    // pixels shorter than the actual laid-out height once backup options
+    // are expanded — causing a bottom RenderFlex overflow.
+    return Stack(
+      children: [
+        if (!isLast)
+          Positioned(
+            left: 15,
+            top: 32,
+            bottom: 0,
+            child: Container(
+              width: 2,
+              color: theme.primary.withValues(alpha: 0.4),
+            ),
+          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: theme.light,
+              shape: BoxShape.circle,
+              border: Border.all(color: theme.primary, width: 2),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              "${stage.stageNum}",
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: theme.primary,
               ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: theme.primary.withValues(alpha: 0.4),
-                  ),
-                ),
-            ],
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -665,11 +627,11 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildDetailRow("🎯 Mục đích", stage.purpose),
+                          _buildDetailRow("Mục đích", stage.purpose),
                           const SizedBox(height: 8),
-                          _buildDetailRow("🍴 Thể loại", stage.category),
+                          _buildDetailRow("Thể loại", stage.category),
                           const SizedBox(height: 8),
-                          _buildDetailRow("⏱️ Thời lượng", "${stage.durationMinutes} phút"),
+                          _buildDetailRow("Thời lượng", "${stage.durationMinutes} phút"),
                           
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 12.0),
@@ -677,7 +639,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                           ),
 
                           Text(
-                            "✨ Hoạt động gợi ý",
+                            "Hoạt động gợi ý",
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -693,45 +655,42 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                               child: Divider(color: Color(0xFFF3F4F6)),
                             ),
                             Text(
-                              "📍 Địa điểm gợi ý",
+                              "Địa điểm gợi ý",
                               style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: theme.dark),
                             ),
                             const SizedBox(height: 6),
                             _buildLocationCard(stage, stage.options.first, theme, isBackup: false),
                             
                             if (stage.options.length > 1) ...[
-                              const SizedBox(height: 4),
-                              InkWell(
-                                onTap: () {
+                              const SizedBox(height: 8),
+                              OutlinedButton.icon(
+                                onPressed: () {
                                   setState(() {
                                     widget.controller.toggleStageBackupExpanded(stage.stageNum);
                                   });
                                 },
-                                borderRadius: BorderRadius.circular(8),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.assistant_navigation, size: 16, color: theme.accent),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          "Lựa chọn dự phòng khác (${stage.options.length - 1})",
-                                          style: GoogleFonts.inter(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.accent,
-                                          ),
-                                        ),
-                                      ),
-                                      Icon(
-                                        widget.controller.expandedStageBackups.contains(stage.stageNum)
-                                          ? Icons.keyboard_arrow_up
-                                          : Icons.keyboard_arrow_down,
-                                        size: 18,
-                                        color: theme.accent,
-                                      ),
-                                    ],
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: theme.accent,
+                                  side: BorderSide(color: theme.accent.withValues(alpha: 0.5)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                icon: Icon(
+                                  widget.controller.expandedStageBackups.contains(stage.stageNum)
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  widget.controller.expandedStageBackups.contains(stage.stageNum)
+                                      ? "Thu gọn lựa chọn dự phòng"
+                                      : "Xem thêm lựa chọn dự phòng (${stage.options.length - 1})",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -747,7 +706,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                           if (stage.tips.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Text(
-                              "💡 Mách Nhỏ Cho Hai Bạn",
+                              "Mách Nhỏ Cho Hai Bạn",
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -784,11 +743,48 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
             ),
           ),
         ],
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildPreferenceButtons(LocationOption opt, ActivityTheme theme) {
+    final preference = widget.controller.preferenceFor(opt);
+    final liked = preference == 'like';
+    final disliked = preference == 'dislike';
+    return [
+      IconButton(
+        key: ValueKey('like-${opt.id}'),
+        tooltip: liked ? 'Bỏ thích' : 'Thích địa điểm này',
+        visualDensity: VisualDensity.compact,
+        onPressed: () => widget.controller.setPreference(opt, 'like'),
+        icon: Icon(liked ? Icons.thumb_up : Icons.thumb_up_outlined, size: 20, color: liked ? theme.primary : Colors.grey[600]),
+      ),
+      IconButton(
+        key: ValueKey('dislike-${opt.id}'),
+        tooltip: disliked ? 'Bỏ không thích' : 'Không thích địa điểm này',
+        visualDensity: VisualDensity.compact,
+        onPressed: () => widget.controller.setPreference(opt, 'dislike'),
+        icon: Icon(disliked ? Icons.thumb_down : Icons.thumb_down_outlined, size: 20, color: disliked ? const Color(0xFF374151) : Colors.grey[600]),
+      ),
+    ];
+  }
+
+  Widget _buildLocationCard(DateStage stage, LocationOption opt, ActivityTheme theme, {bool isBackup = false}) {
+    final card = _buildLocationCardBody(stage, opt, theme, isBackup: isBackup);
+    if (!isBackup || opt.mapsUrl.isEmpty) return card;
+    // Backup cards open the place in maps when tapped anywhere outside their buttons.
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _openUrl(opt.mapsUrl),
+        child: card,
       ),
     );
   }
 
-  Widget _buildLocationCard(DateStage stage, LocationOption opt, ActivityTheme theme, {bool isBackup = false}) {
+  Widget _buildLocationCardBody(DateStage stage, LocationOption opt, ActivityTheme theme, {bool isBackup = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -848,33 +844,17 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                   style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(Icons.sell, color: theme.accent, size: 14),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        "Khoảng giá: ${opt.formattedPriceRange}",
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[800]),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                Text(
+                  "Khoảng giá: ${opt.formattedPriceRange}",
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[800]),
+                  overflow: TextOverflow.ellipsis,
                 ),
                 if (opt.rating != null) ...[
                   const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          "${opt.rating} (${opt.ratingCount ?? 0} đánh giá)",
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[800]),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    "Đánh giá ${opt.rating}/5 (${opt.ratingCount ?? 0} lượt)",
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[800]),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -883,39 +863,30 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final url = Uri.parse(opt.mapsUrl);
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(url);
-                        }
-                      },
-                      icon: const Icon(Icons.map, size: 15),
-                      label: Text(
-                        'Mở bản đồ',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF374151),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        visualDensity: VisualDensity.compact,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                    if (opt.id != null) ..._buildPreferenceButtons(opt, theme),
+                    if (!isBackup && opt.mapsUrl.isNotEmpty)
+                      OutlinedButton.icon(
+                        onPressed: () => _openUrl(opt.mapsUrl),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.primary,
+                          side: BorderSide(color: theme.primary.withValues(alpha: 0.5)),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          visualDensity: VisualDensity.compact,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                        elevation: 0,
+                        icon: const Icon(Icons.map_outlined, size: 16),
+                        label: Text(
+                          'Xem trên bản đồ',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
                       ),
-                    ),
                     if (isBackup)
-                      ElevatedButton.icon(
+                      ElevatedButton(
                         onPressed: () {
                           widget.controller.selectBackupLocation(stage, opt);
                         },
-                        icon: const Icon(Icons.check_circle_outline, size: 15),
-                        label: Text(
-                          'Đặt làm chính',
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
-                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.primary,
                           foregroundColor: Colors.white,
@@ -925,6 +896,10 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           elevation: 0,
+                        ),
+                        child: Text(
+                          'Đặt làm chính',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
                   ],
@@ -1021,8 +996,6 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.location_city_rounded, size: 40, color: theme.primary.withValues(alpha: 0.7)),
-            const SizedBox(height: 6),
             Text(
               "EverUs Date Spot",
               style: GoogleFonts.inter(
@@ -1038,13 +1011,13 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
   }
 
   Widget _buildTransitTimelineItem(double distance, int duration, ActivityTheme theme, String transport) {
-    String transportEmoji = "🏍️";
+    String transportLabel = "Xe máy";
     if (transport == "walking") {
-      transportEmoji = "🚶";
+      transportLabel = "Đi bộ";
     } else if (transport == "taxi") {
-      transportEmoji = "🚖";
+      transportLabel = "Taxi";
     }
-    
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1071,22 +1044,13 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: theme.primary.withValues(alpha: 0.15)),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(transportEmoji, style: const TextStyle(fontSize: 14)),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            "Di chuyển: ~ ${distance.toStringAsFixed(1)} km (~$duration phút)",
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: theme.dark,
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      "$transportLabel: ~ ${distance.toStringAsFixed(1)} km (~$duration phút)",
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: theme.dark,
+                      ),
                     ),
                   ),
                 ],

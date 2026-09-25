@@ -8,6 +8,9 @@ class ProfileView extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onSignOut;
 
+  /// Re-opens the questionnaire pre-filled with the user's answers.
+  final VoidCallback? onEditAnswers;
+
   const ProfileView({
     super.key,
     required this.name,
@@ -15,6 +18,7 @@ class ProfileView extends StatelessWidget {
     this.errorMessage,
     required this.isLoading,
     required this.onSignOut,
+    this.onEditAnswers,
   });
 
   @override
@@ -65,6 +69,24 @@ class ProfileView extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 14),
+        ],
+        if (onEditAnswers != null) ...[
+          OutlinedButton(
+            onPressed: isLoading ? null : onEditAnswers,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF653851),
+              side: const BorderSide(color: Color(0xFF653851)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
+            child: Text(
+              'Chỉnh sửa câu trả lời',
+              style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
         ElevatedButton(
           onPressed: isLoading ? null : onSignOut,

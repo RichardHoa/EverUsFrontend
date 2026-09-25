@@ -134,16 +134,54 @@ class _AuthWrapperState extends State<AuthWrapper> {
           valueListenable: QuestionnaireHelper.isCompletedNotifier,
           builder: (context, isCompleted, child) {
             if (!isCompleted) {
-              return QuestionnaireScreen(
-                onCompleted: () {
-                  QuestionnaireHelper.setQuestionnaireCompleted();
-                },
+              return _QuestionnaireGate(
+                // QuestionnaireHelper flips isCompletedNotifier itself once answers are sent.
+                onCompleted: QuestionnaireHelper.markCompletedForSession,
               );
             }
 
             // 3. Questionnaire is completed -> go to LandingScreen
             return const LandingScreen();
           },
+        );
+      },
+    );
+  }
+}
+
+/// Fetches any previously-autosaved draft before showing the questionnaire,
+/// so a user redirected here again on login resumes where they left off.
+class _QuestionnaireGate extends StatefulWidget {
+  final VoidCallback onCompleted;
+
+  const _QuestionnaireGate({required this.onCompleted});
+
+  @override
+  State<_QuestionnaireGate> createState() => _QuestionnaireGateState();
+}
+
+class _QuestionnaireGateState extends State<_QuestionnaireGate> {
+  late final Future<QuestionnaireAnswers?> _draftFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _draftFuture = QuestionnaireHelper.fetchDraft();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<QuestionnaireAnswers?>(
+      future: _draftFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        final draft = snapshot.data;
+        return QuestionnaireScreen(
+          onCompleted: widget.onCompleted,
+          initialAnswers: draft?.answers,
+          initialFreeText: draft?.freeText,
         );
       },
     );

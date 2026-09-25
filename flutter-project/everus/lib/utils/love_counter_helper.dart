@@ -168,6 +168,19 @@ class LoveCounterHelper {
     }
   }
 
+  /// Wipes all locally cached love-counter data for the current install.
+  /// Call this on logout so the next signed-in user starts blank instead of
+  /// inheriting (and potentially overwriting) the previous account's data.
+  static Future<void> clearLocalData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyUserName);
+    await prefs.remove(_keyLoverName);
+    await prefs.remove(_keyAnniversaryDate);
+    await prefs.remove(_keyUserImagePath);
+    await prefs.remove(_keyLoverImagePath);
+    await prefs.remove(_keyUseDetailedView);
+  }
+
   /// Trigger sync or restore upon authentication change
   static Future<void> handleAuthChange() async {
     if (!AuthHelper.isLoggedIn) return;

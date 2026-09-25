@@ -9,6 +9,7 @@ import 'date_planner/widgets/date_planner_form.dart';
 import 'date_planner/widgets/date_planner_results.dart';
 import 'date_planner/widgets/date_planner_generating.dart';
 import 'date_planner/widgets/date_planner_loading.dart';
+import 'date_planner/widgets/date_planner_error.dart';
 import 'notifications_screen.dart';
 
 /// The entry screen wrapper for the Date Planner feature.
@@ -39,6 +40,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     
     if (widget.initialPlan != null) {
       _controller.setGeneratedPlan(widget.initialPlan);
+    } else {
+      // Ask for the user's position up front; a refusal reveals the manual address field.
+      _controller.useCurrentLocation();
     }
     
     if (AuthHelper.isLoggedIn) {
@@ -100,6 +104,11 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                         body = const DatePlannerLoading();
                       } else if (_controller.generatedPlan != null) {
                         body = DatePlannerResults(controller: _controller);
+                      } else if (_controller.generationError != null) {
+                        body = DatePlannerError(
+                          controller: _controller,
+                          message: _controller.generationError!,
+                        );
                       } else {
                         body = DatePlannerForm(controller: _controller);
                       }
@@ -124,7 +133,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
-        final bool isViewingResult = _controller.generatedPlan != null && !_controller.isGenerating;
+        final bool isViewingResult =
+            (_controller.generatedPlan != null || _controller.generationError != null) && !_controller.isGenerating;
+        final bool isViewingError = _controller.generationError != null && !_controller.isGenerating;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Row(
@@ -158,7 +169,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
               ),
               const SizedBox(width: 14),
               Text(
-                isViewingResult ? 'Lộ Trình Hẹn Hò' : 'Thiết Kế Hẹn Hò',
+                isViewingError
+                    ? 'Không Tìm Thấy Địa Điểm'
+                    : (isViewingResult ? 'Lộ Trình Hẹn Hò' : 'Thiết Kế Hẹn Hò'),
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,

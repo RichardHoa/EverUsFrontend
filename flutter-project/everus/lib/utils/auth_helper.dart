@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'api_client.dart';
 import 'love_counter_helper.dart';
+import 'questionnaire_helper.dart';
 
 // Defines the application run mode (can only be dev or prod)
 enum AppMode { dev, prod }
@@ -149,9 +151,8 @@ class AuthHelper {
   /// Helper to perform HTTP POST requests using cross-platform http package
   static Future<Map<String, dynamic>> _post(String path, Map<String, dynamic> body) async {
     try {
-      final uri = Uri.parse('$baseUrl$path');
-      final response = await http.post(
-        uri,
+      final response = await ApiClient.client.post(
+        ApiClient.uri(path),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
       );
@@ -172,6 +173,31 @@ class AuthHelper {
     }
   }
 
+  /// Stores a fresh session, then moves this device's guest data onto the account.
+  static Future<void> _startSession(Map<String, dynamic> sessionData) async {
+    sessionNotifier.value = sessionData;
+    await _persistSession(sessionData);
+    await _mergeGuestDevice();
+    // The account may already have answered the questionnaire elsewhere.
+    await QuestionnaireHelper.refreshFromServer();
+    LoveCounterHelper.handleAuthChange();
+  }
+
+  /// Reassigns likes/dislikes and questionnaire answers made as a guest on this
+  /// install to the signed-in account. Best effort: never blocks sign-in.
+  static Future<void> _mergeGuestDevice() async {
+    try {
+      final response = await ApiClient.client
+          .post(ApiClient.uri('/auth/merge-device'), headers: await ApiClient.headers())
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) {
+        debugPrint("Device merge responded with status: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Failed to merge guest device data: $e");
+    }
+  }
+
   /// Signs up a new user using the FastAPI backend.
   static Future<void> signUp({
     required String email,
@@ -185,10 +211,7 @@ class AuthHelper {
     });
 
     if (response['session'] != null) {
-      final sessionData = _normalizeSession(response);
-      sessionNotifier.value = sessionData;
-      await _persistSession(sessionData);
-      LoveCounterHelper.handleAuthChange();
+      await _startSession(_normalizeSession(response));
     }
   }
 
@@ -202,10 +225,7 @@ class AuthHelper {
       'password': password,
     });
 
-    final sessionData = _normalizeSession(response);
-    sessionNotifier.value = sessionData;
-    await _persistSession(sessionData);
-    LoveCounterHelper.handleAuthChange();
+    await _startSession(_normalizeSession(response));
   }
 
   /// Log out current session
@@ -226,6 +246,12 @@ class AuthHelper {
 
     await _clearPersistedSession();
     sessionNotifier.value = null;
+
+    // Wipe locally cached per-account state so the next user who signs in on
+    // this device starts blank instead of seeing the previous user's love
+    // counter or skipping the questionnaire because of a stale cached flag.
+    await LoveCounterHelper.clearLocalData();
+    await QuestionnaireHelper.resetQuestionnaire();
   }
 
   static bool _isGoogleSignInInitialized = false;
@@ -284,10 +310,7 @@ class AuthHelper {
 
       final response = await _post('/auth/google', body);
 
-      final sessionData = _normalizeSession(response);
-      sessionNotifier.value = sessionData;
-      await _persistSession(sessionData);
-      LoveCounterHelper.handleAuthChange();
+      await _startSession(_normalizeSession(response));
     } catch (e) {
       if (e is GoogleSignInException && e.code == GoogleSignInExceptionCode.canceled) {
         // User cancelled the sign-in

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/auth_helper.dart';
+import '../utils/questionnaire_helper.dart';
 import '../widgets/everus_footer.dart';
 import 'login/widgets/auth_input_field.dart';
 import 'login/widgets/gentle_login_modal.dart';
 import 'login/widgets/google_sign_in_button.dart';
 import 'login/widgets/profile_view.dart';
+import 'questionnaire_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool isProfileMode;
@@ -119,6 +121,33 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  /// Opens the questionnaire pre-filled with the account's latest answers (logged-in only).
+  Future<void> _handleEditAnswers() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    final previous = await QuestionnaireHelper.fetchMyAnswers();
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (routeContext) => QuestionnaireScreen(
+          isEditMode: true,
+          initialAnswers: previous?.answers,
+          initialFreeText: previous?.freeText,
+          onCompleted: () {
+            Navigator.of(routeContext).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Đã lưu câu trả lời của bạn!')),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -234,6 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 errorMessage: _errorMessage,
                                 isLoading: _isLoading,
                                 onSignOut: _handleSignOut,
+                                onEditAnswers: QuestionnaireHelper.canEditAnswers ? _handleEditAnswers : null,
                               )
                             : _buildAuthForm(),
                       ),

@@ -23,9 +23,7 @@ class FeatureActionCards extends StatelessWidget {
               title: 'Date Planner',
               subtitle: 'Lên kế hoạch &\nthử thách hẹn hò',
               actionText: 'Khám phá',
-              icon: Icons.calendar_today_rounded,
               accentColor: const Color(0xFF653851),
-              badgeBg: const Color(0xFFF7EFF5),
               onTap: onDatePlannerTap,
             ),
           ),
@@ -36,9 +34,7 @@ class FeatureActionCards extends StatelessWidget {
               title: 'Relationship\nReflection',
               subtitle: 'Thấu cảm & phản chiếu\nmối quan hệ',
               actionText: 'Khám phá',
-              icon: Icons.auto_awesome_rounded,
               accentColor: const Color(0xFF5A384C),
-              badgeBg: const Color(0xFFEDE4EB),
               onTap: onReflectionTap,
             ),
           ),
@@ -52,9 +48,7 @@ class GridActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String actionText;
-  final IconData icon;
   final Color accentColor;
-  final Color badgeBg;
   final VoidCallback onTap;
 
   const GridActionCard({
@@ -62,9 +56,7 @@ class GridActionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.actionText,
-    required this.icon,
     required this.accentColor,
-    required this.badgeBg,
     required this.onTap,
   });
 
@@ -115,19 +107,6 @@ class GridActionCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: badgeBg,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              icon,
-                              color: accentColor,
-                              size: 15,
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -143,23 +122,13 @@ class GridActionCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        actionText,
-                        style: GoogleFonts.inter(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: accentColor,
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        color: accentColor,
-                        size: 15,
-                      ),
-                    ],
+                  Text(
+                    actionText,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: accentColor,
+                    ),
                   ),
                 ],
               ),

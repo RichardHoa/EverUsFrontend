@@ -241,7 +241,6 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
                         "${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}",
                         style: const TextStyle(fontSize: 14),
                       ),
-                      const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
                     ],
                   ),
                 ),

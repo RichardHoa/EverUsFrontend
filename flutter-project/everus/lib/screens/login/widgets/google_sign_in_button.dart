@@ -25,15 +25,23 @@ class GoogleSignInButton extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const GoogleLogoIcon(size: 18),
             const SizedBox(width: 8),
-            Text(
-              'Tiếp tục với Google',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: const Color(0xFF5A384C),
+            // Shrinks the label on narrow screens / large system text instead of overflowing.
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Tiếp tục với Google',
+                  maxLines: 1,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: const Color(0xFF5A384C),
+                  ),
+                ),
               ),
             ),
           ],
