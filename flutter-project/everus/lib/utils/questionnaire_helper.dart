@@ -1,25 +1,67 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'api_client.dart';
 import 'auth_helper.dart';
 
+/// Answers previously submitted by the signed-in user, used to pre-fill the edit flow.
+class QuestionnaireAnswers {
+  final Map<String, dynamic> answers;
+  final String? freeText;
+
+  const QuestionnaireAnswers({required this.answers, this.freeText});
+}
+
+/// Tracks whether this user/device has answered the onboarding questionnaire.
+///
+/// The server (`GET /questionnaire/status`) is the source of truth; the local
+/// flag is only a fast-path cache and is written only after the server has
+/// confirmed an answer exists.
 class QuestionnaireHelper {
   static const String _keyCompleted = 'has_completed_couple_onboarding_v1';
+  static const Duration _timeout = Duration(seconds: 8);
 
   /// Reactive notifier for questionnaire completion state
   static final ValueNotifier<bool> isCompletedNotifier = ValueNotifier<bool>(false);
 
   static bool get isCompleted => isCompletedNotifier.value;
 
-  /// Call once during main() startup. Reads the persisted flag so users
-  /// who already completed the questionnaire are not asked again.
+  /// Only accounts can revisit their answers; guests answer once.
+  static bool get canEditAnswers => AuthHelper.isLoggedIn;
+
+  /// Call once during main() startup (and again after sign-in via [refreshFromServer]).
   static Future<void> initialize() async {
-    isCompletedNotifier.value = await hasCompletedQuestionnaire();
+    if (await _hasCachedCompletion()) {
+      isCompletedNotifier.value = true;
+      return;
+    }
+    await refreshFromServer();
   }
 
-  static Future<bool> hasCompletedQuestionnaire() async {
+  /// Asks the server whether the current identity (account or device) has answered.
+  static Future<void> refreshFromServer() async {
+    try {
+      final response = await ApiClient.client
+          .get(ApiClient.uri('/questionnaire/status'), headers: await ApiClient.headers())
+          .timeout(_timeout);
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        if (data['answered'] == true) {
+          await _cacheCompletion();
+          isCompletedNotifier.value = true;
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to check questionnaire status: $e");
+    }
+    isCompletedNotifier.value = isCompletedNotifier.value && await _hasCachedCompletion();
+  }
+
+  static Future<bool> hasCompletedQuestionnaire() => _hasCachedCompletion();
+
+  static Future<bool> _hasCachedCompletion() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(_keyCompleted) ?? false;
@@ -28,32 +70,31 @@ class QuestionnaireHelper {
     }
   }
 
-  static Future<void> setQuestionnaireCompleted() async {
+  static Future<void> _cacheCompletion() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyCompleted, true);
-      isCompletedNotifier.value = true;
     } catch (e) {
-      debugPrint("Failed to save questionnaire completion status: $e");
-      isCompletedNotifier.value = true;
+      debugPrint("Failed to cache questionnaire completion: $e");
     }
+  }
+
+  /// Lets the user continue into the app for this session without caching the answer.
+  static void markCompletedForSession() {
+    isCompletedNotifier.value = true;
   }
 
   static Future<void> resetQuestionnaire() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_keyCompleted);
-      isCompletedNotifier.value = false;
     } catch (e) {
       debugPrint("Failed to reset questionnaire status: $e");
-      isCompletedNotifier.value = false;
     }
+    isCompletedNotifier.value = false;
   }
 
-  static Future<bool> submitToBackend({
-    required Map<String, dynamic> answers,
-    String? freeText,
-  }) async {
+  static Map<String, dynamic> _payload(Map<String, dynamic> answers, String? freeText) {
     String deviceInfo = 'web';
     if (!kIsWeb) {
       try {
@@ -62,38 +103,84 @@ class QuestionnaireHelper {
         deviceInfo = 'unknown';
       }
     }
-
-    final payload = {
+    return {
       'answers': answers,
       'free_text': freeText,
       'client_timestamp': DateTime.now().toIso8601String(),
       'device_info': deviceInfo,
     };
+  }
 
+  /// Submits first-time answers. Returns whether the server stored them.
+  ///
+  /// The user is never blocked: on failure they continue for this session, and
+  /// because nothing is cached the app asks again on the next launch.
+  static Future<bool> submitToBackend({
+    required Map<String, dynamic> answers,
+    String? freeText,
+  }) async {
+    var stored = false;
     try {
-      final url = Uri.parse('${AuthHelper.baseUrl}/questionnaire/submit');
-      final response = await http
+      final response = await ApiClient.client
           .post(
-            url,
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode(payload),
+            ApiClient.uri('/questionnaire/submit'),
+            headers: await ApiClient.headers(),
+            body: json.encode(_payload(answers, freeText)),
           )
-          .timeout(const Duration(seconds: 8));
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        await setQuestionnaireCompleted();
-        return true;
-      } else {
+          .timeout(_timeout);
+      stored = response.statusCode >= 200 && response.statusCode < 300;
+      if (!stored) {
         debugPrint("Backend responded with status: ${response.statusCode}");
-        // Still mark completed locally so the user is never blocked
-        await setQuestionnaireCompleted();
-        return true;
       }
     } catch (e) {
       debugPrint("Failed to send questionnaire to backend: $e");
-      // Still mark completed locally so the user experience is smooth and uninterrupted
-      await setQuestionnaireCompleted();
-      return true;
     }
+
+    if (stored) {
+      await _cacheCompletion();
+    }
+    markCompletedForSession();
+    return stored;
+  }
+
+  /// Replaces a signed-in user's answers (edit flow from the profile page).
+  static Future<bool> updateOnBackend({
+    required Map<String, dynamic> answers,
+    String? freeText,
+  }) async {
+    if (!canEditAnswers) return false;
+    try {
+      final response = await ApiClient.client
+          .put(
+            ApiClient.uri('/questionnaire/submit'),
+            headers: await ApiClient.headers(),
+            body: json.encode(_payload(answers, freeText)),
+          )
+          .timeout(_timeout);
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      debugPrint("Failed to update questionnaire answers: $e");
+      return false;
+    }
+  }
+
+  /// The signed-in user's latest answers, or null when there are none (or on error).
+  static Future<QuestionnaireAnswers?> fetchMyAnswers() async {
+    if (!canEditAnswers) return null;
+    try {
+      final response = await ApiClient.client
+          .get(ApiClient.uri('/questionnaire/me'), headers: await ApiClient.headers())
+          .timeout(_timeout);
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        return QuestionnaireAnswers(
+          answers: Map<String, dynamic>.from(data['answers'] as Map? ?? {}),
+          freeText: data['free_text'] as String?,
+        );
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch questionnaire answers: $e");
+    }
+    return null;
   }
 }

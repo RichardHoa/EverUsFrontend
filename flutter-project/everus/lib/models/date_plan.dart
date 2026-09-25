@@ -3,6 +3,9 @@ import 'activity.dart';
 
 /// Represents a specific location recommendation for a date stage.
 class LocationOption {
+  /// Backend place id, used for like/dislike. Null for "not found" placeholders and legacy saved plans.
+  final int? id;
+
   /// Name of the location.
   final String name;
 
@@ -41,6 +44,7 @@ class LocationOption {
 
   /// Const constructor for [LocationOption].
   const LocationOption({
+    this.id,
     required this.name,
     required this.address,
     this.rating,
@@ -70,6 +74,7 @@ class LocationOption {
   /// Decodes a JSON object into a [LocationOption] model instance.
   factory LocationOption.fromJson(Map<String, dynamic> json) {
     return LocationOption(
+      id: json['id'] != null ? int.tryParse(json['id'].toString()) : null,
       name: json['name'] ?? '',
       address: json['address'] ?? '',
       rating: json['rating'] != null ? double.tryParse(json['rating'].toString()) : null,
@@ -88,6 +93,7 @@ class LocationOption {
   /// Encodes this [LocationOption] model to a JSON map.
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'address': address,
       'rating': rating,
@@ -231,7 +237,7 @@ class DatePlan {
   /// Estimated budget threshold per user.
   final int? budgetPerPerson;
 
-  /// General destination region area.
+  /// Distance label from the backend (e.g. "Gần bạn (≤5km)"); older saved plans hold a district name.
   final String? area;
 
   /// Const constructor for [DatePlan].
@@ -344,8 +350,12 @@ class DatePlannerInput {
   /// Duration limit (hours).
   final double totalDurationHours;
 
-  /// Target area / zone.
-  final String area;
+  /// User's position, from GPS or a geocoded manual address.
+  final double userLatitude;
+  final double userLongitude;
+
+  /// Resolved distance band sent to the backend: 'gan' (≤5km) or 'xa' (5-15km).
+  final String distancePreference;
 
   /// Budget target.
   final int budgetPerPerson;
@@ -373,7 +383,9 @@ class DatePlannerInput {
     required this.date,
     required this.startTime,
     required this.totalDurationHours,
-    required this.area,
+    required this.userLatitude,
+    required this.userLongitude,
+    required this.distancePreference,
     required this.budgetPerPerson,
     required this.vibe,
     required this.stageCount,
@@ -392,7 +404,9 @@ class DatePlannerInput {
       'date': dateStr,
       'startTime': '$hourStr:$minStr',
       'totalDurationHours': totalDurationHours,
-      'area': area,
+      'userLatitude': userLatitude,
+      'userLongitude': userLongitude,
+      'distancePreference': distancePreference,
       'budgetPerPerson': budgetPerPerson,
       'vibe': vibe,
       'stageCount': stageCount,

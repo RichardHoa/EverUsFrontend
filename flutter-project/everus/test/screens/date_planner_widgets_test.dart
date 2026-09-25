@@ -11,11 +11,14 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/test_setup.dart';
 import 'date_planner_controller_test.dart' show FakeLocationService, planJson;
 
-Future<void> pumpTall(WidgetTester tester, Widget child) async {
+/// Pumps [build] the way DatePlannerScreen hosts it: rebuilt whenever the controller notifies.
+Future<void> pumpTall(WidgetTester tester, DatePlannerController controller, Widget Function() build) async {
   tester.view.physicalSize = const Size(1200, 6000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(MaterialApp(home: Scaffold(body: child)));
+  await tester.pumpWidget(MaterialApp(
+    home: Scaffold(body: ListenableBuilder(listenable: controller, builder: (context, _) => build())),
+  ));
   await tester.pump();
 }
 
@@ -27,7 +30,7 @@ void main() {
   group('DatePlannerGenerating', () {
     testWidgets('shows no percentage and falls back to the spinner when the video cannot load', (tester) async {
       final controller = DatePlannerController(locationService: FakeLocationService());
-      await pumpTall(tester, DatePlannerGenerating(controller: controller));
+      await pumpTall(tester, controller, () => DatePlannerGenerating(controller: controller));
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.textContaining('%'), findsNothing);
@@ -38,7 +41,7 @@ void main() {
   group('DatePlannerForm', () {
     testWidgets('offers gần / xa / tuỳ hứng instead of a district picker', (tester) async {
       final controller = DatePlannerController(locationService: FakeLocationService());
-      await pumpTall(tester, DatePlannerForm(controller: controller));
+      await pumpTall(tester, controller, () => DatePlannerForm(controller: controller));
 
       expect(find.text('Gần'), findsOneWidget);
       expect(find.text('Xa'), findsOneWidget);
@@ -53,7 +56,7 @@ void main() {
     testWidgets('shows the manual address field once location permission is denied', (tester) async {
       final location = FakeLocationService()..deny = true;
       final controller = DatePlannerController(locationService: location);
-      await pumpTall(tester, DatePlannerForm(controller: controller));
+      await pumpTall(tester, controller, () => DatePlannerForm(controller: controller));
       expect(find.byKey(const ValueKey('manual-address-field')), findsNothing);
 
       await controller.useCurrentLocation();
@@ -64,7 +67,7 @@ void main() {
 
     testWidgets('uses at most two Material icons', (tester) async {
       final controller = DatePlannerController(locationService: FakeLocationService());
-      await pumpTall(tester, DatePlannerForm(controller: controller));
+      await pumpTall(tester, controller, () => DatePlannerForm(controller: controller));
       expect(find.byType(Icon).evaluate().length, lessThanOrEqualTo(2));
     });
   });
@@ -80,7 +83,7 @@ void main() {
       final json = planJson()..['vibe'] = 'casual';
       controller.setGeneratedPlan(DatePlan.fromJson(json));
       opened = [];
-      await pumpTall(tester, DatePlannerResults(controller: controller, openUrl: (uri) async => opened.add(uri)));
+      await pumpTall(tester, controller, () => DatePlannerResults(controller: controller, openUrl: (uri) async => opened.add(uri)));
     }
 
     testWidgets('location cards drop the map button and gain like/dislike', (tester) async {

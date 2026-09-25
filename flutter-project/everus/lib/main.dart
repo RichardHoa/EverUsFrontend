@@ -135,9 +135,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
           builder: (context, isCompleted, child) {
             if (!isCompleted) {
               return QuestionnaireScreen(
-                onCompleted: () {
-                  QuestionnaireHelper.setQuestionnaireCompleted();
-                },
+                // QuestionnaireHelper flips isCompletedNotifier itself once answers are sent.
+                onCompleted: QuestionnaireHelper.markCompletedForSession,
               );
             }
 

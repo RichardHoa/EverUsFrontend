@@ -1,22 +1,32 @@
 import 'dart:convert';
-import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import '../../models/date_plan.dart';
+import '../../utils/api_client.dart';
 import '../../utils/auth_helper.dart';
 import '../../utils/date_planner_generator.dart';
+import '../../utils/distance_preference.dart';
+import '../../utils/location_service.dart';
 
 /// Controller managing state and logic for the Date Planner screen.
 ///
 /// Separates the raw business rules, API requests, and local caching from
 /// the UI rendering code, extending [ChangeNotifier] to trigger UI rebuilds.
 class DatePlannerController extends ChangeNotifier {
+  DatePlannerController({LocationService? locationService, Random? random})
+      : _locationService = locationService ?? const DeviceLocationService(),
+        _random = random ?? Random();
+
+  final LocationService _locationService;
+  final Random _random;
+
   // Input parameters
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _startTime = const TimeOfDay(hour: 18, minute: 0);
   double _durationHours = 3.5;
-  final TextEditingController areaController = TextEditingController(text: "");
+  DistanceChoice _distanceChoice = DistanceChoice.gan;
   int _budgetPerPerson = 250000;
   String _selectedVibe = 'romantic';
   int _stageCount = 3;
@@ -36,9 +46,15 @@ class DatePlannerController extends ChangeNotifier {
   final List<String> _recentPlaceNames = [];
   final List<String> _recentPlaceIds = [];
 
-  /// Notifier driving the progress percentage on the generating view page.
-  final ValueNotifier<double> progressNotifier = ValueNotifier<double>(0.0);
-  Timer? _progressTimer;
+  // User location: device GPS, or a geocoded manual address when permission is denied
+  UserLocation? _userLocation;
+  bool _isLocating = false;
+  bool _locationPermissionDenied = false;
+  String? _locationError;
+  final TextEditingController addressController = TextEditingController();
+
+  /// Like/dislike state per backend place id, cached so cards keep their state across rebuilds.
+  final Map<int, String> _placePreferences = {};
 
   // Getters for properties
   DateTime get selectedDate => _selectedDate;
@@ -48,6 +64,11 @@ class DatePlannerController extends ChangeNotifier {
   String get selectedVibe => _selectedVibe;
   int get stageCount => _stageCount;
   String get transportation => _transportation;
+  DistanceChoice get distanceChoice => _distanceChoice;
+  UserLocation? get userLocation => _userLocation;
+  bool get isLocating => _isLocating;
+  bool get locationPermissionDenied => _locationPermissionDenied;
+  String? get locationError => _locationError;
 
   bool get isGenerating => _isGenerating;
   bool get isLoadingPlan => _isLoadingPlan;
@@ -99,6 +120,53 @@ class DatePlannerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Updates the gần / xa / tuỳ hứng choice.
+  void setDistanceChoice(DistanceChoice choice) {
+    _distanceChoice = choice;
+    notifyListeners();
+  }
+
+  /// Requests the device position; on refusal, switches the form to the manual address field.
+  Future<void> useCurrentLocation() async {
+    _isLocating = true;
+    _locationError = null;
+    notifyListeners();
+    try {
+      _userLocation = await _locationService.currentLocation();
+      _locationPermissionDenied = false;
+    } on LocationPermissionDeniedException {
+      _locationPermissionDenied = true;
+    } catch (e) {
+      _locationPermissionDenied = true;
+      _locationError = e.toString();
+    } finally {
+      _isLocating = false;
+      notifyListeners();
+    }
+  }
+
+  /// Geocodes a typed address into the user location (fallback when GPS is unavailable).
+  Future<void> setManualAddress(String address) async {
+    final trimmed = address.trim();
+    if (trimmed.isEmpty) {
+      _locationError = 'Vui lòng nhập địa chỉ của bạn!';
+      notifyListeners();
+      return;
+    }
+    _isLocating = true;
+    _locationError = null;
+    notifyListeners();
+    try {
+      _userLocation = await _locationService.geocode(trimmed);
+    } catch (e) {
+      _userLocation = null;
+      _locationError = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      _isLocating = false;
+      notifyListeners();
+    }
+  }
+
   /// Clears the currently viewed plan to show the input form again.
   void clearPlan() {
     _generatedPlan = null;
@@ -117,10 +185,16 @@ class DatePlannerController extends ChangeNotifier {
           if (!_recentPlaceNames.contains(opt.name)) {
             _recentPlaceNames.add(opt.name);
           }
+          if (opt.id != null && !_recentPlaceIds.contains(opt.id.toString())) {
+            _recentPlaceIds.add(opt.id.toString());
+          }
         }
       }
       if (_recentPlaceNames.length > 40) {
         _recentPlaceNames.removeRange(0, _recentPlaceNames.length - 40);
+      }
+      if (_recentPlaceIds.length > 40) {
+        _recentPlaceIds.removeRange(0, _recentPlaceIds.length - 40);
       }
     }
     notifyListeners();
@@ -142,9 +216,7 @@ class DatePlannerController extends ChangeNotifier {
   /// Disposes controllers and active timers.
   @override
   void dispose() {
-    areaController.dispose();
-    progressNotifier.dispose();
-    _progressTimer?.cancel();
+    addressController.dispose();
     super.dispose();
   }
 
@@ -185,147 +257,27 @@ class DatePlannerController extends ChangeNotifier {
     }
   }
 
-  /// Triggers a simulated counting progress indicator matching the generator wait-time (~5 seconds).
-  void _startProgressTimer() {
-    progressNotifier.value = 0.0;
-    _progressTimer?.cancel();
-    
-    const duration = Duration(milliseconds: 100);
-    const totalTime = Duration(seconds: 5);
-    final increment = 1.0 / (totalTime.inMilliseconds / duration.inMilliseconds);
-    
-    _progressTimer = Timer.periodic(duration, (timer) {
-      final currentVal = progressNotifier.value;
-      if (currentVal < 0.95) {
-        progressNotifier.value = currentVal + increment;
-      } else if (currentVal < 0.99) {
-        progressNotifier.value = currentVal + 0.001;
-      }
-    });
-  }
-
-  /// Instantly completes progress to 100% with a quick ease animation.
-  Future<void> _completeProgress() async {
-    _progressTimer?.cancel();
-    
-    const steps = 10;
-    final remaining = 1.0 - progressNotifier.value;
-    final stepVal = remaining / steps;
-    
-    for (int i = 0; i < steps; i++) {
-      await Future.delayed(const Duration(milliseconds: 30));
-      progressNotifier.value = (progressNotifier.value + stepVal).clamp(0.0, 1.0);
-    }
-    await Future.delayed(const Duration(milliseconds: 200));
-  }
-
-  /// List of supported districts in Ho Chi Minh City.
-  static const List<String> hcmcDistricts = [
-    "Thủ Đức",
-    "Quận 1",
-    "Quận 3",
-    "Quận 4",
-    "Quận 5",
-    "Quận 6",
-    "Quận 7",
-    "Quận 8",
-    "Quận 10",
-    "Quận 11",
-    "Quận 12",
-    "Quận Bình Tân",
-    "Quận Tân Bình",
-    "Quận Tân Phú",
-    "Quận Phú Nhuận",
-    "Quận Bình Thạnh",
-    "Quận Gò Vấp",
-  ];
-
-  /// List of currently active/enabled districts for date planning.
-  static const Set<String> enabledDistricts = {
-    "Quận 1",
-    "Quận 7",
-    "Quận 10",
-    "Quận Bình Thạnh",
-  };
-
-  /// Helper to strip Vietnamese accents for fuzzy matching.
-  static String removeDiacritics(String str) {
-    const withDia = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ';
-    const withoutDia = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyydAAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYYD';
-    var result = str;
-    for (int i = 0; i < withDia.length; i++) {
-      result = result.replaceAll(withDia[i], withoutDia[i]);
-    }
-    return result;
-  }
-
-  /// Match user input string to canonical HCMC district name.
-  static String? findMatchingDistrict(String input) {
-    final trimmed = input.trim();
-    if (trimmed.isEmpty) return null;
-
-    final normalizedInput = removeDiacritics(trimmed.toLowerCase())
-        .replaceAll(RegExp(r'^(q\.|q\s+|quan\s+|quận\s+|district\s+|tp\s+|thanh pho\s+|thành phố\s+|tp\.\s+)'), '')
-        .trim();
-
-    for (final district in hcmcDistricts) {
-      final normDistrict = removeDiacritics(district.toLowerCase())
-          .replaceAll(RegExp(r'^(q\.|q\s+|quan\s+|quận\s+|district\s+|tp\s+|thanh pho\s+|thành phố\s+|tp\.\s+)'), '')
-          .trim();
-      if (normalizedInput == normDistrict || district.toLowerCase() == trimmed.toLowerCase()) {
-        return district;
-      }
-    }
-
-    final isNumber = int.tryParse(normalizedInput) != null;
-
-    for (final district in hcmcDistricts) {
-      final normDistrict = removeDiacritics(district.toLowerCase());
-      if (isNumber) {
-        final words = normDistrict.split(RegExp(r'[^0-9a-zA-Z]+'));
-        if (words.contains(normalizedInput)) {
-          return district;
-        }
-      } else {
-        if (normDistrict.contains(normalizedInput) || normalizedInput.contains(normDistrict)) {
-          return district;
-        }
-      }
-    }
-    return null;
-  }
-
   /// Generates a new date plan by requesting the backend API.
+  ///
+  /// [isGenerating] stays true until the real API call returns, which is what
+  /// swaps the looping loading video for the results.
   Future<void> generatePlan() async {
-    final rawArea = areaController.text.trim();
-    if (rawArea.isEmpty) {
-      throw Exception('Vui lòng chọn khu vực/quận muốn hẹn hò!');
+    final location = _userLocation;
+    if (location == null) {
+      throw Exception('Vui lòng cho phép truy cập vị trí hoặc nhập địa chỉ của bạn!');
     }
-
-    final matchedDistrict = findMatchingDistrict(rawArea);
-    if (matchedDistrict == null) {
-      throw Exception('Vui lòng chọn một quận từ danh sách gợi ý!');
-    }
-
-    if (!enabledDistricts.contains(matchedDistrict)) {
-      throw Exception('Khu vực $matchedDistrict hiện chưa khả dụng. Vui lòng chọn Quận 1, Quận 7, Quận 10 hoặc Quận Bình Thạnh!');
-    }
-
-    // Standardize to official district name
-    areaController.text = matchedDistrict;
-    final areaText = matchedDistrict;
 
     _isGenerating = true;
-    progressNotifier.value = 0.0;
     notifyListeners();
-
-    _startProgressTimer();
 
     final input = DatePlannerInput(
       date: _selectedDate,
       startTime: _startTime,
       totalDurationHours: _durationHours,
-      area: areaText,
+      userLatitude: location.latitude,
+      userLongitude: location.longitude,
+      // "Tuỳ hứng" is re-rolled on every generation, never remembered.
+      distancePreference: _distanceChoice.resolve(_random),
       budgetPerPerson: _budgetPerPerson,
       vibe: _selectedVibe,
       stageCount: _stageCount,
@@ -337,15 +289,72 @@ class DatePlannerController extends ChangeNotifier {
 
     try {
       final plan = await DatePlannerGenerator.generate(input);
-      await _completeProgress();
       await savePlan(plan);
       _isGenerating = false;
       setGeneratedPlan(plan);
     } catch (e) {
-      _progressTimer?.cancel();
       _isGenerating = false;
       notifyListeners();
       rethrow;
+    }
+  }
+
+  /// Current like/dislike for a place, or null.
+  String? preferenceFor(LocationOption opt) => opt.id == null ? null : _placePreferences[opt.id];
+
+  /// Fetches the caller's existing likes/dislikes so cards render their state.
+  Future<void> loadPreferences() async {
+    try {
+      final response = await ApiClient.client.get(ApiClient.uri('/api/preferences'), headers: await ApiClient.headers());
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        _placePreferences.clear();
+        for (final item in (data['preferences'] as List? ?? [])) {
+          final placeId = int.tryParse(item['place_id'].toString());
+          final pref = item['preference']?.toString();
+          if (placeId != null && pref != null) {
+            _placePreferences[placeId] = pref;
+          }
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Failed to load place preferences: $e");
+    }
+  }
+
+  /// Likes or dislikes a place; choosing the current preference again clears it.
+  /// Updates optimistically and restores the previous state if the request fails.
+  Future<void> setPreference(LocationOption opt, String preference) async {
+    final placeId = opt.id;
+    if (placeId == null) return;
+
+    final previous = _placePreferences[placeId];
+    final clearing = previous == preference;
+    if (clearing) {
+      _placePreferences.remove(placeId);
+    } else {
+      _placePreferences[placeId] = preference;
+    }
+    notifyListeners();
+
+    try {
+      final uri = ApiClient.uri('/api/preferences/$placeId');
+      final headers = await ApiClient.headers();
+      final response = clearing
+          ? await ApiClient.client.delete(uri, headers: headers)
+          : await ApiClient.client.put(uri, headers: headers, body: jsonEncode({'preference': preference}));
+      if (response.statusCode != 200) {
+        throw Exception('status ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint("Failed to save place preference: $e");
+      if (previous == null) {
+        _placePreferences.remove(placeId);
+      } else {
+        _placePreferences[placeId] = previous;
+      }
+      notifyListeners();
     }
   }
 

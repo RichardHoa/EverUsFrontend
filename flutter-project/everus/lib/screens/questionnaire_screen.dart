@@ -7,9 +7,18 @@ import '../utils/questionnaire_helper.dart';
 class QuestionnaireScreen extends StatefulWidget {
   final VoidCallback onCompleted;
 
+  /// Edit mode (signed-in users, opened from the profile): pre-filled, no
+  /// "skip all", and saves over the previous answers instead of adding new ones.
+  final bool isEditMode;
+  final Map<String, dynamic>? initialAnswers;
+  final String? initialFreeText;
+
   const QuestionnaireScreen({
     super.key,
     required this.onCompleted,
+    this.isEditMode = false,
+    this.initialAnswers,
+    this.initialFreeText,
   });
 
   @override
@@ -25,6 +34,18 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
   // Stores answers: Map of question id -> String (single choice) or List<String> (multiple choice)
   final Map<String, dynamic> _answers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialAnswers;
+    if (initial != null) {
+      initial.forEach((key, value) {
+        _answers[key] = value is List ? List<String>.from(value.map((e) => e.toString())) : value;
+      });
+    }
+    _freeTextController.text = widget.initialFreeText ?? '';
+  }
 
   @override
   void dispose() {
@@ -85,10 +106,26 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     });
 
     final freeText = _freeTextController.text.trim();
-    await QuestionnaireHelper.submitToBackend(
-      answers: _answers,
-      freeText: freeText.isNotEmpty ? freeText : null,
-    );
+    if (widget.isEditMode) {
+      final saved = await QuestionnaireHelper.updateOnBackend(
+        answers: _answers,
+        freeText: freeText.isNotEmpty ? freeText : null,
+      );
+      if (!saved && mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chưa lưu được câu trả lời. Vui lòng thử lại!')),
+        );
+        return;
+      }
+    } else {
+      await QuestionnaireHelper.submitToBackend(
+        answers: _answers,
+        freeText: freeText.isNotEmpty ? freeText : null,
+      );
+    }
 
     if (mounted) {
       setState(() {
@@ -102,7 +139,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     setState(() {
       _isSubmitting = true;
     });
-    await QuestionnaireHelper.setQuestionnaireCompleted();
+    // Skipping still counts as answering (with no answers) so the user is not asked again.
+    await QuestionnaireHelper.submitToBackend(answers: {});
     if (mounted) {
       setState(() {
         _isSubmitting = false;
@@ -151,6 +189,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Color(0xFF5A384C)),
                           onPressed: _previousPage,
                           tooltip: 'Câu trước',
+                        )
+                      else if (widget.isEditMode)
+                        TextButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          style: TextButton.styleFrom(foregroundColor: const Color(0xFF5A384C)),
+                          child: Text('Huỷ', style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600)),
                         )
                       else
                         const SizedBox(width: 40),
@@ -235,7 +279,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                                   children: [
                                     Text(
                                       _currentIndex == totalQuestions - 1
-                                          ? 'Hoàn thành & Bắt đầu'
+                                          ? (widget.isEditMode ? 'Lưu thay đổi' : 'Hoàn thành & Bắt đầu')
                                           : 'Tiếp tục',
                                       style: GoogleFonts.inter(
                                         fontSize: 15.5,
@@ -243,12 +287,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                                         color: Colors.white,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
                                   ],
                                 ),
                         ),
                       ),
+                      if (!widget.isEditMode) ...[
                       const SizedBox(height: 12),
                       GestureDetector(
                         onTap: _isSubmitting ? null : _skipAll,
@@ -262,6 +305,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                           ),
                         ),
                       ),
+                      ],
                     ],
                   ),
                 ),

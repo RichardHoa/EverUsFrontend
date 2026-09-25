@@ -39,6 +39,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     
     if (widget.initialPlan != null) {
       _controller.setGeneratedPlan(widget.initialPlan);
+    } else {
+      // Ask for the user's position up front; a refusal reveals the manual address field.
+      _controller.useCurrentLocation();
     }
     
     if (AuthHelper.isLoggedIn) {
