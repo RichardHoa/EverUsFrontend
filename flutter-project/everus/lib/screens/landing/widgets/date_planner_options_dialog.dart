@@ -98,7 +98,6 @@ class DatePlannerOptionsDialog {
                     _DialogOptionButton(
                       title: 'Lên kế hoạch hẹn hò',
                       subtitle: 'Tự tạo lộ trình chi tiết cho buổi hẹn',
-                      icon: Icons.edit_calendar_rounded,
                       gradientColors: const [Color(0xFF653851), Color(0xFF52283F)],
                       onTap: () {
                         Navigator.pop(ctx);
@@ -111,7 +110,6 @@ class DatePlannerOptionsDialog {
                     _DialogOptionButton(
                       title: 'Thử thách hẹn hò',
                       subtitle: 'Khám phá ý tưởng & thử thách thú vị',
-                      icon: Icons.sports_esports_rounded,
                       gradientColors: const [Color(0xFF824B6B), Color(0xFF6E3957)],
                       onTap: () {
                         Navigator.pop(ctx);
@@ -146,14 +144,12 @@ class DatePlannerOptionsDialog {
 class _DialogOptionButton extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
   final List<Color> gradientColors;
   final VoidCallback onTap;
 
   const _DialogOptionButton({
     required this.title,
     required this.subtitle,
-    required this.icon,
     required this.gradientColors,
     required this.onTap,
   });
@@ -186,19 +182,6 @@ class _DialogOptionButton extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icon,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,11 +205,6 @@ class _DialogOptionButton extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Colors.white,
-                    size: 16,
                   ),
                 ],
               ),

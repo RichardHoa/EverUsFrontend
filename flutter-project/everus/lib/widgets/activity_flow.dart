@@ -483,14 +483,13 @@ class _ActivityFlowState extends State<ActivityFlow> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Begin Journey ',
+                              'Begin Journey',
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
-                            const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
                           ],
                         ),
                       ),
@@ -899,14 +898,13 @@ class _ActivityFlowState extends State<ActivityFlow> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _currentLevel == activity.levels.length - 1 ? 'Hoàn thành! 🎉' : 'Mức tiếp theo ',
+                        _currentLevel == activity.levels.length - 1 ? 'Hoàn thành! 🎉' : 'Mức tiếp theo',
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
                     ],
                   ),
                 ),
@@ -1052,8 +1050,6 @@ class _ActivityFlowState extends State<ActivityFlow> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.home, size: 18, color: Colors.white),
-                      const SizedBox(width: 8),
                       Text(
                         'Return Home',
                         style: GoogleFonts.inter(

@@ -291,8 +291,6 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 64, color: Color(0xFFEF4444)),
-              const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
@@ -477,20 +475,13 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.favorite, size: 12, color: Color(0xFF10B981)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Đã nhận lời 💖',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF047857),
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              'Đã nhận lời',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF047857),
+                              ),
                             ),
                           ),
                         ] else if (planMap['invitation_slug'] != null) ...[
@@ -502,20 +493,13 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: const Color(0xFFEC4899).withValues(alpha: 0.3)),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.mail_outline, size: 12, color: Color(0xFFEC4899)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Đã gửi lời mời 💌',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFFBE185D),
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              'Đã gửi lời mời',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFBE185D),
+                              ),
                             ),
                           ),
                         ],
@@ -529,8 +513,6 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                         ),
                         if (planData['budgetPerPerson'] != null) ...[
                           const SizedBox(width: 8),
-                          const Icon(Icons.monetization_on_outlined, size: 14, color: Colors.green),
-                          const SizedBox(width: 2),
                           Text(
                             _formatBudget(
                               int.tryParse(planData['budgetPerPerson'].toString().replaceAll('.0', '')) ??
@@ -545,8 +527,6 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                         ],
                         if (planData['area'] != null && planData['area'].toString().isNotEmpty) ...[
                           const SizedBox(width: 8),
-                          const Icon(Icons.pin_drop_outlined, size: 14, color: Color(0xFF8B5CF6)),
-                          const SizedBox(width: 2),
                           Expanded(
                             child: Text(
                               planData['area'].toString(),
@@ -567,26 +547,13 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                       const SizedBox(height: 12),
                       const Divider(color: Color(0xFFE5E7EB), height: 1),
                       const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: Color(0xFF8B5CF6),
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              locsStr,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: const Color(0xFF4B5563),
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        locsStr,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF4B5563),
+                          height: 1.4,
+                        ),
                       ),
                     ],
                   ],
