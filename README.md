@@ -1,4 +1,4 @@
-# 💖 EverUs (DateMate)
+# 💖 EverUs
 
 > **"Advanced Mathematics meets Date Night."**  
 > EverUs is a beautiful, interactive couple recommendation app that uses linear algebra matching to find, guide, and save your perfect date experiences.
