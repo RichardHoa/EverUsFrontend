@@ -81,7 +81,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
     buffer.writeln("📅 Ngày hẹn: ${_formatDate(widget.controller.selectedDate)}");
     buffer.writeln("⏱️ Tổng thời lượng: ${plan.totalDurationMinutes} phút (~${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)} tiếng)");
     final budgetVal = plan.budgetPerPerson ?? widget.controller.budgetPerPerson;
-    if (budgetVal > 0) {
+    if (budgetVal != null && budgetVal > 0) {
       buffer.writeln("💰 Ngân sách: ${_formatBudget(budgetVal)} / người");
     }
     buffer.writeln("📍 Khu vực: ${_areaLabel(plan)}");

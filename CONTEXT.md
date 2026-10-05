@@ -32,3 +32,7 @@ _Avoid_: Search results, options list
 
 **Backup rank**:
 The ordering applied to a Stage's Backup options. For Stage 1 and later, ranked by distance to the previous stage's chosen Location. For Stage 0 (the first stop), ranked by distance to the user's own location instead, since there is no previous stage to anchor to.
+
+**Love counter**:
+The couple's "days together" count, measured from their chosen anniversary date, shown alongside both partners' chosen names and photos. Must be set up before the landing screen is usable.
+_Avoid_: Day counter, anniversary tracker

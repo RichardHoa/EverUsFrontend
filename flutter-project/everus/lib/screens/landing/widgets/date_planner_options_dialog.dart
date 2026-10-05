@@ -11,7 +11,7 @@ class DatePlannerOptionsDialog {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Date Planner',
+      barrierLabel: 'Lên Lịch Hẹn Hò',
       barrierColor: Colors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 250),
       transitionBuilder: (context, anim1, anim2, child) {
@@ -74,7 +74,7 @@ class DatePlannerOptionsDialog {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      'Date Planner',
+                      'Lên Lịch Hẹn Hò',
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,

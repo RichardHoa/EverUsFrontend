@@ -1,301 +1,197 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../widgets/app_avatar.dart';
 
+import '../../../widgets/app_avatar.dart';
+import 'arc_name_label.dart';
+
+/// Love counter card from the Figma `landing_page` frame. Every measurement is
+/// in the frame's units (about 3x a phone); [scale] maps them to the screen.
 class MiniLoveCounter extends StatelessWidget {
   final int loveDays;
   final String userName;
   final String loverName;
-  final bool isConfigured;
   final bool userImageExists;
   final bool loverImageExists;
   final String? userImagePath;
   final String? loverImagePath;
   final VoidCallback onTap;
+  final double scale;
 
   const MiniLoveCounter({
     super.key,
     required this.loveDays,
     required this.userName,
     required this.loverName,
-    required this.isConfigured,
     required this.userImageExists,
     required this.loverImageExists,
     required this.userImagePath,
     required this.loverImagePath,
     required this.onTap,
+    required this.scale,
   });
+
+  static const _ink = Color(0xFF6F3953);
+  static const _cardWidth = 1040.65;
+  static const _cardHeight = 596.3;
+  static const _circleDiameter = 225.5;
+  static const _nameRadius = 134.0;
+  static const _nameBox = 2 * (_nameRadius + 40);
 
   @override
   Widget build(BuildContext context) {
+    final k = scale;
+    final radius = BorderRadius.circular(76.8 * k);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      width: _cardWidth * k,
+      height: _cardHeight * k,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        color: Colors.white.withValues(alpha: 0.55),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.8),
-          width: 1.5,
-        ),
-        boxShadow: const [
+        color: Colors.white.withValues(alpha: 0.56),
+        borderRadius: radius,
+        border: Border.all(color: Colors.white, width: 2.95 * k),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0D5A384C),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            color: const Color(0xFFB769A6).withValues(alpha: 0.4),
+            offset: Offset(10.31 * k, 10.31 * k),
+            blurRadius: 29.46 * k,
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CHÚNG MÌNH ĐÃ BÊN NHAU',
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF653851),
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              '$loveDays',
-                              style: GoogleFonts.playfairDisplay(
-                                fontSize: 38,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF5A384C),
-                                height: 1.0,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'ngày',
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF5A384C),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$userName ♥ $loverName',
-                          style: GoogleFonts.inter(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF7C6E79),
-                          ),
-                        ),
-                      ],
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 45 * k,
+                child: Text(
+                  'CHÚNG MÌNH ĐÃ BÊN NHAU',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.nunito(
+                    fontSize: 36.4 * k,
+                    fontWeight: FontWeight.w600,
+                    color: _ink,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 124 * k,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '$loveDays',
+                      style: GoogleFonts.inter(
+                        fontSize: 150.29 * k,
+                        fontWeight: FontWeight.w700,
+                        color: _ink,
+                        height: 1.0,
+                      ),
                     ),
-                  ),
-                  _DoubleAvatar(
-                    isConfigured: isConfigured,
-                    userName: userName,
-                    loverName: loverName,
-                    userImageExists: userImageExists,
-                    loverImageExists: loverImageExists,
-                    userImagePath: userImagePath,
-                    loverImagePath: loverImagePath,
-                  ),
-                ],
+                    SizedBox(width: 30 * k),
+                    Text(
+                      'ngày',
+                      style: GoogleFonts.nunito(
+                        fontSize: 50.88 * k,
+                        fontWeight: FontWeight.w600,
+                        color: _ink,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              Positioned(
+                left: 180.2 * k,
+                top: 371.4 * k,
+                width: 676 * k,
+                child: Image.asset('assets/images/love_thread.png'),
+              ),
+              _circle(
+                centerX: 267.8,
+                fill: const Color(0xFFF9DCF2),
+                stroke: const Color(0xFFF0B1DE),
+                imagePath: userImageExists ? userImagePath : null,
+              ),
+              _circle(
+                centerX: 778.0,
+                fill: const Color(0xFFE4E5BD),
+                stroke: const Color(0xFFDAE096),
+                imagePath: loverImageExists ? loverImagePath : null,
+              ),
+              _name(centerX: 267.8, name: userName, centerAngle: -35),
+              _name(centerX: 778.0, name: loverName, centerAngle: 35),
+            ],
           ),
         ),
       ),
     );
   }
-}
 
-class _DoubleAvatar extends StatelessWidget {
-  final bool isConfigured;
-  final String userName;
-  final String loverName;
-  final bool userImageExists;
-  final bool loverImageExists;
-  final String? userImagePath;
-  final String? loverImagePath;
-  static const double size = 48.0;
+  static const _circleCenterY = 402.2;
 
-  const _DoubleAvatar({
-    required this.isConfigured,
-    required this.userName,
-    required this.loverName,
-    required this.userImageExists,
-    required this.loverImageExists,
-    required this.userImagePath,
-    required this.loverImagePath,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!isConfigured) {
-      return Container(
-        padding: const EdgeInsets.all(12),
+  Widget _circle({
+    required double centerX,
+    required Color fill,
+    required Color stroke,
+    required String? imagePath,
+  }) {
+    final k = scale;
+    final d = _circleDiameter * k;
+    return Positioned(
+      left: centerX * k - d / 2,
+      top: _circleCenterY * k - d / 2,
+      width: d,
+      height: d,
+      child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFF7EFF5),
+          color: fill,
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF5A384C).withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: Border.all(color: stroke, width: 4.98 * k),
         ),
-        child: const Icon(
-          Icons.favorite,
-          color: Color(0xFF653851),
-          size: 24,
-        ),
-      );
-    }
-
-    if (userImageExists && loverImageExists) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _AvatarCircle(
-            name: loverName.isNotEmpty ? loverName : 'Em',
-            imagePath: loverImagePath,
-            exists: loverImageExists,
-            size: size,
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6),
-            child: Icon(
-              Icons.favorite,
-              color: Color(0xFF653851),
-              size: 22,
-            ),
-          ),
-          _AvatarCircle(
-            name: userName.isNotEmpty ? userName : 'Bạn',
-            imagePath: userImagePath,
-            exists: userImageExists,
-            size: size,
-          ),
-        ],
-      );
-    }
-
-    final uInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'B';
-    final lInitial = loverName.isNotEmpty ? loverName[0].toUpperCase() : 'N';
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF7EFF5),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
-          ),
-          child: Center(
-            child: Text(
-              lInitial,
-              style: GoogleFonts.inter(
-                fontSize: size * 0.375,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF653851),
+        child: imagePath == null
+            ? null
+            : ClipOval(
+                child: AppAvatar(
+                  imagePath: imagePath,
+                  radius: d / 2,
+                  fallback: const SizedBox.shrink(),
+                ),
               ),
-            ),
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 6),
-          child: Icon(
-            Icons.favorite,
-            color: Color(0xFF653851),
-            size: 22,
-          ),
-        ),
-        Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEDE4EB),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
-          ),
-          child: Center(
-            child: Text(
-              uInitial,
-              style: GoogleFonts.inter(
-                fontSize: size * 0.375,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF5A384C),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
-}
 
-class _AvatarCircle extends StatelessWidget {
-  final String name;
-  final String? imagePath;
-  final bool exists;
-  final double size;
-
-  const _AvatarCircle({
-    required this.name,
-    required this.imagePath,
-    required this.exists,
-    this.size = 32.0,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1F000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: AppAvatar(
-        imagePath: exists ? imagePath : null,
-        radius: size / 2,
-        fallback: Container(
-          color: const Color(0xFFF7EFF5),
-          child: Center(
-            child: Text(
-              name.isNotEmpty ? name[0].toUpperCase() : '♥',
-              style: GoogleFonts.inter(
-                fontSize: size * 0.375,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF653851),
-              ),
-            ),
-          ),
+  Widget _name({
+    required double centerX,
+    required String name,
+    required double centerAngle,
+  }) {
+    final k = scale;
+    final box = _nameBox * k;
+    return Positioned(
+      left: centerX * k - box / 2,
+      top: _circleCenterY * k - box / 2,
+      child: ArcNameLabel(
+        name: name,
+        size: box,
+        radius: _nameRadius * k,
+        centerAngle: centerAngle * math.pi / 180,
+        style: GoogleFonts.nunito(
+          fontSize: 32 * k,
+          fontWeight: FontWeight.w600,
+          color: _ink,
         ),
       ),
     );

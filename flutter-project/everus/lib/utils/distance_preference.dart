@@ -2,8 +2,8 @@ import 'dart:math';
 
 /// How far from the user the date planner should look for places.
 enum DistanceChoice {
-  gan('Gần', '≤ 5km'),
-  xa('Xa', '5 – 15km'),
+  gan('Gần', 'dưới 5km'),
+  xa('Xa', '5 - 15 km'),
   tuyHung('Tuỳ hứng', 'Để EverUs chọn');
 
   final String label;

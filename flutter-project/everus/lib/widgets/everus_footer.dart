@@ -77,7 +77,7 @@ class EverUsFooter extends StatelessWidget {
                       height: 26,
                       color: isHome ? const Color(0xFF5A384C) : const Color(0xFFB0A2AC),
                       colorBlendMode: BlendMode.srcIn,
-                      errorBuilder: (_, __, ___) => Icon(
+                      errorBuilder: (_, _, _) => Icon(
                         isHome ? Icons.home_rounded : Icons.home_outlined,
                         color: isHome ? const Color(0xFF5A384C) : const Color(0xFFB0A2AC),
                         size: 26,
@@ -100,7 +100,7 @@ class EverUsFooter extends StatelessWidget {
                       height: 26,
                       color: isAccount ? const Color(0xFF5A384C) : const Color(0xFFB0A2AC),
                       colorBlendMode: BlendMode.srcIn,
-                      errorBuilder: (_, __, ___) => Icon(
+                      errorBuilder: (_, _, _) => Icon(
                         isAccount ? Icons.person : Icons.person_outline,
                         color: isAccount ? const Color(0xFF5A384C) : const Color(0xFFB0A2AC),
                         size: 26,

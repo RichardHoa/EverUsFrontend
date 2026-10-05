@@ -35,8 +35,9 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
     super.initState();
     _controller = DatePlannerController();
     
-    // Load local cached plans and notifications
+    // Load local cached plans, the days already planned, and notifications
     _controller.loadSavedPlan();
+    _controller.loadPlannedDates();
     
     if (widget.initialPlan != null) {
       _controller.setGeneratedPlan(widget.initialPlan);
@@ -136,6 +137,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
         final bool isViewingResult =
             (_controller.generatedPlan != null || _controller.generationError != null) && !_controller.isGenerating;
         final bool isViewingError = _controller.generationError != null && !_controller.isGenerating;
+        final bool isOnForm = !isViewingResult && !_controller.isGenerating && !_controller.isLoadingPlan;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Row(
@@ -167,18 +169,37 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 14),
-              Text(
-                isViewingError
-                    ? 'Không Tìm Thấy Địa Điểm'
-                    : (isViewingResult ? 'Lộ Trình Hẹn Hò' : 'Thiết Kế Hẹn Hò'),
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF5A384C),
+              if (!isOnForm) ...[
+                const SizedBox(width: 14),
+                Text(
+                  isViewingError
+                      ? 'Không Tìm Thấy Địa Điểm'
+                      : (isViewingResult ? 'Lộ Trình Hẹn Hò' : 'Thiết Kế Hẹn Hò'),
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF5A384C),
+                  ),
                 ),
-              ),
-              const Spacer(),
+                const Spacer(),
+              ] else
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Thiết Kế Hẹn Hò',
+                      maxLines: 1,
+                      style: GoogleFonts.nunito(
+                        // Figma: 92.6 units on the 1316-wide frame.
+                        fontSize: MediaQuery.sizeOf(context).width * 92.6 / DatePlannerForm.frameWidth,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6F3953),
+                      ),
+                    ),
+                  ),
+                ),
+              // Balances the back button so the form title stays centred for guests.
+              if (isOnForm && !AuthHelper.isLoggedIn) const SizedBox(width: 48),
               if (AuthHelper.isLoggedIn) ...[
                 Stack(
                   clipBehavior: Clip.none,

@@ -7,8 +7,10 @@ import '../../models/date_plan.dart';
 import '../../utils/api_client.dart';
 import '../../utils/auth_helper.dart';
 import '../../utils/date_planner_generator.dart';
+import '../../utils/date_time_span.dart';
 import '../../utils/distance_preference.dart';
 import '../../utils/location_service.dart';
+import '../../utils/vnd_budget.dart';
 
 /// Controller managing state and logic for the Date Planner screen.
 ///
@@ -23,11 +25,11 @@ class DatePlannerController extends ChangeNotifier {
   final Random _random;
 
   // Input parameters
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = DateUtils.dateOnly(DateTime.now());
   TimeOfDay _startTime = const TimeOfDay(hour: 18, minute: 0);
-  double _durationHours = 3.5;
+  TimeOfDay _endTime = const TimeOfDay(hour: 21, minute: 30);
   DistanceChoice _distanceChoice = DistanceChoice.gan;
-  int _budgetPerPerson = 250000;
+  int? _budgetPerPerson;
   String _selectedVibe = 'romantic';
   int _stageCount = 3;
   String _transportation = 'motorbike';
@@ -53,6 +55,10 @@ class DatePlannerController extends ChangeNotifier {
   bool _locationPermissionDenied = false;
   String? _locationError;
   final TextEditingController addressController = TextEditingController();
+  final TextEditingController budgetController = TextEditingController();
+
+  /// Days (date-only) that already have a saved plan, circled on the calendar.
+  Set<DateTime> _plannedDates = {};
 
   /// Like/dislike state per backend place id, cached so cards keep their state across rebuilds.
   final Map<int, String> _placePreferences = {};
@@ -60,8 +66,12 @@ class DatePlannerController extends ChangeNotifier {
   // Getters for properties
   DateTime get selectedDate => _selectedDate;
   TimeOfDay get startTime => _startTime;
-  double get durationHours => _durationHours;
-  int get budgetPerPerson => _budgetPerPerson;
+  TimeOfDay get endTime => _endTime;
+  double get durationHours => dateDurationMinutes(_startTime, _endTime) / 60.0;
+  bool get isEndNextDay => endsNextDay(_startTime, _endTime);
+  int? get budgetPerPerson => _budgetPerPerson;
+  bool get canGenerate => isValidBudget(_budgetPerPerson);
+  Set<DateTime> get plannedDates => _plannedDates;
   String get selectedVibe => _selectedVibe;
   int get stageCount => _stageCount;
   String get transportation => _transportation;
@@ -82,25 +92,37 @@ class DatePlannerController extends ChangeNotifier {
 
   /// Updates the selected date and notifies views.
   void setSelectedDate(DateTime date) {
-    _selectedDate = date;
+    _selectedDate = DateUtils.dateOnly(date);
     notifyListeners();
   }
 
-  /// Updates the selected starting time and notifies views.
+  /// Updates the start time; an end time that would leave under an hour moves to start + 1 hour.
   void setStartTime(TimeOfDay time) {
     _startTime = time;
+    if (!isValidDateSpan(_startTime, _endTime)) {
+      _endTime = addMinutes(_startTime, minDateDurationMinutes);
+    }
     notifyListeners();
   }
 
-  /// Updates the selected duration in hours and notifies views.
-  void setDurationHours(double hours) {
-    _durationHours = hours;
+  /// Updates the end time, or returns false and keeps the old one when the date would be under an hour.
+  bool setEndTime(TimeOfDay time) {
+    if (!isValidDateSpan(_startTime, time)) return false;
+    _endTime = time;
     notifyListeners();
+    return true;
   }
 
-  /// Updates the selected budget range and notifies views.
-  void setBudgetPerPerson(int budget) {
+  /// Updates the budget and keeps the budget field showing it.
+  void setBudgetPerPerson(int? budget) {
     _budgetPerPerson = budget;
+    final text = budget == null ? '' : formatVnd(budget);
+    if (budgetController.text != text) {
+      budgetController.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    }
     notifyListeners();
   }
 
@@ -220,6 +242,7 @@ class DatePlannerController extends ChangeNotifier {
   @override
   void dispose() {
     addressController.dispose();
+    budgetController.dispose();
     super.dispose();
   }
 
@@ -247,12 +270,50 @@ class DatePlannerController extends ChangeNotifier {
     }
   }
 
+  /// Loads the days that already have a plan: the server's saved plans when logged in,
+  /// otherwise the day of the one plan cached on this device.
+  Future<void> loadPlannedDates() async {
+    try {
+      final dates = <DateTime>{};
+      if (AuthHelper.isLoggedIn) {
+        final token = AuthHelper.currentAccessToken;
+        final response = await http.get(
+          Uri.parse('${AuthHelper.baseUrl}/api/date-planner/plans'),
+          headers: {
+            if (token != null) 'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
+        if (response.statusCode != 200) return;
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        for (final item in data) {
+          final date = DateTime.tryParse(item['date']?.toString() ?? '');
+          if (date != null) dates.add(DateUtils.dateOnly(date));
+        }
+      } else {
+        final prefs = await SharedPreferences.getInstance();
+        final date = DateTime.tryParse(prefs.getString(_savedPlanDateKey) ?? '');
+        if (date != null) dates.add(DateUtils.dateOnly(date));
+      }
+      _plannedDates = dates;
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Failed to load planned dates: $e");
+    }
+  }
+
+  static const String _savedPlanDateKey = 'saved_date_plan_date';
+
   /// Saves the specified plan locally and keeps track of it.
-  Future<void> savePlan(DatePlan plan) async {
+  /// Pass [date] for a newly generated plan so a guest's calendar can circle its day.
+  Future<void> savePlan(DatePlan plan, {DateTime? date}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = jsonEncode(plan.toJson());
       await prefs.setString('saved_date_plan', jsonStr);
+      if (date != null) {
+        await prefs.setString(_savedPlanDateKey, DateUtils.dateOnly(date).toIso8601String());
+      }
       _savedPlan = plan;
       notifyListeners();
     } catch (e) {
@@ -269,6 +330,10 @@ class DatePlannerController extends ChangeNotifier {
     if (location == null) {
       throw Exception('Vui lòng cho phép truy cập vị trí hoặc nhập địa chỉ của bạn!');
     }
+    final budget = _budgetPerPerson;
+    if (!isValidBudget(budget)) {
+      throw Exception('Ngân sách tối thiểu là ${formatVnd(minBudgetVnd)} VND / người.');
+    }
 
     _isGenerating = true;
     _generationError = null;
@@ -277,12 +342,12 @@ class DatePlannerController extends ChangeNotifier {
     final input = DatePlannerInput(
       date: _selectedDate,
       startTime: _startTime,
-      totalDurationHours: _durationHours,
+      totalDurationHours: durationHours,
       userLatitude: location.latitude,
       userLongitude: location.longitude,
       // "Tuỳ hứng" is re-rolled on every generation, never remembered.
       distancePreference: _distanceChoice.resolve(_random),
-      budgetPerPerson: _budgetPerPerson,
+      budgetPerPerson: budget!,
       vibe: _selectedVibe,
       stageCount: _stageCount,
       transportation: _transportation,
@@ -293,7 +358,8 @@ class DatePlannerController extends ChangeNotifier {
 
     try {
       final plan = await DatePlannerGenerator.generate(input);
-      await savePlan(plan);
+      await savePlan(plan, date: _selectedDate);
+      _plannedDates = AuthHelper.isLoggedIn ? {..._plannedDates, _selectedDate} : {_selectedDate};
       _isGenerating = false;
       setGeneratedPlan(plan);
     } catch (e) {

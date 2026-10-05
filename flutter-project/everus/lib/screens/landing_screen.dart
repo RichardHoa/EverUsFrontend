@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../main.dart';
 import '../models/date_plan.dart';
@@ -37,9 +36,7 @@ class _LandingScreenState extends State<LandingScreen> {
   String? _loverImagePath;
 
   // Mascot Interactive State
-  String _mascotEmotion = 'excited';
   String _mascotComment = 'Chào cậu nhé! Chạm vào tớ đi! 💖';
-  final bool _showMascotComment = true;
   int _tapCount = 0;
 
   @override
@@ -123,9 +120,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
   void _onMascotTap() {
     setState(() {
-      final interaction = kDefaultMascotInteractions[_tapCount];
-      _mascotEmotion = interaction.emotion;
-      _mascotComment = interaction.comment;
+      _mascotComment = kDefaultMascotInteractions[_tapCount].comment;
       _tapCount = (_tapCount + 1) % kDefaultMascotInteractions.length;
     });
   }
@@ -225,82 +220,66 @@ class _LandingScreenState extends State<LandingScreen> {
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 90.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 20),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Layout follows the Figma landing_page frame, drawn
+                      // 1243 units wide (about 3x a phone).
+                      final k = constraints.maxWidth / 1243;
+                      return SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 90.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 76 * k),
 
-                        // App title & brand
-                        Center(
-                          child: Text(
-                            'EverUs',
-                            style: GoogleFonts.playfairDisplay(
-                              fontSize: 44,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF5A384C),
-                              letterSpacing: 1.5,
+                            // Mascot Interactive Section (Isolated repaint)
+                            RepaintBoundary(
+                              child: LandingMascotSection(
+                                comment: _mascotComment,
+                                onTap: _onMascotTap,
+                                scale: k,
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Center(
-                          child: Text(
-                            'Không gian kết nối yêu thương',
-                            style: GoogleFonts.inter(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF7C6E79),
-                              letterSpacing: 0.3,
+                            SizedBox(height: 69 * k),
+
+                            // Quick-view Love Counter (If Anniversary Date configured)
+                            if (_isConfigured)
+                              Padding(
+                                padding: EdgeInsets.only(left: 101.17 * k, bottom: 130 * k),
+                                child: RepaintBoundary(
+                                  child: MiniLoveCounter(
+                                    loveDays: _loveDays,
+                                    userName: _loveSettings['userName'] ?? '',
+                                    loverName: _loveSettings['loverName'] ?? '',
+                                    userImageExists: _userImageExists,
+                                    loverImageExists: _loverImageExists,
+                                    userImagePath: _userImagePath,
+                                    loverImagePath: _loverImagePath,
+                                    onTap: _navigateToLoveCounter,
+                                    scale: k,
+                                  ),
+                                ),
+                              ),
+
+                            // Side-by-Side Action Cards (Date Planner & Relationship Reflection)
+                            RepaintBoundary(
+                              child: FeatureActionCards(
+                                scale: k,
+                                onDatePlannerTap: () {
+                                  DatePlannerOptionsDialog.show(
+                                    context,
+                                    onPlanCustom: _navigateToCustomDatePlanner,
+                                    onChallenge: _navigateToDatePlanner,
+                                  );
+                                },
+                                onReflectionTap: _navigateToReflection,
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 14),
-
-                        // Mascot Interactive Section (Isolated repaint)
-                        RepaintBoundary(
-                          child: LandingMascotSection(
-                            emotion: _mascotEmotion,
-                            comment: _mascotComment,
-                            showComment: _showMascotComment,
-                            onTap: _onMascotTap,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Quick-view Love Counter (If Anniversary Date configured)
-                        if (_isConfigured)
-                          RepaintBoundary(
-                            child: MiniLoveCounter(
-                              loveDays: _loveDays,
-                              userName: _loveSettings['userName'] ?? '',
-                              loverName: _loveSettings['loverName'] ?? '',
-                              isConfigured: _isConfigured,
-                              userImageExists: _userImageExists,
-                              loverImageExists: _loverImageExists,
-                              userImagePath: _userImagePath,
-                              loverImagePath: _loverImagePath,
-                              onTap: _navigateToLoveCounter,
-                            ),
-                          ),
-
-                        // Side-by-Side Action Cards (Date Planner & Relationship Reflection)
-                        RepaintBoundary(
-                          child: FeatureActionCards(
-                            onDatePlannerTap: () {
-                              DatePlannerOptionsDialog.show(
-                                context,
-                                onPlanCustom: _navigateToCustomDatePlanner,
-                                onChallenge: _navigateToDatePlanner,
-                              );
-                            },
-                            onReflectionTap: _navigateToReflection,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
 
@@ -310,7 +289,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   right: 16,
                   child: ValueListenableBuilder<bool>(
                     valueListenable: NotificationManager.refreshNotifier,
-                    builder: (context, _, __) {
+                    builder: (context, _, _) {
                       final bool hasUnreadNoti = AuthHelper.isLoggedIn &&
                           NotificationManager.instance.notifications.any((n) => n['is_read'] == false);
                       return Stack(
