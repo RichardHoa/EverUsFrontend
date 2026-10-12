@@ -213,30 +213,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // Mascot & Brand Header
                       Center(
-                        child: Text(
-                          widget.isProfileMode ? 'Hồ sơ của bạn' : 'EverUs',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF5A384C),
-                            letterSpacing: 1.2,
-                          ),
+                        child: Image.asset('assets/images/login_mascots.png', width: 190),
+                      ),
+                      const SizedBox(height: 14),
+                      Center(
+                        child: Image.asset(
+                          'assets/images/logo_wordmark.png',
+                          width: 240,
+                          semanticLabel: 'EverUs',
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          widget.isProfileMode
-                              ? 'Xem & cập nhật thông tin tài khoản'
-                              : 'Kết nối và lưu giữ khoảnh khắc',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF7C6E79),
+                          'kết nối với nửa kia của bạn',
+                          style: GoogleFonts.nunito(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFFBDA9B4),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 22),
 
                       // Glassmorphic Card Container
                       Container(
@@ -257,13 +255,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         child: (widget.isProfileMode && AuthHelper.isLoggedIn)
-                            ? ProfileView(
-                                name: AuthHelper.currentUserName ?? 'Người ấy',
-                                email: AuthHelper.currentUserEmail ?? '',
-                                errorMessage: _errorMessage,
-                                isLoading: _isLoading,
-                                onSignOut: _handleSignOut,
-                                onEditAnswers: QuestionnaireHelper.canEditAnswers ? _handleEditAnswers : null,
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _cardTitle('Hồ sơ của bạn'),
+                                  const SizedBox(height: 16),
+                                  ProfileView(
+                                    name: AuthHelper.currentUserName ?? 'Người ấy',
+                                    email: AuthHelper.currentUserEmail ?? '',
+                                    errorMessage: _errorMessage,
+                                    isLoading: _isLoading,
+                                    onSignOut: _handleSignOut,
+                                    onEditAnswers: QuestionnaireHelper.canEditAnswers ? _handleEditAnswers : null,
+                                  ),
+                                ],
                               )
                             : _buildAuthForm(),
                       ),
@@ -276,7 +281,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
         ],
       ),
-      bottomNavigationBar: widget.isOnboardingMode ? null : const EverUsFooter(currentTab: 'account'),
+      bottomNavigationBar: EverUsFooter(
+        currentTab: 'account',
+        onHomeTap: widget.isOnboardingMode ? _continueAsGuest : null,
+      ),
+    );
+  }
+
+  void _continueAsGuest() {
+    if (widget.onContinueAsGuest != null) {
+      widget.onContinueAsGuest!();
+    } else if (Navigator.canPop(context)) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Widget _cardTitle(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.comfortaa(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: const Color(0xFF5A384C),
+      ),
+      textAlign: TextAlign.center,
     );
   }
 
@@ -286,16 +314,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Title
-          Text(
-            _isSignUp ? 'Đăng ký' : 'Đăng nhập',
-            style: GoogleFonts.comfortaa(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF5A384C),
-            ),
-            textAlign: TextAlign.center,
-          ),
+          _cardTitle(_isSignUp ? 'Đăng ký' : 'Đăng nhập'),
           const SizedBox(height: 16),
 
           // Error banner
@@ -501,19 +520,13 @@ class _LoginScreenState extends State<LoginScreen> {
           if (widget.isOnboardingMode) ...[
             const SizedBox(height: 18),
             GestureDetector(
-              onTap: () {
-                if (widget.onContinueAsGuest != null) {
-                  widget.onContinueAsGuest!();
-                } else if (Navigator.canPop(context)) {
-                  Navigator.of(context).pop();
-                }
-              },
+              onTap: _continueAsGuest,
               child: Center(
                 child: Text(
                   'Bỏ qua & Tiếp tục thiết lập ➔',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: const Color(0xFF8B5CF6),
+                    color: const Color(0xFF5A384C),
                     fontWeight: FontWeight.w600,
                     decoration: TextDecoration.underline,
                   ),

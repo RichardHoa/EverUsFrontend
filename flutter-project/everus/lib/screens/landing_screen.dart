@@ -37,6 +37,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
   // Mascot Interactive State
   String _mascotComment = 'Chào cậu nhé! Chạm vào tớ đi! 💖';
+  String _mascotImage = kDefaultMascotImage;
   int _tapCount = 0;
 
   @override
@@ -120,7 +121,9 @@ class _LandingScreenState extends State<LandingScreen> {
 
   void _onMascotTap() {
     setState(() {
-      _mascotComment = kDefaultMascotInteractions[_tapCount].comment;
+      final interaction = kDefaultMascotInteractions[_tapCount];
+      _mascotComment = interaction.comment;
+      _mascotImage = interaction.image;
       _tapCount = (_tapCount + 1) % kDefaultMascotInteractions.length;
     });
   }
@@ -236,6 +239,7 @@ class _LandingScreenState extends State<LandingScreen> {
                             // Mascot Interactive Section (Isolated repaint)
                             RepaintBoundary(
                               child: LandingMascotSection(
+                                image: _mascotImage,
                                 comment: _mascotComment,
                                 onTap: _onMascotTap,
                                 scale: k,

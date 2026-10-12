@@ -55,6 +55,11 @@ ArcLabelFit fitArcLabel({
   return ArcLabelFit([...graphemes, '…'], shrunk);
 }
 
+TextPainter _glyphPainter(String g, TextStyle style, double fontSize) => TextPainter(
+      text: TextSpan(text: g, style: style.copyWith(fontSize: fontSize)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
 /// Draws [name] along a circular arc around a point, glyphs standing upright
 /// on the outside of the circle. The widget is a square of [size] whose centre
 /// is the circle's centre.
@@ -81,6 +86,24 @@ class ArcNameLabel extends StatelessWidget {
     this.maxSweep = math.pi,
     this.spacing = 0.45,
   });
+
+  /// The angle the drawn name covers, in radians, once fitted to the arc.
+  double get sweep {
+    final fit = fitArcLabel(
+      text: name,
+      fontSize: style.fontSize ?? 14,
+      radius: radius,
+      maxSweep: maxSweep,
+      spacing: spacing,
+      measure: (g, fs) => _glyphPainter(g, style, fs).width,
+    );
+    if (fit.graphemes.isEmpty) return 0;
+    var width = spacing * fit.fontSize * (fit.graphemes.length - 1);
+    for (final g in fit.graphemes) {
+      width += _glyphPainter(g, style, fit.fontSize).width;
+    }
+    return width / radius;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,10 +140,7 @@ class _ArcNamePainter extends CustomPainter {
     required this.spacing,
   });
 
-  TextPainter _glyph(String g, double fontSize) => TextPainter(
-        text: TextSpan(text: g, style: style.copyWith(fontSize: fontSize)),
-        textDirection: TextDirection.ltr,
-      )..layout();
+  TextPainter _glyph(String g, double fontSize) => _glyphPainter(g, style, fontSize);
 
   @override
   void paint(Canvas canvas, Size size) {

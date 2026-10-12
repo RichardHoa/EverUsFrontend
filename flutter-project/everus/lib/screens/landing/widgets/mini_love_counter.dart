@@ -38,11 +38,24 @@ class MiniLoveCounter extends StatelessWidget {
   static const _circleDiameter = 225.5;
   static const _nameRadius = 134.0;
   static const _nameBox = 2 * (_nameRadius + 40);
+  static const _userCenterX = 267.8;
+  static const _loverCenterX = 778.0;
+  static const _counterGap = 20.0;
+  static const _nameAngle = 35.0;
+  static const _nameFontSize = 32.0;
+
+  /// Names further than this from 12 o'clock, in degrees, sit below the
+  /// counter row.
+  static const _counterRowAngle = 40.0;
 
   @override
   Widget build(BuildContext context) {
     final k = scale;
     final radius = BorderRadius.circular(76.8 * k);
+    final userLabel = _nameLabel(userName, -_nameAngle);
+    final loverLabel = _nameLabel(loverName, _nameAngle);
+    final left = _userCenterX + _nameReach(userLabel) + _counterGap;
+    final right = _loverCenterX - _nameReach(loverLabel) - _counterGap;
 
     return Container(
       width: _cardWidth * k,
@@ -82,34 +95,39 @@ class MiniLoveCounter extends StatelessWidget {
                   ),
                 ),
               ),
+              // Long counts shrink so the row stays between the two circle
+              // centres, clear of the arc names.
               Positioned(
-                left: 0,
-                right: 0,
-                top: 124 * k,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '$loveDays',
-                      style: GoogleFonts.inter(
-                        fontSize: 150.29 * k,
-                        fontWeight: FontWeight.w700,
-                        color: _ink,
-                        height: 1.0,
+                left: left * k,
+                width: (right - left) * k,
+                top: 134 * k,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '$loveDays',
+                        style: GoogleFonts.inter(
+                          fontSize: 120 * k,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                          height: 1.0,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 30 * k),
-                    Text(
-                      'ngày',
-                      style: GoogleFonts.nunito(
-                        fontSize: 50.88 * k,
-                        fontWeight: FontWeight.w600,
-                        color: _ink,
+                      SizedBox(width: 24 * k),
+                      Text(
+                        'ngày',
+                        style: GoogleFonts.nunito(
+                          fontSize: 42 * k,
+                          fontWeight: FontWeight.w600,
+                          color: _ink,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               Positioned(
@@ -119,19 +137,19 @@ class MiniLoveCounter extends StatelessWidget {
                 child: Image.asset('assets/images/love_thread.png'),
               ),
               _circle(
-                centerX: 267.8,
+                centerX: _userCenterX,
                 fill: const Color(0xFFF9DCF2),
                 stroke: const Color(0xFFF0B1DE),
                 imagePath: userImageExists ? userImagePath : null,
               ),
               _circle(
-                centerX: 778.0,
+                centerX: _loverCenterX,
                 fill: const Color(0xFFE4E5BD),
                 stroke: const Color(0xFFDAE096),
                 imagePath: loverImageExists ? loverImagePath : null,
               ),
-              _name(centerX: 267.8, name: userName, centerAngle: -35),
-              _name(centerX: 778.0, name: loverName, centerAngle: 35),
+              _name(centerX: _userCenterX, label: userLabel),
+              _name(centerX: _loverCenterX, label: loverLabel),
             ],
           ),
         ),
@@ -173,27 +191,37 @@ class MiniLoveCounter extends StatelessWidget {
     );
   }
 
-  Widget _name({
-    required double centerX,
-    required String name,
-    required double centerAngle,
-  }) {
+  /// How far past its circle's centre a name reaches towards the middle of
+  /// the card, counting only the part of the arc high enough to meet the
+  /// counter row.
+  static double _nameReach(ArcNameLabel label) {
+    final innerEnd = label.sweep / 2 - _nameAngle * math.pi / 180;
+    return (_nameRadius + _nameFontSize) *
+        math.sin(innerEnd.clamp(0.0, _counterRowAngle * math.pi / 180));
+  }
+
+  ArcNameLabel _nameLabel(String name, double centerAngle) {
+    final k = scale;
+    return ArcNameLabel(
+      name: name,
+      size: _nameBox * k,
+      radius: _nameRadius * k,
+      centerAngle: centerAngle * math.pi / 180,
+      style: GoogleFonts.nunito(
+        fontSize: _nameFontSize * k,
+        fontWeight: FontWeight.w600,
+        color: _ink,
+      ),
+    );
+  }
+
+  Widget _name({required double centerX, required ArcNameLabel label}) {
     final k = scale;
     final box = _nameBox * k;
     return Positioned(
       left: centerX * k - box / 2,
       top: _circleCenterY * k - box / 2,
-      child: ArcNameLabel(
-        name: name,
-        size: box,
-        radius: _nameRadius * k,
-        centerAngle: centerAngle * math.pi / 180,
-        style: GoogleFonts.nunito(
-          fontSize: 32 * k,
-          fontWeight: FontWeight.w600,
-          color: _ink,
-        ),
-      ),
+      child: label,
     );
   }
 }

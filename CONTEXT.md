@@ -35,4 +35,12 @@ The ordering applied to a Stage's Backup options. For Stage 1 and later, ranked 
 
 **Love counter**:
 The couple's "days together" count, measured from their chosen anniversary date, shown alongside both partners' chosen names and photos. Must be set up before the landing screen is usable.
-_Avoid_: Day counter, anniversary tracker
+_Avoid_: Day counter, date counter, anniversary tracker
+
+**Display language**:
+The language of the app's UI chrome (labels, buttons, hints, app-generated messages), chosen by the user as Vietnamese (default) or English and remembered per device. Distinct from **Content**, which keeps its own language regardless of the Display language.
+_Avoid_: Locale (when you mean the user's choice), app language
+
+**Content**:
+Text that is the substance of a feature rather than its chrome — Questionnaire questions and answer options, Reflection text, and text the backend returns. Always shown as authored (Vietnamese), never translated by the Display language.
+_Avoid_: Copy, strings

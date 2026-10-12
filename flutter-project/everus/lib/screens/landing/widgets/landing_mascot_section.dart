@@ -3,36 +3,44 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+const String kDefaultMascotImage = 'assets/images/mascot_yarn.png';
+const String _pinkHappy = 'assets/images/mascot_pink_happy.png';
+const String _pinkCheeky = 'assets/images/mascot_pink_cheeky.png';
+const String _greenGlasses = 'assets/images/mascot_green_glasses.png';
+const String _pair = 'assets/images/mascot_pair.png';
+
+/// One tap reaction: the bubble's comment and the mascot face shown with it.
+/// Every image shares the yarn ball's canvas so faces swap in place.
 class MascotInteraction {
-  final String emotion;
+  final String image;
   final String comment;
 
-  const MascotInteraction({required this.emotion, required this.comment});
+  const MascotInteraction({required this.image, required this.comment});
 }
 
 const List<MascotInteraction> kDefaultMascotInteractions = [
   MascotInteraction(
-    emotion: 'happy',
+    image: _greenGlasses,
     comment: 'Hôm nay tụi mình đi đâu chơi nhỉ? 🤔',
   ),
   MascotInteraction(
-    emotion: 'love',
+    image: _pinkHappy,
     comment: 'Yêu cậu nhiều lắm á! ♥',
   ),
   MascotInteraction(
-    emotion: 'excited',
+    image: _pinkCheeky,
     comment: 'Lên lịch hẹn hò thôi! Tớ đã sẵn sàng! 🚀',
   ),
   MascotInteraction(
-    emotion: 'celebrating',
+    image: kDefaultMascotImage,
     comment: 'Cùng tạo nên thật nhiều kỉ niệm nhé! 🥳',
   ),
   MascotInteraction(
-    emotion: 'thinking',
+    image: _pair,
     comment: 'Hai cậu trông thật là đẹp đôi luôn á! 💑',
   ),
   MascotInteraction(
-    emotion: 'happy',
+    image: _pinkCheeky,
     comment: 'Chạm vào tớ tiếp đi, tớ thích lắm! 🥰',
   ),
 ];
@@ -41,12 +49,14 @@ const List<MascotInteraction> kDefaultMascotInteractions = [
 /// `landing_page` frame. Measurements are in the frame's units (about 3x a
 /// phone); [scale] maps them to the screen.
 class LandingMascotSection extends StatefulWidget {
+  final String image;
   final String comment;
   final VoidCallback onTap;
   final double scale;
 
   const LandingMascotSection({
     super.key,
+    required this.image,
     required this.comment,
     required this.onTap,
     required this.scale,
@@ -71,6 +81,23 @@ class _LandingMascotSectionState extends State<LandingMascotSection>
     vsync: this,
     duration: const Duration(milliseconds: 550),
   );
+
+  /// The face to keep showing until the tap hop reaches its top.
+  String? _previousImage;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    for (final m in kDefaultMascotInteractions) {
+      precacheImage(AssetImage(m.image), context);
+    }
+  }
+
+  @override
+  void didUpdateWidget(LandingMascotSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.image != widget.image) _previousImage = oldWidget.image;
+  }
 
   @override
   void dispose() {
@@ -108,6 +135,9 @@ class _LandingMascotSectionState extends State<LandingMascotSection>
                   final squish = math.sin(p * 2 * math.pi) * (1 - p) * 0.12;
                   final hop = math.sin(p * math.pi) * 24 * k;
                   final breathe = 1 + 0.02 * math.sin(t);
+                  final image = _previousImage != null && _tap.isAnimating && p < 0.5
+                      ? _previousImage!
+                      : widget.image;
                   return Transform.translate(
                     offset: Offset(0, math.sin(t) * 10 * k - hop),
                     child: Transform(
@@ -117,14 +147,18 @@ class _LandingMascotSectionState extends State<LandingMascotSection>
                         breathe * (1 - squish),
                         1,
                       ),
-                      child: child,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Image.asset(
+                          image,
+                          key: ValueKey(image),
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                        ),
+                      ),
                     ),
                   );
                 },
-                child: Image.asset(
-                  'assets/images/mascot_yarn.png',
-                  fit: BoxFit.contain,
-                ),
               ),
             ),
           ),

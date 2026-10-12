@@ -5,9 +5,14 @@ import '../utils/auth_helper.dart';
 class EverUsFooter extends StatelessWidget {
   final String currentTab; // 'home' | 'account' | 'other'
 
+  /// Replaces the default Home navigation, e.g. to continue as a guest when
+  /// there is no home route underneath yet.
+  final VoidCallback? onHomeTap;
+
   const EverUsFooter({
     super.key,
     required this.currentTab,
+    this.onHomeTap,
   });
 
   void _navigateToProfile(BuildContext context) {
@@ -22,6 +27,7 @@ class EverUsFooter extends StatelessWidget {
   }
 
   void _navigateToHome(BuildContext context) {
+    if (onHomeTap != null) return onHomeTap!();
     if (currentTab == 'home') return;
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
