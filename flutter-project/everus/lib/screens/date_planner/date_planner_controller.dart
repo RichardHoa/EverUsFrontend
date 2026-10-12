@@ -11,6 +11,7 @@ import '../../utils/date_time_span.dart';
 import '../../utils/distance_preference.dart';
 import '../../utils/location_service.dart';
 import '../../utils/vnd_budget.dart';
+import '../../utils/display_language_helper.dart';
 
 /// Controller managing state and logic for the Date Planner screen.
 ///
@@ -173,7 +174,7 @@ class DatePlannerController extends ChangeNotifier {
   Future<void> setManualAddress(String address) async {
     final trimmed = address.trim();
     if (trimmed.isEmpty) {
-      _locationError = 'Vui lòng nhập địa chỉ của bạn!';
+      _locationError = DisplayLanguageHelper.strings.plannerAddressRequired;
       notifyListeners();
       return;
     }
@@ -328,11 +329,11 @@ class DatePlannerController extends ChangeNotifier {
   Future<void> generatePlan() async {
     final location = _userLocation;
     if (location == null) {
-      throw Exception('Vui lòng cho phép truy cập vị trí hoặc nhập địa chỉ của bạn!');
+      throw Exception(DisplayLanguageHelper.strings.plannerLocationRequired);
     }
     final budget = _budgetPerPerson;
     if (!isValidBudget(budget)) {
-      throw Exception('Ngân sách tối thiểu là ${formatVnd(minBudgetVnd)} VND / người.');
+      throw Exception(DisplayLanguageHelper.strings.plannerMinBudget(formatVnd(minBudgetVnd)));
     }
 
     _isGenerating = true;

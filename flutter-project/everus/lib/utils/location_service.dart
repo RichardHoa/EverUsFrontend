@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'api_client.dart';
+import 'display_language_helper.dart';
 
 class UserLocation {
   final double latitude;
@@ -17,7 +18,7 @@ class LocationPermissionDeniedException implements Exception {
   const LocationPermissionDeniedException();
 
   @override
-  String toString() => 'Không thể truy cập vị trí. Hãy nhập địa chỉ của bạn nhé!';
+  String toString() => DisplayLanguageHelper.strings.errorLocationUnavailable;
 }
 
 class LocationLookupException implements Exception {
@@ -77,6 +78,6 @@ class DeviceLocationService implements LocationService {
         label: data['display_name'] as String? ?? address,
       );
     }
-    throw const LocationLookupException('Không tìm thấy địa chỉ này. Hãy thử nhập chi tiết hơn nhé!');
+    throw LocationLookupException(DisplayLanguageHelper.strings.errorAddressNotFound);
   }
 }

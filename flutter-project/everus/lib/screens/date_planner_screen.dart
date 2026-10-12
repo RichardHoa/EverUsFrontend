@@ -11,6 +11,7 @@ import 'date_planner/widgets/date_planner_generating.dart';
 import 'date_planner/widgets/date_planner_loading.dart';
 import 'date_planner/widgets/date_planner_error.dart';
 import 'notifications_screen.dart';
+import '../l10n/l10n.dart';
 
 /// The entry screen wrapper for the Date Planner feature.
 ///
@@ -173,8 +174,8 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                 const SizedBox(width: 14),
                 Text(
                   isViewingError
-                      ? 'Không Tìm Thấy Địa Điểm'
-                      : (isViewingResult ? 'Lộ Trình Hẹn Hò' : 'Thiết Kế Hẹn Hò'),
+                      ? context.l10n.plannerNoPlacesTitle
+                      : (isViewingResult ? context.l10n.plannerItineraryTitle : context.l10n.plannerTitle),
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -187,7 +188,7 @@ class _DatePlannerScreenState extends State<DatePlannerScreen> {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      'Thiết Kế Hẹn Hò',
+                      context.l10n.plannerTitle,
                       maxLines: 1,
                       style: GoogleFonts.nunito(
                         // Figma: 92.6 units on the 1316-wide frame.

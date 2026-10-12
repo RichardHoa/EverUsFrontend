@@ -4,6 +4,7 @@ import '../models/activity.dart';
 import 'api_client.dart';
 
 import '../models/date_plan.dart';
+import 'display_language_helper.dart';
 
 class DatePlannerGenerator {
   static Future<DatePlan> generate(DatePlannerInput input) async {
@@ -16,7 +17,7 @@ class DatePlannerGenerator {
         body: jsonEncode(input.toJson()),
       );
     } catch (e) {
-      throw Exception('Không thể kết nối tới máy chủ EverUs. Vui lòng thử lại!');
+      throw Exception(DisplayLanguageHelper.strings.errorPlannerConnection);
     }
 
     if (response.statusCode != 200) {
@@ -24,7 +25,7 @@ class DatePlannerGenerator {
       try {
         detail = (jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>)['detail']?.toString();
       } catch (_) {}
-      throw Exception(detail ?? 'Không thể tạo kế hoạch (lỗi ${response.statusCode}). Vui lòng thử lại!');
+      throw Exception(detail ?? DisplayLanguageHelper.strings.errorPlanFailed(response.statusCode));
     }
 
     final data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -51,7 +52,7 @@ class DatePlannerGenerator {
 
     return DatePlan(
       id: data['id']?.toString(),
-      dateType: data['dateType'] ?? 'Kế hoạch Hẹn hò',
+      dateType: data['dateType'] ?? DisplayLanguageHelper.strings.plannerDefaultDateType,
       vibe: input.vibe,
       emoji: data['emoji'] ?? '📅',
       totalDurationMinutes: data['totalDurationMinutes'] ?? 0,

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/activity.dart';
 import 'preference_matcher.dart';
 import 'spider_graph.dart';
+import '../l10n/l10n.dart';
 
 class ResultsDashboard extends StatefulWidget {
   final MatcherResult result;
@@ -70,7 +71,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
           onPressed: widget.onBack,
         ),
         title: Text(
-          'Kết quả tương thích',
+          context.l10n.dashboardTitle,
           style: GoogleFonts.playfairDisplay(
             color: Colors.grey.shade900,
             fontWeight: FontWeight.bold,
@@ -149,7 +150,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                             Column(
                               children: [
                                 Text(
-                                  'Độ tương hợp',
+                                  context.l10n.dashboardCompatibility,
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
                                     color: Colors.white.withValues(alpha: 0.9),
@@ -208,7 +209,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                     child: Column(
                                       children: [
                                         Text(
-                                          'Ngân sách',
+                                          context.l10n.dashboardBudget,
                                           style: GoogleFonts.inter(
                                             fontSize: 10,
                                             color: Colors.grey.shade500,
@@ -239,7 +240,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                     child: Column(
                                       children: [
                                         Text(
-                                          'Mức độ',
+                                          context.l10n.dashboardLevels,
                                           style: GoogleFonts.inter(
                                             fontSize: 10,
                                             color: Colors.grey.shade500,
@@ -247,7 +248,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          '${selectedActivity.levels.length} hoạt động',
+                                          context.l10n.dashboardActivityCount(selectedActivity.levels.length),
                                           style: GoogleFonts.inter(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
@@ -276,7 +277,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    "Bắt đầu ngay! ",
+                                    context.l10n.dashboardStartNow,
                                     style: GoogleFonts.inter(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -316,7 +317,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Sở thích của hai bạn',
+                      context.l10n.dashboardYourPreferences,
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -366,7 +367,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Tất cả ý tưởng (${activities.length} tổng số)',
+                      context.l10n.dashboardAllIdeas(activities.length),
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -474,7 +475,7 @@ class _ResultsDashboardState extends State<ResultsDashboard> {
           SizedBox(
             width: 70,
             child: Text(
-              dim.label,
+              dimensionLabel(context.l10n, idx),
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,

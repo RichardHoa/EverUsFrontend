@@ -9,6 +9,7 @@ import '../../../utils/auth_helper.dart';
 import '../../create_invite_screen.dart';
 import '../../saved_plans_screen.dart';
 import '../date_planner_controller.dart';
+import '../../../l10n/l10n.dart';
 
 /// Renders the generated date plan itinerary, with timeline stages and maps links.
 class DatePlannerResults extends StatefulWidget {
@@ -59,7 +60,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
   }
 
   String _areaLabel(DatePlan plan) =>
-      (plan.area != null && plan.area!.isNotEmpty) ? plan.area! : 'Gần bạn';
+      (plan.area != null && plan.area!.isNotEmpty) ? plan.area! : context.l10n.resultsNearYou;
 
   String _formatDate(DateTime dt) {
     final day = dt.day.toString().padLeft(2, '0');
@@ -77,54 +78,55 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
 
   void _sharePlanText(DatePlan plan) {
     final buffer = StringBuffer();
-    buffer.writeln("✨ KẾ HOẠCH HẸN HÒ: ${plan.dateType} ${plan.emoji} ✨");
-    buffer.writeln("📅 Ngày hẹn: ${_formatDate(widget.controller.selectedDate)}");
-    buffer.writeln("⏱️ Tổng thời lượng: ${plan.totalDurationMinutes} phút (~${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)} tiếng)");
+    final l = context.l10n;
+    buffer.writeln(l.shareHeader(plan.dateType, plan.emoji));
+    buffer.writeln(l.shareDate(_formatDate(widget.controller.selectedDate)));
+    buffer.writeln(l.shareTotalDuration(plan.totalDurationMinutes, (plan.totalDurationMinutes / 60.0).toStringAsFixed(1)));
     final budgetVal = plan.budgetPerPerson ?? widget.controller.budgetPerPerson;
     if (budgetVal != null && budgetVal > 0) {
-      buffer.writeln("💰 Ngân sách: ${_formatBudget(budgetVal)} / người");
+      buffer.writeln(l.shareBudget(_formatBudget(budgetVal)));
     }
-    buffer.writeln("📍 Khu vực: ${_areaLabel(plan)}");
-    buffer.writeln("🏍️ Phương tiện: ${widget.controller.transportation == 'walking' ? 'Đi bộ' : widget.controller.transportation == 'motorbike' ? 'Xe máy' : 'Taxi'}\n");
-    buffer.writeln("🎯 Mục tiêu buổi hẹn: ${plan.purpose}\n");
+    buffer.writeln(l.shareArea(_areaLabel(plan)));
+    buffer.writeln("${l.shareTransport(transportLabel(l, widget.controller.transportation))}\n");
+    buffer.writeln("${l.sharePurpose(plan.purpose)}\n");
     buffer.writeln("-----------------------------------------");
 
     for (var stage in plan.stages) {
-      buffer.writeln("📍 Chặng ${stage.stageNum}: ${stage.title}");
-      buffer.writeln("⏰ Thời gian: ${stage.startTime} - ${stage.endTime} (${stage.durationMinutes} phút)");
-      buffer.writeln("🎯 Mục tiêu: ${stage.purpose}");
-      buffer.writeln("🍴 Thể loại: ${stage.category}");
+      buffer.writeln(l.shareStage(stage.stageNum, stage.title));
+      buffer.writeln(l.shareStageTime(stage.startTime, stage.endTime, stage.durationMinutes));
+      buffer.writeln(l.shareStagePurpose(stage.purpose));
+      buffer.writeln(l.shareStageCategory(stage.category));
       
       if (stage.options.isNotEmpty) {
         final pickedOpt = stage.options.first;
         final priceText = pickedOpt.formattedPriceRange.isNotEmpty ? " (${pickedOpt.formattedPriceRange})" : "";
-        buffer.writeln("📍 Địa điểm: ${pickedOpt.name}$priceText");
+        buffer.writeln(l.sharePlace("${pickedOpt.name}$priceText"));
         if (pickedOpt.address.isNotEmpty) {
-          buffer.writeln("   Địa chỉ: ${pickedOpt.address}");
+          buffer.writeln(l.shareAddress(pickedOpt.address));
         }
         if (pickedOpt.mapsUrl.isNotEmpty) {
           buffer.writeln("   🗺️ Google Maps: ${pickedOpt.mapsUrl}");
         }
       }
-      buffer.writeln("✨ Hoạt động gợi ý:");
+      buffer.writeln(l.shareTasks);
       for (var task in stage.tasks) {
         buffer.writeln("  • $task");
       }
       if (stage.tips.isNotEmpty) {
-        buffer.writeln("💡 Mách nhỏ:");
+        buffer.writeln(l.shareTips);
         for (var tip in stage.tips) {
           buffer.writeln("  • $tip");
         }
       }
       buffer.writeln("-----------------------------------------");
     }
-    buffer.writeln("👉 Tạo kế hoạch hẹn hò của riêng bạn trên app EverUs!");
+    buffer.writeln(l.shareFooter);
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('📋 Đã sao chép lộ trình vào bộ nhớ tạm!'),
-        backgroundColor: Color(0xFF653851),
+      SnackBar(
+        content: Text(l.shareCopied),
+        backgroundColor: const Color(0xFF653851),
       ),
     );
   }
@@ -163,7 +165,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "DATE TYPE SUGGESTION",
+                  context.l10n.resultsDateTypeSuggestion,
                   style: GoogleFonts.inter(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -195,7 +197,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                   children: [
                     _buildResultMetaBadge(label: _formatDate(widget.controller.selectedDate)),
                     _buildResultMetaBadge(
-                      label: "${plan.totalDurationMinutes} phút (~${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)}h)",
+                      label: context.l10n.resultsDurationBadge(plan.totalDurationMinutes, (plan.totalDurationMinutes / 60.0).toStringAsFixed(1)),
                     ),
                     _buildResultMetaBadge(label: _areaLabel(plan)),
                   ],
@@ -213,7 +215,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
             child: Text(
-              'LỘ TRÌNH CHI TIẾT',
+              context.l10n.resultsStagesTitle,
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -264,7 +266,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                 elevation: 2,
               ),
               child: Text(
-                'MỞ BẢN ĐỒ TOÀN LỘ TRÌNH',
+                context.l10n.resultsOpenFullMap,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -280,26 +282,26 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildCompactActionButton(
-                label: 'Tạo lại',
+                label: context.l10n.resultsRegenerate,
                 onTap: () async {
                   try {
                     await widget.controller.generatePlan();
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Không thể tạo lại kế hoạch: $e')),
+                        SnackBar(content: Text(context.l10n.resultsRegenerateFailed(e.toString()))),
                       );
                     }
                   }
                 },
               ),
               _buildCompactActionButton(
-                label: 'Sao chép',
+                label: context.l10n.resultsCopy,
                 onTap: () => _sharePlanText(plan),
               ),
               if (AuthHelper.isLoggedIn)
                 _buildCompactActionButton(
-                  label: 'Lịch sử',
+                  label: context.l10n.resultsHistory,
                   onTap: () async {
                     final selectedPlan = await Navigator.push<DatePlan>(
                       context,
@@ -333,8 +335,8 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
           activityName: plan.dateType,
           initialDate: widget.controller.selectedDate,
           initialTime: startTimeStr,
-          initialLocation: locationName.isNotEmpty ? locationName : "Khu vực trung tâm",
-          duration: "${(plan.totalDurationMinutes / 60.0).toStringAsFixed(1)} tiếng",
+          initialLocation: locationName.isNotEmpty ? locationName : context.l10n.resultsCentralArea,
+          duration: context.l10n.resultsHours((plan.totalDurationMinutes / 60.0).toStringAsFixed(1)),
           primaryColor: plan.theme.primary,
           secondaryColor: plan.theme.secondary,
           planId: plan.id,
@@ -376,7 +378,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Lời mời đã được chấp nhận!',
+                    context.l10n.resultsInviteAccepted,
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -385,7 +387,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Đối phương đã đồng ý tham gia buổi hẹn hò này.',
+                    context.l10n.resultsInviteAcceptedBody,
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: const Color(0xFF047857),
@@ -414,7 +416,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
         elevation: 2,
       ),
       child: Text(
-        hasInvite ? 'XEM / GỬI LẠI LỜI MỜI HẸN HÒ' : 'GỬI LỜI MỜI HẸN HÒ',
+        hasInvite ? context.l10n.resultsResendInvite : context.l10n.resultsSendInvite,
         style: GoogleFonts.inter(
           fontSize: 14,
           fontWeight: FontWeight.bold,
@@ -495,7 +497,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
       child: Column(
         children: [
           Text(
-            "Mục Tiêu Buổi Hẹn",
+            context.l10n.resultsPurposeTitle,
             style: GoogleFonts.playfairDisplay(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -627,11 +629,11 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildDetailRow("Mục đích", stage.purpose),
+                          _buildDetailRow(context.l10n.resultsStagePurpose, stage.purpose),
                           const SizedBox(height: 8),
-                          _buildDetailRow("Thể loại", stage.category),
+                          _buildDetailRow(context.l10n.resultsStageCategory, stage.category),
                           const SizedBox(height: 8),
-                          _buildDetailRow("Thời lượng", "${stage.durationMinutes} phút"),
+                          _buildDetailRow(context.l10n.resultsStageDuration, context.l10n.resultsMinutes(stage.durationMinutes)),
                           
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 12.0),
@@ -639,7 +641,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                           ),
 
                           Text(
-                            "Hoạt động gợi ý",
+                            context.l10n.resultsSuggestedTasks,
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -655,7 +657,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                               child: Divider(color: Color(0xFFF3F4F6)),
                             ),
                             Text(
-                              "Địa điểm gợi ý",
+                              context.l10n.resultsSuggestedPlaces,
                               style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: theme.dark),
                             ),
                             const SizedBox(height: 6),
@@ -686,8 +688,8 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                                 ),
                                 label: Text(
                                   widget.controller.expandedStageBackups.contains(stage.stageNum)
-                                      ? "Thu gọn lựa chọn dự phòng"
-                                      : "Xem thêm lựa chọn dự phòng (${stage.options.length - 1})",
+                                      ? context.l10n.resultsHideBackups
+                                      : context.l10n.resultsShowBackups(stage.options.length - 1),
                                   style: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -706,7 +708,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                           if (stage.tips.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Text(
-                              "Mách Nhỏ Cho Hai Bạn",
+                              context.l10n.resultsTipsTitle,
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -755,14 +757,14 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
     return [
       IconButton(
         key: ValueKey('like-${opt.id}'),
-        tooltip: liked ? 'Bỏ thích' : 'Thích địa điểm này',
+        tooltip: liked ? context.l10n.resultsUnlike : context.l10n.resultsLike,
         visualDensity: VisualDensity.compact,
         onPressed: () => widget.controller.setPreference(opt, 'like'),
         icon: Icon(liked ? Icons.thumb_up : Icons.thumb_up_outlined, size: 20, color: liked ? theme.primary : Colors.grey[600]),
       ),
       IconButton(
         key: ValueKey('dislike-${opt.id}'),
-        tooltip: disliked ? 'Bỏ không thích' : 'Không thích địa điểm này',
+        tooltip: disliked ? context.l10n.resultsUndislike : context.l10n.resultsDislike,
         visualDensity: VisualDensity.compact,
         onPressed: () => widget.controller.setPreference(opt, 'dislike'),
         icon: Icon(disliked ? Icons.thumb_down : Icons.thumb_down_outlined, size: 20, color: disliked ? const Color(0xFF374151) : Colors.grey[600]),
@@ -826,7 +828,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      "LỰA CHỌN DỰ PHÒNG",
+                      context.l10n.resultsBackupBadge,
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -840,19 +842,19 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                 Text(opt.name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15)),
                 const SizedBox(height: 4),
                 Text(
-                  opt.address.isNotEmpty ? opt.address : "Khu vực trung tâm, Hồ Chí Minh",
+                  opt.address.isNotEmpty ? opt.address : context.l10n.resultsDefaultAddress,
                   style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  "Khoảng giá: ${opt.formattedPriceRange}",
+                  context.l10n.resultsPriceRange(opt.formattedPriceRange),
                   style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[800]),
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (opt.rating != null) ...[
                   const SizedBox(height: 6),
                   Text(
-                    "Đánh giá ${opt.rating}/5 (${opt.ratingCount ?? 0} lượt)",
+                    context.l10n.resultsRating(opt.rating.toString(), opt.ratingCount ?? 0),
                     style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[800]),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -878,7 +880,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                         ),
                         icon: const Icon(Icons.map_outlined, size: 16),
                         label: Text(
-                          'Xem trên bản đồ',
+                          context.l10n.resultsViewOnMap,
                           style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -898,7 +900,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                           elevation: 0,
                         ),
                         child: Text(
-                          'Đặt làm chính',
+                          context.l10n.resultsMakePrimary,
                           style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -1011,12 +1013,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
   }
 
   Widget _buildTransitTimelineItem(double distance, int duration, ActivityTheme theme, String transport) {
-    String transportLabel = "Xe máy";
-    if (transport == "walking") {
-      transportLabel = "Đi bộ";
-    } else if (transport == "taxi") {
-      transportLabel = "Taxi";
-    }
+    final transportName = transportLabel(context.l10n, transport);
 
     return IntrinsicHeight(
       child: Row(
@@ -1045,7 +1042,7 @@ class _DatePlannerResultsState extends State<DatePlannerResults> {
                       border: Border.all(color: theme.primary.withValues(alpha: 0.15)),
                     ),
                     child: Text(
-                      "$transportLabel: ~ ${distance.toStringAsFixed(1)} km (~$duration phút)",
+                      context.l10n.resultsTransit(transportName, distance.toStringAsFixed(1), duration),
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,

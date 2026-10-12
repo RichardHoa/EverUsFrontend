@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'models/activity.dart';
 import 'widgets/preference_matcher.dart';
@@ -10,6 +11,8 @@ import 'screens/login_screen.dart';
 import 'screens/questionnaire_screen.dart';
 import 'utils/auth_helper.dart';
 import 'utils/questionnaire_helper.dart';
+import 'utils/display_language_helper.dart';
+import 'l10n/l10n.dart';
 import 'widgets/everus_footer.dart';
 import 'utils/notification_manager.dart';
 
@@ -24,6 +27,7 @@ Future<void> main() async {
       systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
+  await DisplayLanguageHelper.initialize();
   await AuthHelper.initializeSession();
   await QuestionnaireHelper.initialize();
   NotificationManager.instance.initialize();
@@ -35,47 +39,58 @@ class EverUsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'EverUs - Couple Vibe',
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        if (screenWidth > 600) {
-          return Container(
-            color: const Color(0xFF1E1B2E),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 414),
-                child: ClipRect(
-                  child: MediaQuery(
-                    data: MediaQuery.of(context).copyWith(
-                      size: Size(414, MediaQuery.of(context).size.height),
+    return ValueListenableBuilder<Locale>(
+      valueListenable: DisplayLanguageHelper.localeNotifier,
+      builder: (context, locale, _) => MaterialApp(
+        title: 'EverUs - Couple Vibe',
+        navigatorKey: navigatorKey,
+        debugShowCheckedModeBanner: false,
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        builder: (context, child) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          if (screenWidth > 600) {
+            return Container(
+              color: const Color(0xFF1E1B2E),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 414),
+                  child: ClipRect(
+                    child: MediaQuery(
+                      data: MediaQuery.of(context).copyWith(
+                        size: Size(414, MediaQuery.of(context).size.height),
+                      ),
+                      child: child ?? const SizedBox.shrink(),
                     ),
-                    child: child ?? const SizedBox.shrink(),
                   ),
                 ),
               ),
-            ),
-          );
-        }
-        return child ?? const SizedBox.shrink();
-      },
+            );
+          }
+          return child ?? const SizedBox.shrink();
+        },
 
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF8B5CF6),
-          primary: const Color(0xFF8B5CF6),
-          secondary: const Color(0xFFEC4899),
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF8B5CF6),
+            primary: const Color(0xFF8B5CF6),
+            secondary: const Color(0xFFEC4899),
+          ),
+          useMaterial3: true,
+          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+          ),
+          textTheme: GoogleFonts.interTextTheme(),
         ),
-        useMaterial3: true,
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        textTheme: GoogleFonts.interTextTheme(),
+        home: const AuthWrapper(),
       ),
-      home: const AuthWrapper(),
     );
   }
 }
@@ -236,7 +251,7 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
     switch (_currentPage) {
       case 'results':
         if (_matcherResult == null) {
-          pageBody = const Center(child: Text('No match result found.'));
+          pageBody = Center(child: Text(context.l10n.challengeNoMatchResult));
         } else {
           pageBody = ResultsDashboard(
             result: _matcherResult!,
@@ -247,11 +262,11 @@ class _EverUsHomePageState extends State<EverUsHomePage> {
         break;
       case 'activity':
         if (_selectedActivityKey == null) {
-          pageBody = const Center(child: Text('No activity selected.'));
+          pageBody = Center(child: Text(context.l10n.challengeNoActivitySelected));
         } else {
           final act = activities[_selectedActivityKey!];
           if (act == null) {
-            pageBody = const Center(child: Text('Selected activity not found.'));
+            pageBody = Center(child: Text(context.l10n.challengeActivityNotFound));
           } else {
             pageBody = ActivityFlow(
               activity: act,

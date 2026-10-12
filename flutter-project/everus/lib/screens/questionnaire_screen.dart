@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../data/questionnaire_data.dart';
 import '../models/questionnaire_model.dart';
 import '../utils/questionnaire_helper.dart';
+import '../l10n/l10n.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   final VoidCallback onCompleted;
@@ -139,7 +140,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
           _isSubmitting = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chưa lưu được câu trả lời. Vui lòng thử lại!')),
+          SnackBar(content: Text(context.l10n.questionnaireSaveFailed)),
         );
         return;
       }
@@ -211,13 +212,13 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                         IconButton(
                           icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Color(0xFF5A384C)),
                           onPressed: _previousPage,
-                          tooltip: 'Câu trước',
+                          tooltip: context.l10n.questionnairePrevious,
                         )
                       else if (widget.isEditMode)
                         TextButton(
                           onPressed: () => Navigator.of(context).maybePop(),
                           style: TextButton.styleFrom(foregroundColor: const Color(0xFF5A384C)),
-                          child: Text('Huỷ', style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                          child: Text(context.l10n.commonCancel, style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600)),
                         )
                       else
                         const SizedBox(width: 40),
@@ -243,7 +244,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         ),
                         child: Text(
-                          _currentIndex == totalQuestions - 1 ? 'Bỏ qua' : 'Bỏ qua',
+                          context.l10n.questionnaireSkip,
                           style: GoogleFonts.inter(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w600,
@@ -302,8 +303,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                                   children: [
                                     Text(
                                       _currentIndex == totalQuestions - 1
-                                          ? (widget.isEditMode ? 'Lưu thay đổi' : 'Hoàn thành & Bắt đầu')
-                                          : 'Tiếp tục',
+                                          ? (widget.isEditMode ? context.l10n.questionnaireSaveChanges : context.l10n.questionnaireFinish)
+                                          : context.l10n.commonContinue,
                                       style: GoogleFonts.inter(
                                         fontSize: 15.5,
                                         fontWeight: FontWeight.bold,
@@ -319,7 +320,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       GestureDetector(
                         onTap: _isSubmitting ? null : _skipAll,
                         child: Text(
-                          'Bỏ qua tất cả & Bắt đầu trải nghiệm ➔',
+                          context.l10n.questionnaireSkipAll,
                           style: GoogleFonts.inter(
                             fontSize: 12.5,
                             color: const Color(0xFF9E8E9B),
@@ -403,7 +404,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                           border: Border.all(color: const Color(0xFFE9D5FF)),
                         ),
                         child: Text(
-                          'Có thể chọn nhiều đáp án',
+                          context.l10n.questionnaireMultiSelect,
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             color: const Color(0xFF8B5CF6),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../l10n/l10n.dart';
 
 /// Sideways carousel of illustrated Vibe cards.
 ///
@@ -28,13 +29,11 @@ class VibeCarousel extends StatefulWidget {
 
 class _Vibe {
   final String key;
-  final String label;
-  final String description;
   final String image;
   final Color labelColor;
   final Color descriptionColor;
 
-  const _Vibe(this.key, this.label, this.description, this.image, this.labelColor, this.descriptionColor);
+  const _Vibe(this.key, this.image, this.labelColor, this.descriptionColor);
 }
 
 class _VibeCarouselState extends State<VibeCarousel> {
@@ -44,10 +43,10 @@ class _VibeCarouselState extends State<VibeCarousel> {
   static const _lift = 18.0;
 
   static const _vibes = [
-    _Vibe('casual', 'Đời\nthường', 'trà chiều, đi dạo\n& những điều bình dị', 'assets/images/vibe_casual.png', _ink, _ink),
-    _Vibe('romantic', 'Lãng\nmạn', 'ánh nến, hoàng hôn\n& kết nối ngọt ngào', 'assets/images/vibe_romantic.png',
+    _Vibe('casual', 'assets/images/vibe_casual.png', _ink, _ink),
+    _Vibe('romantic', 'assets/images/vibe_romantic.png',
         Colors.white, Color(0xFFFCECF4)),
-    _Vibe('adventure', 'Trải\nnghiệm', 'trò chơi, khám phá\n& phiêu lưu cùng nhau', 'assets/images/vibe_adventure.png',
+    _Vibe('adventure', 'assets/images/vibe_adventure.png',
         _ink, _ink),
   ];
 
@@ -117,6 +116,30 @@ class _VibeCarouselState extends State<VibeCarousel> {
     );
   }
 
+  String _label(_Vibe vibe) {
+    final l = context.l10n;
+    switch (vibe.key) {
+      case 'romantic':
+        return l.vibeRomantic;
+      case 'adventure':
+        return l.vibeAdventure;
+      default:
+        return l.vibeCasual;
+    }
+  }
+
+  String _description(_Vibe vibe) {
+    final l = context.l10n;
+    switch (vibe.key) {
+      case 'romantic':
+        return l.vibeRomanticDescription;
+      case 'adventure':
+        return l.vibeAdventureDescription;
+      default:
+        return l.vibeCasualDescription;
+    }
+  }
+
   Widget _card(_Vibe vibe) {
     final k = widget.scale;
     final selected = vibe.key == widget.selectedVibe;
@@ -156,7 +179,7 @@ class _VibeCarouselState extends State<VibeCarousel> {
                 left: 57.8 * k,
                 top: 44.6 * k,
                 child: Text(
-                  vibe.label,
+                  _label(vibe),
                   style: GoogleFonts.nunito(
                     fontSize: 42.76 * k,
                     fontWeight: FontWeight.w400,
@@ -169,7 +192,7 @@ class _VibeCarouselState extends State<VibeCarousel> {
                 left: 59.2 * k,
                 top: 383 * k,
                 child: Text(
-                  vibe.description,
+                  _description(vibe),
                   style: GoogleFonts.nunito(
                     fontSize: 24.92 * k,
                     fontWeight: FontWeight.w300,

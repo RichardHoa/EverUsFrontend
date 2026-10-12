@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import '../l10n/l10n.dart';
 import '../utils/auth_helper.dart';
+import '../utils/display_language_helper.dart';
 import '../widgets/everus_footer.dart';
 import '../models/date_plan.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
@@ -43,7 +45,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (!AuthHelper.isLoggedIn) {
       setState(() {
         _isLoading = false;
-        _errorMessage = "Vui lòng đăng nhập để xem thông báo.";
+        _errorMessage = DisplayLanguageHelper.strings.notificationsLoginRequired;
       });
       return;
     }
@@ -75,7 +77,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = "Không thể tải danh sách thông báo (${response.statusCode}).";
+            _errorMessage = DisplayLanguageHelper.strings.notificationsLoadFailed(response.statusCode);
           });
         }
       }
@@ -84,7 +86,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = "Có lỗi xảy ra khi kết nối tới máy chủ.";
+          _errorMessage = DisplayLanguageHelper.strings.errorServerConnection;
         });
       }
     }
@@ -156,7 +158,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Không thể tải kế hoạch hẹn hò này.')),
+            SnackBar(content: Text(context.l10n.notificationsPlanLoadFailed)),
           );
         }
       }
@@ -167,7 +169,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tải kế hoạch: $e')),
+          SnackBar(content: Text(context.l10n.notificationsPlanLoadError(e.toString()))),
         );
       }
     }
@@ -233,7 +235,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        'Thông Báo Hẹn Hò',
+                        context.l10n.notificationsTitle,
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -290,7 +292,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text('Thử lại'),
+                child: Text(context.l10n.commonRetry),
               ),
             ],
           ),
@@ -311,7 +313,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Bạn chưa có thông báo nào.',
+                context.l10n.notificationsEmptyTitle,
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -320,7 +322,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Các hoạt động tương tác từ đối phương sẽ hiển thị tại đây.',
+                context.l10n.notificationsEmptyBody,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 14,
@@ -341,7 +343,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         final notif = _notifications[index];
         final notifId = notif['id'] ?? '';
         final planId = notif['plan_id'] as String?;
-        final title = notif['title'] ?? 'Thông báo';
+        final title = notif['title'] ?? context.l10n.notificationsDefaultTitle;
         final message = notif['message'] ?? '';
         final isRead = notif['is_read'] ?? false;
         final createdAt = notif['created_at'] as String?;
@@ -417,7 +419,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Thời gian chấp nhận: ${_formatDateTime(createdAt)}',
+                              context.l10n.notificationsAcceptedAt(_formatDateTime(createdAt)),
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 color: const Color(0xFF9CA3AF),
@@ -432,7 +434,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   onPressed: () => _loadAndDirectToPlan(planId, notifId),
                                   icon: const Icon(Icons.arrow_forward_rounded, size: 14),
                                   label: Text(
-                                    'Xem lộ trình',
+                                    context.l10n.notificationsViewItinerary,
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -467,7 +469,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     ),
                                   ),
                                   child: Text(
-                                    'Đã đọc',
+                                    context.l10n.notificationsMarkRead,
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,

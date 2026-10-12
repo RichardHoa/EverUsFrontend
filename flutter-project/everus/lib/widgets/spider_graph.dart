@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/activity.dart';
+import '../l10n/l10n.dart';
 
 class SpiderGraph extends StatefulWidget {
   final List<double> userVector;
@@ -211,12 +212,12 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
         children: [
           // Header - static, does not rebuild on frame tick
           Text(
-            'Phân Tích Độ Tương Hợp Ý Tưởng',
+            context.l10n.spiderTitle,
             style: _headerStyle,
           ),
           const SizedBox(height: 2),
           Text(
-            'Ý Tưởng vs Sở Thích Của Bạn',
+            context.l10n.spiderSubtitle,
             style: _subHeaderStyle,
           ),
           const SizedBox(height: 16),
@@ -275,22 +276,22 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
                     final ActivityTheme currentTheme = _interpolateTheme(_sourceTheme, _targetTheme, t);
                     return _buildLegendItem(
                       color: currentTheme.primary,
-                      label: 'Độ khớp của ý tưởng',
-                      desc: 'Mức độ ý tưởng',
+                      label: context.l10n.spiderLegendIdea,
+                      desc: context.l10n.spiderLegendIdeaDesc,
                       isDashed: false,
                     );
                   },
                 ),
                 _buildLegendItem(
                   color: const Color(0xFFEC4899),
-                  label: 'Sở thích của bạn',
-                  desc: 'Mức độ mong muốn',
+                  label: context.l10n.spiderLegendYou,
+                  desc: context.l10n.spiderLegendYouDesc,
                   isDashed: false,
                 ),
                 _buildLegendItem(
                   color: const Color(0xFFFBBF24),
-                  label: 'Tương thích lý tưởng',
-                  desc: 'Điểm 10 hoàn hảo',
+                  label: context.l10n.spiderLegendIdeal,
+                  desc: context.l10n.spiderLegendIdealDesc,
                   isDashed: true,
                 ),
               ],
@@ -302,7 +303,7 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
             child: Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Text(
-                'Chạm vào các biểu tượng để xem phần trăm tương thích',
+                context.l10n.spiderTapHint,
                 style: _noteStyle,
               ),
             ),
@@ -397,17 +398,17 @@ class _SpiderGraphState extends State<SpiderGraph> with SingleTickerProviderStat
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${dim.icon} ${dim.label}',
+            '${dim.icon} ${dimensionLabel(context.l10n, index)}',
             style: _dimLabelStyle,
           ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMetricColumn('Ý tưởng', '${actVal.toStringAsFixed(0)}/10'),
-              _buildMetricColumn('Sở thích', '${userVal.toStringAsFixed(0)}/10'),
+              _buildMetricColumn(context.l10n.spiderMetricIdea, '${actVal.toStringAsFixed(0)}/10'),
+              _buildMetricColumn(context.l10n.spiderMetricPreference, '${userVal.toStringAsFixed(0)}/10'),
               _buildMetricColumn(
-                'Độ khớp',
+                context.l10n.spiderMetricMatch,
                 '$alignmentPct%',
                 valueColor: const Color(0xFF059669),
               ),

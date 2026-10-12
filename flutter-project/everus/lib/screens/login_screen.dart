@@ -3,12 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/auth_helper.dart';
 import '../utils/questionnaire_helper.dart';
+import '../widgets/display_language_toggle.dart';
 import '../widgets/everus_footer.dart';
 import 'login/widgets/auth_input_field.dart';
 import 'login/widgets/gentle_login_modal.dart';
 import 'login/widgets/google_sign_in_button.dart';
 import 'login/widgets/profile_view.dart';
 import 'questionnaire_screen.dart';
+import '../l10n/l10n.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool isProfileMode;
@@ -73,8 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đăng ký tài khoản thành công! Chào mừng bạn đến với EverUs!'),
+            SnackBar(
+              content: Text(context.l10n.loginSignUpSuccess),
             ),
           );
         }
@@ -113,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Đăng xuất thất bại: $e';
+          _errorMessage = context.l10n.loginSignOutFailed(e.toString());
         });
       }
     } finally {
@@ -142,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onCompleted: () {
             Navigator.of(routeContext).pop();
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Đã lưu câu trả lời của bạn!')),
+              SnackBar(content: Text(context.l10n.loginAnswersSaved)),
             );
           },
         ),
@@ -226,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'kết nối với nửa kia của bạn',
+                          context.l10n.loginTagline,
                           style: GoogleFonts.nunito(
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
@@ -258,10 +260,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _cardTitle('Hồ sơ của bạn'),
+                                  _cardTitle(context.l10n.loginProfileTitle),
                                   const SizedBox(height: 16),
                                   ProfileView(
-                                    name: AuthHelper.currentUserName ?? 'Người ấy',
+                                    name: AuthHelper.currentUserName ?? context.l10n.loginDefaultName,
                                     email: AuthHelper.currentUserEmail ?? '',
                                     errorMessage: _errorMessage,
                                     isLoading: _isLoading,
@@ -279,6 +281,16 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
+          const Positioned(
+            top: 0,
+            right: 16,
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: DisplayLanguageToggle(),
+              ),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: EverUsFooter(
@@ -314,7 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _cardTitle(_isSignUp ? 'Đăng ký' : 'Đăng nhập'),
+          _cardTitle(_isSignUp ? context.l10n.loginSignUpTitle : context.l10n.loginSignInTitle),
           const SizedBox(height: 16),
 
           // Error banner
@@ -343,11 +355,11 @@ class _LoginScreenState extends State<LoginScreen> {
           if (_isSignUp) ...[
             AuthInputField(
               controller: _nameController,
-              hint: 'tên của bạn',
+              hint: context.l10n.loginNameHint,
               icon: Icons.person_rounded,
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {
-                  return 'Vui lòng nhập tên của bạn';
+                  return context.l10n.loginNameRequired;
                 }
                 return null;
               },
@@ -359,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Email Field
           AuthInputField(
             controller: _emailController,
-            hint: 'địa chỉ email',
+            hint: context.l10n.loginEmailHint,
             prefixChild: Text(
               '@',
               style: GoogleFonts.inter(
@@ -372,10 +384,10 @@ class _LoginScreenState extends State<LoginScreen> {
             keyboardType: TextInputType.emailAddress,
             validator: (val) {
               if (val == null || val.trim().isEmpty) {
-                return 'Vui lòng nhập email của bạn';
+                return context.l10n.loginEmailRequired;
               }
               if (!_isValidEmail(val)) {
-                return 'Vui lòng nhập email hợp lệ';
+                return context.l10n.loginEmailInvalid;
               }
               return null;
             },
@@ -386,7 +398,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Password Field
           AuthInputField(
             controller: _passwordController,
-            hint: 'mật khẩu',
+            hint: context.l10n.loginPasswordHint,
             prefixChild: const Icon(
               Icons.lock,
               size: 18,
@@ -407,10 +419,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             validator: (val) {
               if (val == null || val.isEmpty) {
-                return 'Vui lòng nhập mật khẩu';
+                return context.l10n.loginPasswordRequired;
               }
               if (_isSignUp && val.length < 6) {
-                return 'Mật khẩu phải dài ít nhất 6 ký tự';
+                return context.l10n.loginPasswordTooShort;
               }
               return null;
             },
@@ -439,7 +451,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : Text(
-                      _isSignUp ? 'Đăng Ký' : 'Đăng Nhập',
+                      _isSignUp ? context.l10n.loginSignUpButton : context.l10n.loginSignInButton,
                       style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
                         fontSize: 14.5,
@@ -462,7 +474,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
-                  'hoặc',
+                  context.l10n.loginOr,
                   style: GoogleFonts.inter(
                     color: const Color(0xFF9E8E9B),
                     fontSize: 11.5,
@@ -504,10 +516,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   children: [
                     TextSpan(
-                      text: _isSignUp ? 'Đã có tài khoản? ' : 'Chưa có tài khoản? ',
+                      text: _isSignUp ? context.l10n.loginHaveAccount : context.l10n.loginNoAccount,
                     ),
                     TextSpan(
-                      text: _isSignUp ? 'Đăng nhập' : 'Đăng ký',
+                      text: _isSignUp ? context.l10n.loginSignInTitle : context.l10n.loginSignUpTitle,
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                       ),
@@ -523,7 +535,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onTap: _continueAsGuest,
               child: Center(
                 child: Text(
-                  'Bỏ qua & Tiếp tục thiết lập ➔',
+                  context.l10n.loginSkipAsGuest,
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: const Color(0xFF5A384C),

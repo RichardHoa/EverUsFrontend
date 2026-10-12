@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import '../../../l10n/l10n.dart';
 
 /// Inline month calendar for the Date Planner form.
 ///
@@ -35,7 +37,6 @@ class _PlannerCalendarState extends State<PlannerCalendar> {
   static const _muted = Color(0xFFC9C8D0);
   static const _blush = Color(0xFFFDEFF6);
   static const _periwinkle = Color(0xFFC2D0F3);
-  static const _weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
   late DateTime _month;
 
@@ -58,9 +59,12 @@ class _PlannerCalendarState extends State<PlannerCalendar> {
   Widget build(BuildContext context) {
     final k = widget.scale;
     final canGoBack = _month.isAfter(_thisMonth);
+    final monthName = DateFormat.MMMM(Localizations.localeOf(context).toString()).format(_month).toUpperCase();
     final title = _month.year == DateTime.now().year
-        ? 'THÁNG ${_month.month}'
-        : 'THÁNG ${_month.month}/${_month.year}';
+        ? monthName
+        : context.l10n.calendarMonthWithYear(monthName, _month.year.toString());
+    // Sunday-first short weekday names.
+    final weekdays = context.l10n.calendarWeekdays.split(',');
 
     return Container(
       padding: EdgeInsets.fromLTRB(136 * k, 121 * k, 136 * k, 130 * k),
@@ -106,7 +110,7 @@ class _PlannerCalendarState extends State<PlannerCalendar> {
           SizedBox(height: 40 * k),
           Row(
             children: [
-              for (final day in _weekdays)
+              for (final day in weekdays)
                 Expanded(
                   child: Text(
                     day,

@@ -8,7 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import '../main.dart'; // For navigatorKey
 import '../screens/date_planner_screen.dart';
+import '../l10n/l10n.dart';
 import 'auth_helper.dart';
+import 'display_language_helper.dart';
 
 class NotificationManager with WidgetsBindingObserver {
   static final NotificationManager instance = NotificationManager._internal();
@@ -290,8 +292,8 @@ class NotificationManager with WidgetsBindingObserver {
 
     if (isBackground) {
       _showLocalNotification(
-        title: "Lời mời được chấp nhận! 🎉",
-        body: "${inviteData['receiver_name']} đã chấp nhận lời mời hẹn hò của bạn.",
+        title: DisplayLanguageHelper.strings.pushInviteAcceptedTitle,
+        body: DisplayLanguageHelper.strings.pushInviteAcceptedBody(inviteData['receiver_name']?.toString() ?? ''),
         payload: inviteData['id'],
       );
     } else {
@@ -305,10 +307,10 @@ class NotificationManager with WidgetsBindingObserver {
     required String payload,
   }) async {
     if (kIsWeb) return;
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'everus_invitations_channel',
-      'Lời mời EverUs',
-      channelDescription: 'Thông báo khi đối phương chấp nhận lời mời',
+      DisplayLanguageHelper.strings.pushChannelName,
+      channelDescription: DisplayLanguageHelper.strings.pushChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
@@ -318,7 +320,7 @@ class NotificationManager with WidgetsBindingObserver {
       presentBadge: true,
       presentSound: true,
     );
-    const NotificationDetails platformDetails = NotificationDetails(
+    final NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: iOSDetails,
     );
@@ -357,7 +359,7 @@ class NotificationManager with WidgetsBindingObserver {
   }
 
   Widget _buildModalContent(BuildContext context, Map<String, dynamic> inviteData) {
-    final receiverName = inviteData['receiver_name'] ?? 'Đối phương';
+    final receiverName = inviteData['receiver_name'] ?? context.l10n.inviteModalDefaultPartner;
     final dateStr = inviteData['date'] ?? '';
     final timeStr = inviteData['time'] ?? '';
     final location = inviteData['location'] ?? '';
@@ -406,7 +408,7 @@ class NotificationManager with WidgetsBindingObserver {
           
           // Title
           Text(
-            'Lời Mời Đã Được Đồng Ý! 🎉',
+            context.l10n.inviteModalTitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.playfairDisplay(
               fontSize: 22,
@@ -430,7 +432,7 @@ class NotificationManager with WidgetsBindingObserver {
                   text: receiverName,
                   style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFEC4899)),
                 ),
-                const TextSpan(text: ' đã chấp nhận lời mời hẹn hò lãng mạn của bạn. Hãy chuẩn bị tinh thần hẹn hò nhé! 💕'),
+                TextSpan(text: context.l10n.inviteModalMessage),
               ],
             ),
           ),
@@ -447,13 +449,13 @@ class NotificationManager with WidgetsBindingObserver {
             child: Column(
               children: [
                 if (dateStr.isNotEmpty)
-                  _buildDetailRow(Icons.calendar_today_rounded, "Ngày", dateStr),
+                  _buildDetailRow(Icons.calendar_today_rounded, context.l10n.inviteModalDate, dateStr),
                 if (timeStr.isNotEmpty)
-                  _buildDetailRow(Icons.access_time_rounded, "Giờ", timeStr),
+                  _buildDetailRow(Icons.access_time_rounded, context.l10n.inviteModalTime, timeStr),
                 if (location.isNotEmpty)
-                  _buildDetailRow(Icons.location_on_rounded, "Nơi hẹn", location),
+                  _buildDetailRow(Icons.location_on_rounded, context.l10n.inviteModalLocation, location),
                 if (pickupOption.isNotEmpty)
-                  _buildDetailRow(Icons.directions_car_rounded, "Đón đưa", pickupOption),
+                  _buildDetailRow(Icons.directions_car_rounded, context.l10n.inviteModalPickup, pickupOption),
               ],
             ),
           ),
@@ -471,7 +473,7 @@ class NotificationManager with WidgetsBindingObserver {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text(
-                    'Đóng',
+                    context.l10n.commonClose,
                     style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF4B5563)),
                   ),
                 ),
@@ -491,7 +493,7 @@ class NotificationManager with WidgetsBindingObserver {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text(
-                    'Xem Lộ Trình ➔',
+                    context.l10n.inviteModalViewItinerary,
                     style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -665,7 +667,7 @@ class NotificationManager with WidgetsBindingObserver {
 
     final notifId = notif['id']?.toString() ?? '';
     final planId = notif['plan_id'] as String?;
-    final title = notif['title'] ?? 'Thông báo';
+    final title = notif['title'] ?? context.l10n.notificationsDefaultTitle;
     final message = notif['message'] ?? '';
 
     showDialog(
@@ -700,7 +702,7 @@ class NotificationManager with WidgetsBindingObserver {
                 _markNotificationAsRead(notifId);
               },
               child: Text(
-                'Đóng',
+                context.l10n.commonClose,
                 style: GoogleFonts.inter(color: const Color(0xFF6B7280)),
               ),
             ),
@@ -716,7 +718,7 @@ class NotificationManager with WidgetsBindingObserver {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 child: Text(
-                  'Xem kế hoạch ➔',
+                  context.l10n.notificationViewPlan,
                   style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),

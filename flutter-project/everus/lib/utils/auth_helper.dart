@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
 import 'love_counter_helper.dart';
 import 'questionnaire_helper.dart';
+import 'display_language_helper.dart';
 
 // Defines the application run mode (can only be dev or prod)
 enum AppMode { dev, prod }
@@ -160,16 +161,16 @@ class AuthHelper {
       final Map<String, dynamic> responseData = json.decode(utf8.decode(response.bodyBytes));
       
       if (response.statusCode >= 400) {
-        throw AuthException(responseData['detail'] ?? 'Authentication failed');
+        throw AuthException(responseData['detail'] ?? DisplayLanguageHelper.strings.errorAuthFailed);
       }
       
       return responseData;
     } on AuthException {
       rethrow;
     } on FormatException {
-      throw const AuthException('Invalid response format from authentication server');
+      throw AuthException(DisplayLanguageHelper.strings.errorAuthInvalidResponse);
     } catch (e) {
-      throw AuthException('Failed to connect to backend server. Make sure the backend is running.');
+      throw AuthException(DisplayLanguageHelper.strings.errorAuthConnection);
     }
   }
 
@@ -296,7 +297,7 @@ class AuthHelper {
       }
 
       if ((idToken == null || idToken.isEmpty) && (accessToken == null || accessToken.isEmpty)) {
-        throw const AuthException('Failed to retrieve Google authentication tokens.');
+        throw AuthException(DisplayLanguageHelper.strings.errorGoogleTokens);
       }
 
       // Post to backend
@@ -319,7 +320,7 @@ class AuthHelper {
       if (e is AuthException) {
         rethrow;
       }
-      throw AuthException('Google Sign-In failed: $e');
+      throw AuthException(DisplayLanguageHelper.strings.errorGoogleSignIn(e.toString()));
     }
   }
 }

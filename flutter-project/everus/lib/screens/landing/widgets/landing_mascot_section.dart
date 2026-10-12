@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../l10n/l10n.dart';
 
 const String kDefaultMascotImage = 'assets/images/mascot_yarn.png';
 const String _pinkHappy = 'assets/images/mascot_pink_happy.png';
@@ -13,35 +14,42 @@ const String _pair = 'assets/images/mascot_pair.png';
 /// Every image shares the yarn ball's canvas so faces swap in place.
 class MascotInteraction {
   final String image;
-  final String comment;
+  final String Function(AppLocalizations) comment;
 
   const MascotInteraction({required this.image, required this.comment});
 }
 
+String _mascotComment1(AppLocalizations l) => l.mascotComment1;
+String _mascotComment2(AppLocalizations l) => l.mascotComment2;
+String _mascotComment3(AppLocalizations l) => l.mascotComment3;
+String _mascotComment4(AppLocalizations l) => l.mascotComment4;
+String _mascotComment5(AppLocalizations l) => l.mascotComment5;
+String _mascotComment6(AppLocalizations l) => l.mascotComment6;
+
 const List<MascotInteraction> kDefaultMascotInteractions = [
   MascotInteraction(
     image: _greenGlasses,
-    comment: 'Hôm nay tụi mình đi đâu chơi nhỉ? 🤔',
+    comment: _mascotComment1,
   ),
   MascotInteraction(
     image: _pinkHappy,
-    comment: 'Yêu cậu nhiều lắm á! ♥',
+    comment: _mascotComment2,
   ),
   MascotInteraction(
     image: _pinkCheeky,
-    comment: 'Lên lịch hẹn hò thôi! Tớ đã sẵn sàng! 🚀',
+    comment: _mascotComment3,
   ),
   MascotInteraction(
     image: kDefaultMascotImage,
-    comment: 'Cùng tạo nên thật nhiều kỉ niệm nhé! 🥳',
+    comment: _mascotComment4,
   ),
   MascotInteraction(
     image: _pair,
-    comment: 'Hai cậu trông thật là đẹp đôi luôn á! 💑',
+    comment: _mascotComment5,
   ),
   MascotInteraction(
     image: _pinkCheeky,
-    comment: 'Chạm vào tớ tiếp đi, tớ thích lắm! 🥰',
+    comment: _mascotComment6,
   ),
 ];
 

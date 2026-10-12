@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import '../l10n/l10n.dart';
 import '../utils/auth_helper.dart';
+import '../utils/display_language_helper.dart';
 import '../models/date_plan.dart';
 import '../widgets/preference_matcher.dart'; // For GlassCard
 
@@ -28,7 +30,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
     if (!AuthHelper.isLoggedIn) {
       setState(() {
         _isLoading = false;
-        _errorMessage = "Vui lòng đăng nhập để xem các kế hoạch đã lưu.";
+        _errorMessage = DisplayLanguageHelper.strings.savedPlansLoginRequired;
       });
       return;
     }
@@ -60,7 +62,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = "Không thể tải danh sách kế hoạch từ máy chủ (${response.statusCode}).";
+            _errorMessage = DisplayLanguageHelper.strings.savedPlansLoadFailed(response.statusCode);
           });
         }
       }
@@ -69,7 +71,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = "Có lỗi xảy ra khi kết nối tới máy chủ.";
+          _errorMessage = DisplayLanguageHelper.strings.errorServerConnection;
         });
       }
     }
@@ -92,16 +94,16 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
             _savedPlans.removeWhere((p) => p['id'] == planId);
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã xoá kế hoạch thành công 💖'),
-              backgroundColor: Color(0xFF8B5CF6),
+            SnackBar(
+              content: Text(context.l10n.savedPlansDeleted),
+              backgroundColor: const Color(0xFF8B5CF6),
             ),
           );
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Xoá thất bại: ${response.statusCode}')),
+            SnackBar(content: Text(context.l10n.savedPlansDeleteFailed(response.statusCode))),
           );
         }
       }
@@ -109,7 +111,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
       debugPrint("Failed to delete plan: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Có lỗi xảy ra khi kết nối để xoá kế hoạch.')),
+          SnackBar(content: Text(context.l10n.savedPlansDeleteConnectionError)),
         );
       }
     }
@@ -125,14 +127,14 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           title: Text(
-            'Xác nhận xoá',
+            context.l10n.savedPlansConfirmDeleteTitle,
             style: GoogleFonts.inter(
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1F2937),
             ),
           ),
           content: Text(
-            'Bạn có chắc chắn muốn xoá kế hoạch hẹn hò này không? Thao tác này không thể hoàn tác.',
+            context.l10n.savedPlansConfirmDeleteBody,
             style: GoogleFonts.inter(
               color: const Color(0xFF4B5563),
             ),
@@ -141,7 +143,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(
-                'Huỷ',
+                context.l10n.commonCancel,
                 style: GoogleFonts.inter(
                   color: const Color(0xFF9CA3AF),
                   fontWeight: FontWeight.bold,
@@ -161,7 +163,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                 ),
               ),
               child: Text(
-                'Xoá',
+                context.l10n.commonDelete,
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.bold,
                 ),
@@ -190,16 +192,16 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
   String _getVibeLabel(String vibe) {
     switch (vibe.toLowerCase()) {
       case 'romantic':
-        return 'Lãng mạn';
+        return context.l10n.vibeLabelRomantic;
       case 'fun':
-        return 'Sôi nổi';
+        return context.l10n.vibeLabelFun;
       case 'adventure':
-        return 'Trải nghiệm';
+        return context.l10n.vibeLabelAdventure;
       case 'casual':
-        return 'Đời thường';
+        return context.l10n.vibeLabelCasual;
       case 'chill':
       default:
-        return 'Chill';
+        return context.l10n.vibeLabelChill;
     }
   }
 
@@ -254,7 +256,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        'Kế Hoạch Hẹn Hò Đã Lưu',
+                        context.l10n.savedPlansTitle,
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -308,7 +310,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text('Thử lại'),
+                child: Text(context.l10n.commonRetry),
               ),
             ],
           ),
@@ -329,7 +331,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Bạn chưa lưu kế hoạch hẹn hò nào.',
+                context.l10n.savedPlansEmptyTitle,
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -338,7 +340,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Hãy lên lịch và tạo kế hoạch mới nhé, hệ thống sẽ tự động lưu lại ở đây!',
+                context.l10n.savedPlansEmptyBody,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 14,
@@ -364,7 +366,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
         final planData = planMap['plan_data'] ?? {};
         final vibe = planData['vibe'] ?? 'chill';
         final emoji = planData['emoji'] ?? '📅';
-        final dateType = planData['dateType'] ?? 'Kế hoạch Hẹn hò';
+        final dateType = planData['dateType'] ?? context.l10n.plannerDefaultDateType;
 
         // Extract area
         String displayArea = planData['area']?.toString() ?? '';
@@ -433,7 +435,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Ngày: $dateStr${displayArea.isNotEmpty ? " • $displayArea" : ""}${displayPrice.isNotEmpty ? " • $displayPrice" : ""}',
+                                context.l10n.savedPlansDateLine('$dateStr${displayArea.isNotEmpty ? " • $displayArea" : ""}${displayPrice.isNotEmpty ? " • $displayPrice" : ""}'),
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   color: const Color(0xFF6B7280),
@@ -476,7 +478,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                               border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
                             ),
                             child: Text(
-                              'Đã nhận lời',
+                              context.l10n.savedPlansAccepted,
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -494,7 +496,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                               border: Border.all(color: const Color(0xFFEC4899).withValues(alpha: 0.3)),
                             ),
                             child: Text(
-                              'Đã gửi lời mời',
+                              context.l10n.savedPlansInviteSent,
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -505,7 +507,7 @@ class _SavedPlansScreenState extends State<SavedPlansScreen> {
                         ],
                         const SizedBox(width: 8),
                         Text(
-                          '${planData['stages']?.length ?? 0} chặng',
+                          context.l10n.savedPlansStageCount(planData['stages']?.length ?? 0),
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             color: const Color(0xFF6B7280),

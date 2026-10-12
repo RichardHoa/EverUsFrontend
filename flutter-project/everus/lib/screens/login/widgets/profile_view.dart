@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../l10n/l10n.dart';
 
 class ProfileView extends StatelessWidget {
   final String name;
@@ -82,7 +83,7 @@ class ProfileView extends StatelessWidget {
               ),
             ),
             child: Text(
-              'Chỉnh sửa câu trả lời',
+              context.l10n.profileEditAnswers,
               style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ),
@@ -106,7 +107,7 @@ class ProfileView extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
               : Text(
-                  'Đăng xuất',
+                  context.l10n.profileSignOut,
                   style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
         ),

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/l10n.dart';
 import '../models/activity.dart';
 import 'heart_mascot.dart';
 import '../utils/auth_helper.dart';
@@ -34,19 +35,19 @@ class _ActivityFlowState extends State<ActivityFlow> {
   String _mascotComment = '';
   bool _showMascotComment = false;
 
-  final List<String> _startComments = [
-    'Sẵn sàng chưa nào? 💪',
-    'Cùng tạo kỉ niệm nhé!',
-    'Đến lúc tỏa sáng rồi! ✨',
-    'Cuộc phiêu lưu đang chờ đón! 🌟',
-  ];
+  List<String> get _startComments => [
+        context.l10n.flowStartComment1,
+        context.l10n.flowStartComment2,
+        context.l10n.flowStartComment3,
+        context.l10n.flowStartComment4,
+      ];
 
-  final List<String> _completeComments = [
-    'Hai bạn thật tuyệt vời! 💕',
-    'Ngập tràn tình yêu luôn! 🥰',
-    'Cặp đôi hoàn hảo nhất quả đất! 👑',
-    'Khoảnh khắc này thật đẹp! 🌸',
-  ];
+  List<String> get _completeComments => [
+        context.l10n.flowCompleteComment1,
+        context.l10n.flowCompleteComment2,
+        context.l10n.flowCompleteComment3,
+        context.l10n.flowCompleteComment4,
+      ];
 
   @override
   void initState() {
@@ -75,7 +76,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'This photo upload feature is currently being developed!',
+                context.l10n.flowPhotoUploadComingSoon,
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
@@ -99,7 +100,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
     });
 
     if (_tasksChecked[_currentLevel][taskIdx]) {
-      _triggerMascotReaction('happy', 'Nice job! 🎯');
+      _triggerMascotReaction('happy', context.l10n.flowNiceJob);
     }
   }
 
@@ -110,18 +111,18 @@ class _ActivityFlowState extends State<ActivityFlow> {
     }
 
     if (_currentLevel < widget.activity.levels.length - 1) {
-      _triggerMascotReaction('excited', 'Level ${_currentLevel + 2} coming up!');
+      _triggerMascotReaction('excited', context.l10n.flowLevelComingUp(_currentLevel + 2));
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) {
           setState(() {
             _currentLevel += 1;
             _mascotEmotion = 'excited';
-            _mascotComment = 'Keep going! 🚀';
+            _mascotComment = context.l10n.flowKeepGoing;
           });
         }
       });
     } else {
-      _triggerMascotReaction('celebrating', 'We did it! 🎉');
+      _triggerMascotReaction('celebrating', context.l10n.flowWeDidIt);
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) {
           setState(() {
@@ -189,7 +190,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Mở khoá thêm các mức! 💖',
+                context.l10n.flowUnlockTitle,
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -200,7 +201,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
-                  'Để tiếp tục cuộc phiêu lưu hẹn hò và mở khóa các mức tiếp theo, vui lòng đăng nhập hoặc tạo tài khoản.',
+                  context.l10n.flowUnlockBody,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 14,
@@ -248,7 +249,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                     ),
                   ),
                   child: Text(
-                    'Đăng nhập / Đăng ký',
+                    context.l10n.flowLoginOrSignUp,
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -261,7 +262,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  'Để sau',
+                  context.l10n.commonLater,
                   style: GoogleFonts.inter(
                     color: Colors.grey.shade500,
                     fontWeight: FontWeight.w600,
@@ -300,7 +301,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
           onPressed: widget.onBack,
         ),
         title: Text(
-          'Adventure Awaits',
+          context.l10n.flowIntroTitle,
           style: GoogleFonts.playfairDisplay(
             color: Colors.grey.shade900,
             fontWeight: FontWeight.bold,
@@ -409,7 +410,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Secret to keep in mind:',
+                                    context.l10n.flowSecretLabel,
                                     style: GoogleFonts.inter(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
@@ -437,11 +438,11 @@ class _ActivityFlowState extends State<ActivityFlow> {
                     // Summary details row
                     Row(
                       children: [
-                        _buildDetailItem('Duration', activity.duration),
+                        _buildDetailItem(context.l10n.flowDuration, activity.duration),
                         const SizedBox(width: 8),
-                        _buildDetailItem('Levels', '${activity.levels.length}'),
+                        _buildDetailItem(context.l10n.flowLevels, '${activity.levels.length}'),
                         const SizedBox(width: 8),
-                        _buildDetailItem('Check-ins', '${activity.levels.length}'),
+                        _buildDetailItem(context.l10n.flowCheckIns, '${activity.levels.length}'),
                       ],
                     ),
 
@@ -483,7 +484,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Begin Journey',
+                              context.l10n.flowBegin,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -563,7 +564,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
           },
         ),
         title: Text(
-          'Level ${_currentLevel + 1} / ${activity.levels.length}',
+          context.l10n.flowLevelProgress(_currentLevel + 1, activity.levels.length),
           style: GoogleFonts.playfairDisplay(
             color: Colors.grey.shade900,
             fontWeight: FontWeight.bold,
@@ -585,7 +586,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Level ${_currentLevel + 1}/${activity.levels.length}',
+                          context.l10n.flowLevelProgress(_currentLevel + 1, activity.levels.length),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -653,7 +654,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'LEVEL ${level.num}',
+                      context.l10n.flowLevelUpper(level.num),
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -845,7 +846,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                             const Text('📷', style: TextStyle(fontSize: 32)),
                             const SizedBox(height: 8),
                             Text(
-                              'Click to upload photo',
+                              context.l10n.flowUploadPhoto,
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -853,7 +854,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                               ),
                             ),
                             Text(
-                              'Quyền truy cập Máy ảnh / Thư viện',
+                              context.l10n.flowPhotoPermission,
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 color: Colors.grey.shade400,
@@ -898,7 +899,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _currentLevel == activity.levels.length - 1 ? 'Hoàn thành! 🎉' : 'Mức tiếp theo',
+                        _currentLevel == activity.levels.length - 1 ? context.l10n.flowFinish : context.l10n.flowNextLevel,
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1010,7 +1011,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                         const Text('📷', style: TextStyle(fontSize: 24)),
                         const SizedBox(height: 4),
                         Text(
-                          'Level ${idx + 1}',
+                          context.l10n.flowLevel(idx + 1),
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -1051,7 +1052,7 @@ class _ActivityFlowState extends State<ActivityFlow> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Return Home',
+                        context.l10n.flowReturnHome,
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../main.dart';
 import '../models/date_plan.dart';
 import '../utils/auth_helper.dart';
 import '../utils/file_helper/file_helper.dart';
 import '../utils/love_counter_helper.dart';
 import '../utils/notification_manager.dart';
+import '../widgets/display_language_toggle.dart';
 import '../widgets/everus_footer.dart';
 import 'date_planner_screen.dart';
 import 'landing/widgets/date_planner_options_dialog.dart';
@@ -36,7 +38,8 @@ class _LandingScreenState extends State<LandingScreen> {
   String? _loverImagePath;
 
   // Mascot Interactive State
-  String _mascotComment = 'Chào cậu nhé! Chạm vào tớ đi! 💖';
+  /// Null until the first tap, while the greeting is shown.
+  MascotInteraction? _mascotInteraction;
   String _mascotImage = kDefaultMascotImage;
   int _tapCount = 0;
 
@@ -122,7 +125,7 @@ class _LandingScreenState extends State<LandingScreen> {
   void _onMascotTap() {
     setState(() {
       final interaction = kDefaultMascotInteractions[_tapCount];
-      _mascotComment = interaction.comment;
+      _mascotInteraction = interaction;
       _mascotImage = interaction.image;
       _tapCount = (_tapCount + 1) % kDefaultMascotInteractions.length;
     });
@@ -240,7 +243,7 @@ class _LandingScreenState extends State<LandingScreen> {
                             RepaintBoundary(
                               child: LandingMascotSection(
                                 image: _mascotImage,
-                                comment: _mascotComment,
+                                comment: _mascotInteraction?.comment(context.l10n) ?? context.l10n.mascotGreeting,
                                 onTap: _onMascotTap,
                                 scale: k,
                               ),
@@ -285,6 +288,12 @@ class _LandingScreenState extends State<LandingScreen> {
                       );
                     },
                   ),
+                ),
+
+                const Positioned(
+                  top: 18,
+                  right: 76,
+                  child: DisplayLanguageToggle(),
                 ),
 
                 // Top action bar (Notification button - listens to refreshNotifier directly)

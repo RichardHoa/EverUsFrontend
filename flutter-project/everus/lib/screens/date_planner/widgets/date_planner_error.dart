@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../date_planner_controller.dart';
+import '../../../l10n/l10n.dart';
 
 /// Shown in place of the results screen when plan generation fails
 /// (e.g. no places found near the user), so the failure reads as an
@@ -37,7 +38,7 @@ class DatePlannerError extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Không thể tạo kế hoạch',
+            context.l10n.plannerErrorTitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.playfairDisplay(
               fontSize: 20,
@@ -86,7 +87,7 @@ class DatePlannerError extends StatelessWidget {
                 elevation: 0,
               ),
               child: Text(
-                'THỬ LẠI',
+                context.l10n.plannerRetry,
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
@@ -99,7 +100,7 @@ class DatePlannerError extends StatelessWidget {
           TextButton(
             onPressed: controller.clearPlan,
             child: Text(
-              'Quay lại chỉnh sửa',
+              context.l10n.plannerBackToEdit,
               style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF653851)),
             ),
           ),

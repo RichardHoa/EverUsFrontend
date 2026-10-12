@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../../../models/date_plan.dart';
 import '../../../utils/auth_helper.dart';
 import '../../../utils/distance_preference.dart';
@@ -8,6 +9,7 @@ import '../../saved_plans_screen.dart';
 import '../date_planner_controller.dart';
 import 'planner_calendar.dart';
 import 'vibe_carousel.dart';
+import '../../../l10n/l10n.dart';
 
 /// Form widget displaying the date planning inputs (date, time, vibe, distance, transport, budget).
 ///
@@ -26,8 +28,7 @@ class DatePlannerForm extends StatelessWidget {
   static const _ink = Color(0xFF6F3953);
   static const _pink = Color(0xFFDB74A3);
   static const _budgetPresets = [100000, 200000, 300000, 500000];
-  static const _transports = {'walking': 'Đi bộ', 'motorbike': 'Xe máy', 'taxi': 'Taxi'};
-  static const _weekdayNames = ['Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy', 'Chủ nhật'];
+  static const _transportKeys = ['walking', 'motorbike', 'taxi'];
 
   @override
   Widget build(BuildContext context) {
@@ -50,16 +51,16 @@ class DatePlannerForm extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 113 * k),
-              _buildDateRow(k),
+              _buildDateRow(context, k),
               SizedBox(height: 51 * k),
               _buildTimeRow(context, k),
               if (_showLocationRow) ...[
                 SizedBox(height: 36 * k),
-                _buildLocationRow(k),
+                _buildLocationRow(context, k),
               ],
               SizedBox(height: 40 * k),
               Text(
-                'Vibe buổi hẹn hò',
+                context.l10n.plannerVibeTitle,
                 textAlign: TextAlign.center,
                 style: _title(k),
               ),
@@ -70,7 +71,7 @@ class DatePlannerForm extends StatelessWidget {
                 scale: k,
               ),
               SizedBox(height: 20 * k),
-              _buildOptionsPanel(k),
+              _buildOptionsPanel(context, k),
               SizedBox(height: 70 * k),
               _buildHistoryLink(context, k),
               SizedBox(height: 60 * k),
@@ -119,19 +120,21 @@ class DatePlannerForm extends StatelessWidget {
     );
   }
 
-  String _formatSelectedDate(DateTime date) =>
-      '${_weekdayNames[date.weekday - 1]}, ${date.day}/${date.month}';
+  String _formatSelectedDate(BuildContext context, DateTime date) {
+    final weekday = DateFormat.EEEE(Localizations.localeOf(context).toString()).format(date);
+    return '$weekday, ${date.day}/${date.month}';
+  }
 
   String _formatTime(TimeOfDay time) =>
       '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
-  Widget _buildDateRow(double k) {
+  Widget _buildDateRow(BuildContext context, double k) {
     return Padding(
       padding: EdgeInsets.only(left: 127.5 * k, right: 150 * k),
       child: Row(
         children: [
-          Expanded(child: Text('Ngày hẹn hò', style: _title(k))),
-          _pill(k, width: 405.6, height: 100.5, text: _formatSelectedDate(controller.selectedDate)),
+          Expanded(child: Text(context.l10n.plannerDateLabel, style: _title(k))),
+          _pill(k, width: 405.6, height: 100.5, text: _formatSelectedDate(context, controller.selectedDate)),
         ],
       ),
     );
@@ -145,7 +148,7 @@ class DatePlannerForm extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Thời gian', style: _title(k))),
+              Expanded(child: Text(context.l10n.plannerTimeLabel, style: _title(k))),
               _pill(
                 k,
                 width: 191.7,
@@ -155,7 +158,7 @@ class DatePlannerForm extends StatelessWidget {
               ),
               SizedBox(width: 46 * k),
               Text(
-                'đến',
+                context.l10n.plannerTimeTo,
                 style: GoogleFonts.nunito(fontSize: 42.46 * k, fontWeight: FontWeight.w300, color: _ink),
               ),
               SizedBox(width: 46 * k),
@@ -174,7 +177,7 @@ class DatePlannerForm extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.only(top: 10 * k),
                 child: Text(
-                  '(hôm sau)',
+                  context.l10n.plannerNextDay,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.nunito(fontSize: 32 * k, fontWeight: FontWeight.w300, color: _pink),
                 ),
@@ -210,8 +213,8 @@ class DatePlannerForm extends StatelessWidget {
       controller.setStartTime(picked);
     } else if (!controller.setEndTime(picked) && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Buổi hẹn cần dài ít nhất 1 tiếng nhé!'),
+        SnackBar(
+          content: Text(context.l10n.plannerMinDuration),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -222,7 +225,7 @@ class DatePlannerForm extends StatelessWidget {
       controller.isLocating || controller.locationPermissionDenied || controller.userLocation == null;
 
   /// One-line location status, shown only while detecting or when the device position isn't available.
-  Widget _buildLocationRow(double k) {
+  Widget _buildLocationRow(BuildContext context, double k) {
     final textStyle = GoogleFonts.nunito(fontSize: 38 * k, fontWeight: FontWeight.w400, color: _ink);
     final Widget content;
     if (controller.isLocating) {
@@ -234,7 +237,7 @@ class DatePlannerForm extends StatelessWidget {
             child: const CircularProgressIndicator(strokeWidth: 2, color: _pink),
           ),
           SizedBox(width: 20 * k),
-          Expanded(child: Text('Đang xác định vị trí...', style: textStyle, maxLines: 1)),
+          Expanded(child: Text(context.l10n.plannerLocating, style: textStyle, maxLines: 1)),
         ],
       );
     } else if (controller.locationPermissionDenied) {
@@ -257,7 +260,7 @@ class DatePlannerForm extends StatelessWidget {
                 isDense: true,
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
-                hintText: 'Nhập địa chỉ xuất phát, VD: 45 Lê Lợi, Q1',
+                hintText: context.l10n.plannerAddressHint,
                 hintStyle: textStyle.copyWith(fontWeight: FontWeight.w200, color: _pink),
               ),
             ),
@@ -266,7 +269,7 @@ class DatePlannerForm extends StatelessWidget {
             onTap: () => controller.setManualAddress(controller.addressController.text),
             child: Padding(
               padding: EdgeInsets.only(left: 20 * k),
-              child: Text('Tìm', style: textStyle.copyWith(fontWeight: FontWeight.w700, color: _pink)),
+              child: Text(context.l10n.plannerAddressSearch, style: textStyle.copyWith(fontWeight: FontWeight.w700, color: _pink)),
             ),
           ),
         ],
@@ -276,10 +279,10 @@ class DatePlannerForm extends StatelessWidget {
         children: [
           Icon(Icons.location_searching, size: 44 * k, color: _pink),
           SizedBox(width: 20 * k),
-          Expanded(child: Text('Chưa có vị trí của bạn', style: textStyle, maxLines: 1)),
+          Expanded(child: Text(context.l10n.plannerNoLocation, style: textStyle, maxLines: 1)),
           GestureDetector(
             onTap: controller.useCurrentLocation,
-            child: Text('Thử lại', style: textStyle.copyWith(fontWeight: FontWeight.w700, color: _pink)),
+            child: Text(context.l10n.commonRetry, style: textStyle.copyWith(fontWeight: FontWeight.w700, color: _pink)),
           ),
         ],
       );
@@ -308,7 +311,7 @@ class DatePlannerForm extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionsPanel(double k) {
+  Widget _buildOptionsPanel(BuildContext context, double k) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 21 * k),
       padding: EdgeInsets.fromLTRB(46 * k, 26.6 * k, 47 * k, 70 * k),
@@ -319,7 +322,7 @@ class DatePlannerForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _panelTitle('Khoảng cách', k),
+          _panelTitle(context.l10n.plannerDistanceTitle, k),
           SizedBox(height: 31.7 * k),
           _chipRow(k, [
             for (final choice in DistanceChoice.values)
@@ -332,21 +335,21 @@ class DatePlannerForm extends StatelessWidget {
               ),
           ]),
           SizedBox(height: 46 * k),
-          _panelTitle('Phương tiện di chuyển', k),
+          _panelTitle(context.l10n.plannerTransportTitle, k),
           SizedBox(height: 31.7 * k),
           _chipRow(k, [
-            for (final entry in _transports.entries)
+            for (final key in _transportKeys)
               _optionChip(
                 k,
-                label: entry.value,
-                selected: controller.transportation == entry.key,
-                onTap: () => controller.setTransportation(entry.key),
+                label: transportLabel(context.l10n, key),
+                selected: controller.transportation == key,
+                onTap: () => controller.setTransportation(key),
               ),
           ]),
           SizedBox(height: 60 * k),
-          _panelTitle('Ngân sách tối đa cho 1 người', k),
+          _panelTitle(context.l10n.plannerBudgetTitle, k),
           SizedBox(height: 40 * k),
-          _buildBudgetField(k),
+          _buildBudgetField(context, k),
           SizedBox(height: 55 * k),
           Padding(
             padding: EdgeInsets.only(left: 40 * k, right: 30 * k),
@@ -411,7 +414,7 @@ class DatePlannerForm extends StatelessWidget {
     );
   }
 
-  Widget _buildBudgetField(double k) {
+  Widget _buildBudgetField(BuildContext context, double k) {
     final style = GoogleFonts.nunito(fontSize: 40 * k, fontWeight: FontWeight.w600, color: _pink);
     return Align(
       alignment: Alignment.centerLeft,
@@ -433,7 +436,7 @@ class DatePlannerForm extends StatelessWidget {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
-            hintText: 'Nhập số tiền',
+            hintText: context.l10n.plannerBudgetHint,
             hintStyle: style.copyWith(fontWeight: FontWeight.w200),
             suffixText: 'VND',
             suffixStyle: style,
@@ -481,7 +484,7 @@ class DatePlannerForm extends StatelessWidget {
           }
         },
         child: Text(
-          'Xem lại lịch sử ý tưởng',
+          context.l10n.plannerHistoryLink,
           style: GoogleFonts.nunito(fontSize: 50 * k, fontWeight: FontWeight.w300, color: const Color(0xFFAF6389)),
         ),
       ),
@@ -509,7 +512,7 @@ class DatePlannerForm extends StatelessWidget {
               height: 148 * k,
               child: Center(
                 child: Text(
-                  'BẮT ĐẦU LÊN Ý TƯỞNG',
+                  context.l10n.plannerSubmit,
                   style: GoogleFonts.nunito(fontSize: 50 * k, fontWeight: FontWeight.w700, color: Colors.white),
                 ),
               ),

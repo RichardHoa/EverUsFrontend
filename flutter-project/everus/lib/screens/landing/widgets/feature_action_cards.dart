@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../l10n/l10n.dart';
 
 /// Date Planner and Relationship Reflection cards, using the illustrated
 /// artwork exported from the Figma `landing_page` frame. The two images are
@@ -29,7 +30,7 @@ class FeatureActionCards extends StatelessWidget {
         children: [
           _ArtworkCard(
             asset: 'assets/images/card_date_planner.png',
-            title: 'Lên Lịch Hẹn Hò',
+            title: context.l10n.featurePlanDate,
             titleRect: const Rect.fromLTWH(99, 140, 355, 80),
             width: 635,
             scale: scale,
@@ -37,7 +38,7 @@ class FeatureActionCards extends StatelessWidget {
           ),
           _ArtworkCard(
             asset: 'assets/images/card_reflection.png',
-            title: 'Nhìn Lại\nMối Quan Hệ',
+            title: context.l10n.featureReflection,
             titleRect: const Rect.fromLTWH(68, 72, 340, 125),
             width: 495,
             scale: scale,

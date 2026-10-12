@@ -551,17 +551,17 @@ final Map<String, Activity> activities = {
   ),
 };
 
+/// Display labels come from `dimensionLabel` in l10n.dart, by index.
 class DimensionInfo {
   final String icon;
-  final String label;
 
-  const DimensionInfo({required this.icon, required this.label});
+  const DimensionInfo({required this.icon});
 }
 
 const List<DimensionInfo> dimensions = [
-  DimensionInfo(icon: '💕', label: 'Lãng mạn'),
-  DimensionInfo(icon: '🧗', label: 'Phiêu lưu'),
-  DimensionInfo(icon: '🎨', label: 'Sáng tạo'),
-  DimensionInfo(icon: '🏠', label: 'Trong nhà'),
-  DimensionInfo(icon: '⚡', label: 'Năng lượng'),
+  DimensionInfo(icon: '💕'),
+  DimensionInfo(icon: '🧗'),
+  DimensionInfo(icon: '🎨'),
+  DimensionInfo(icon: '🏠'),
+  DimensionInfo(icon: '⚡'),
 ];

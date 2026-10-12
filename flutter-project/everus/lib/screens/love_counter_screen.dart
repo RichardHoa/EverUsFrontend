@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import '../l10n/l10n.dart';
 import '../utils/love_counter_helper.dart';
 import '../utils/file_helper/file_helper.dart';
 import '../widgets/app_avatar.dart';
@@ -156,7 +157,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                 ),
               ),
               Text(
-                'Tải ảnh lên',
+                context.l10n.loveUploadPhoto,
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -169,7 +170,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                 children: [
                   _buildPickerOption(
                     icon: Icons.photo_library_outlined,
-                    label: 'Thư viện',
+                    label: context.l10n.loveGallery,
                     onTap: () async {
                       Navigator.pop(context);
                       final path = await LoveCounterHelper.pickAndSaveImage(
@@ -192,7 +193,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                   ),
                   _buildPickerOption(
                     icon: Icons.camera_alt_outlined,
-                    label: 'Máy ảnh',
+                    label: context.l10n.loveCamera,
                     onTap: () async {
                       Navigator.pop(context);
                       final path = await LoveCounterHelper.pickAndSaveImage(
@@ -286,7 +287,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
     if (_formKey.currentState!.validate()) {
       if (_setupAnniversaryDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng chọn ngày kỷ niệm của hai bạn.')),
+          SnackBar(content: Text(context.l10n.loveAnniversaryRequired)),
         );
         return;
       }
@@ -327,7 +328,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                 const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Đã lưu thông tin kỷ niệm thành công! 💖',
+                  context.l10n.loveSaved,
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -376,9 +377,9 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
         if (didPop) return;
         if (!_isSetup && widget.isForceSetup) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Vui lòng hoàn thành thiết lập để tiếp tục! 💖'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text(context.l10n.loveFinishSetup),
+              duration: const Duration(seconds: 2),
             ),
           );
         } else if (!_isSetup && !widget.isForceSetup) {
@@ -511,7 +512,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
               child: Column(
                 children: [
                   Text(
-                    'CHÚNG TA ĐÃ BÊN NHAU ĐƯỢC',
+                    context.l10n.loveTogetherHeading,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 11,
@@ -540,7 +541,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                     ),
                   ),
                   Text(
-                    'NGÀY',
+                    context.l10n.loveDaysUpper,
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -574,7 +575,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          _useDetailedView ? 'Ẩn chi tiết' : 'Xem chi tiết (Giờ/Phút/Giây)',
+                          _useDetailedView ? context.l10n.loveHideDetails : context.l10n.loveShowDetails,
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -664,10 +665,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildDetailUnit('${elapsed.inDays}', 'Ngày'),
-        _buildDetailUnit('$hours', 'Giờ'),
-        _buildDetailUnit('$minutes', 'Phút'),
-        _buildDetailUnit('$seconds', 'Giây'),
+        _buildDetailUnit('${elapsed.inDays}', context.l10n.loveUnitDays),
+        _buildDetailUnit('$hours', context.l10n.loveUnitHours),
+        _buildDetailUnit('$minutes', context.l10n.loveUnitMinutes),
+        _buildDetailUnit('$seconds', context.l10n.loveUnitSeconds),
       ],
     );
   }
@@ -709,7 +710,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
   // MARK: - Setup View
   Widget _buildSetupView() {
     final df = _setupAnniversaryDate == null
-        ? 'Chọn ngày'
+        ? context.l10n.lovePickDate
         : '${_setupAnniversaryDate!.day}/${_setupAnniversaryDate!.month}/${_setupAnniversaryDate!.year}';
 
     return Form(
@@ -728,7 +729,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                 child: Padding(
                   padding: EdgeInsets.only(right: widget.isForceSetup ? 0.0 : 48.0),
                   child: Text(
-                    'Tạo Bộ Đếm Ngày Yêu',
+                    context.l10n.loveSetupTitle,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 26,
@@ -742,7 +743,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
           ),
           const SizedBox(height: 6),
           Text(
-            'Ghi lại cột mốc của bạn. Tất cả dữ liệu được bảo mật 100% trên điện thoại.',
+            context.l10n.loveSetupSubtitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 14,
@@ -755,8 +756,8 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildSetupProfileButton('user', 'Bạn', _setupUserImagePath, _userImageExists),
-              _buildSetupProfileButton('lover', 'Người ấy', _setupLoverImagePath, _loverImageExists),
+              _buildSetupProfileButton('user', context.l10n.loveYou, _setupUserImagePath, _userImageExists),
+              _buildSetupProfileButton('lover', context.l10n.loginDefaultName, _setupLoverImagePath, _loverImageExists),
             ],
           ),
           const SizedBox(height: 32),
@@ -774,7 +775,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ngày kỷ niệm',
+                        context.l10n.loveAnniversaryLabel,
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -808,10 +809,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                 TextFormField(
                   controller: _userController,
                   validator: (val) =>
-                      (val == null || val.trim().isEmpty) ? 'Vui lòng nhập tên của bạn' : null,
+                      (val == null || val.trim().isEmpty) ? context.l10n.loginNameRequired : null,
                   style: GoogleFonts.inter(fontSize: 15),
                   decoration: InputDecoration(
-                    labelText: 'Tên của bạn',
+                    labelText: context.l10n.loveYourName,
                     labelStyle: GoogleFonts.inter(color: const Color(0xFF6B7280)),
                     prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF8B5CF6)),
                     border: OutlineInputBorder(
@@ -829,10 +830,10 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                 TextFormField(
                   controller: _loverController,
                   validator: (val) =>
-                      (val == null || val.trim().isEmpty) ? 'Vui lòng nhập tên người ấy' : null,
+                      (val == null || val.trim().isEmpty) ? context.l10n.lovePartnerNameRequired : null,
                   style: GoogleFonts.inter(fontSize: 15),
                   decoration: InputDecoration(
-                    labelText: 'Tên người ấy',
+                    labelText: context.l10n.lovePartnerName,
                     labelStyle: GoogleFonts.inter(color: const Color(0xFF6B7280)),
                     prefixIcon: const Icon(Icons.favorite_border, color: Color(0xFFEC4899)),
                     border: OutlineInputBorder(
@@ -879,7 +880,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                 ),
               ),
               child: Text(
-                'Lưu & Đếm Ngày Yêu',
+                context.l10n.loveSave,
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -899,7 +900,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                 _startTimer();
               },
               child: Text(
-                'Hủy',
+                context.l10n.commonCancel,
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -955,7 +956,7 @@ class _LoveCounterScreenState extends State<LoveCounterScreen> with SingleTicker
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Thêm ảnh',
+                        context.l10n.loveAddPhoto,
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

@@ -1,0 +1,650 @@
+{
+  "@@locale": "vi",
+  "flowStartComment1": "Sẵn sàng chưa nào? 💪",
+  "flowStartComment2": "Cùng tạo kỉ niệm nhé!",
+  "flowStartComment3": "Đến lúc tỏa sáng rồi! ✨",
+  "flowStartComment4": "Cuộc phiêu lưu đang chờ đón! 🌟",
+  "flowCompleteComment1": "Hai bạn thật tuyệt vời! 💕",
+  "flowCompleteComment2": "Ngập tràn tình yêu luôn! 🥰",
+  "flowCompleteComment3": "Cặp đôi hoàn hảo nhất quả đất! 👑",
+  "flowCompleteComment4": "Khoảnh khắc này thật đẹp! 🌸",
+  "flowPhotoUploadComingSoon": "Tính năng tải ảnh lên đang được phát triển!",
+  "flowNiceJob": "Giỏi lắm! 🎯",
+  "flowLevelComingUp": "Sắp tới mức {level} rồi!",
+  "@flowLevelComingUp": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "flowKeepGoing": "Tiếp tục nào! 🚀",
+  "flowWeDidIt": "Tụi mình làm được rồi! 🎉",
+  "flowUnlockTitle": "Mở khoá thêm các mức! 💖",
+  "flowUnlockBody": "Để tiếp tục cuộc phiêu lưu hẹn hò và mở khóa các mức tiếp theo, vui lòng đăng nhập hoặc tạo tài khoản.",
+  "flowLoginOrSignUp": "Đăng nhập / Đăng ký",
+  "flowIntroTitle": "Cuộc Phiêu Lưu Đang Chờ",
+  "flowSecretLabel": "Bí mật cần ghi nhớ:",
+  "flowDuration": "Thời lượng",
+  "flowLevels": "Mức",
+  "flowCheckIns": "Check-in",
+  "flowBegin": "Bắt Đầu Hành Trình",
+  "flowLevelProgress": "Mức {current}/{total}",
+  "@flowLevelProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "flowLevelUpper": "MỨC {level}",
+  "@flowLevelUpper": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "flowPhotoPermission": "Quyền truy cập Máy ảnh / Thư viện",
+  "flowUploadPhoto": "Chạm để tải ảnh lên",
+  "flowFinish": "Hoàn thành! 🎉",
+  "flowNextLevel": "Mức tiếp theo",
+  "flowLevel": "Mức {level}",
+  "@flowLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "flowReturnHome": "Về Trang Chủ",
+  "matcherStageTalking": "Trò chuyện",
+  "matcherStage1to3": "1–3 tháng",
+  "matcherStage3to6": "3–6 tháng",
+  "matcherStageOver6": "Trên 6 tháng",
+  "matcherHeaderTag": "GỢI Ý HẸN HÒ",
+  "matcherHeaderBody": "Hãy cho tụi mình biết vibe của hai bạn — tụi mình sẽ tìm ý tưởng hẹn hò phù hợp nhất.",
+  "matcherHowItWorksTitle": "Cách hoạt động",
+  "matcherHowItWorksBody": "Điều chỉnh sở thích của hai bạn qua 5 khía cạnh. Thuật toán sẽ tìm ý tưởng phù hợp nhất cho cả hai.",
+  "matcherAlgorithmTitle": "Thuật toán",
+  "matcherAlgorithmBody": "Phương pháp bình phương tối thiểu giúp tìm điểm khớp nhất trong không gian ý tưởng.",
+  "matcherResultsTitle": "Kết quả của bạn",
+  "matcherResultsBody": "Nhận danh sách ý tưởng được xếp hạng, phân tích khía cạnh và điểm số tương thích.",
+  "matcherAdjustYours": "Điều chỉnh sở thích của bạn",
+  "dimensionRomance": "Lãng mạn",
+  "dimensionAdventure": "Phiêu lưu",
+  "dimensionCreative": "Sáng tạo",
+  "dimensionIndoor": "Trong nhà",
+  "dimensionEnergy": "Năng lượng",
+  "matcherAddPartner": "Thêm sở thích của Người ấy",
+  "matcherBudgetTitle": "💸 Khoảng ngân sách",
+  "matcherBudgetMin": "Tối thiểu (VND)",
+  "matcherBudgetMax": "Tối đa (VND)",
+  "matcherStageTitle": "💑 Giai đoạn mối quan hệ",
+  "matcherCoupleModeNote": "Chế độ đôi: Tụi mình sẽ tìm ý tưởng hẹn hò phù hợp nhất với sở thích của cả hai bằng phương pháp tối thiểu hoá bình phương.",
+  "matcherCta": "✨ Tìm ý tưởng hẹn hò hoàn hảo",
+  "spiderTitle": "Phân Tích Độ Tương Hợp Ý Tưởng",
+  "spiderSubtitle": "Ý Tưởng vs Sở Thích Của Bạn",
+  "spiderLegendIdea": "Độ khớp của ý tưởng",
+  "spiderLegendIdeaDesc": "Mức độ ý tưởng",
+  "spiderLegendYou": "Sở thích của bạn",
+  "spiderLegendYouDesc": "Mức độ mong muốn",
+  "spiderLegendIdeal": "Tương thích lý tưởng",
+  "spiderLegendIdealDesc": "Điểm 10 hoàn hảo",
+  "spiderTapHint": "Chạm vào các biểu tượng để xem phần trăm tương thích",
+  "spiderMetricIdea": "Ý tưởng",
+  "spiderMetricPreference": "Sở thích",
+  "spiderMetricMatch": "Độ khớp",
+  "dashboardTitle": "Kết quả tương thích",
+  "dashboardCompatibility": "Độ tương hợp",
+  "dashboardBudget": "Ngân sách",
+  "dashboardLevels": "Mức độ",
+  "dashboardActivityCount": "{count} hoạt động",
+  "@dashboardActivityCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardStartNow": "Bắt đầu ngay! ",
+  "dashboardYourPreferences": "Sở thích của hai bạn",
+  "dashboardAllIdeas": "Tất cả ý tưởng ({count} tổng số)",
+  "@dashboardAllIdeas": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeNoMatchResult": "Không tìm thấy kết quả phù hợp.",
+  "challengeNoActivitySelected": "Chưa chọn hoạt động nào.",
+  "challengeActivityNotFound": "Không tìm thấy hoạt động đã chọn.",
+  "errorAuthFailed": "Xác thực thất bại",
+  "errorAuthInvalidResponse": "Phản hồi từ máy chủ xác thực không hợp lệ",
+  "errorAuthConnection": "Không thể kết nối tới máy chủ. Vui lòng thử lại sau!",
+  "errorGoogleTokens": "Không lấy được thông tin xác thực Google.",
+  "errorGoogleSignIn": "Đăng nhập Google thất bại: {error}",
+  "@errorGoogleSignIn": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorAddressNotFound": "Không tìm thấy địa chỉ này. Hãy thử nhập chi tiết hơn nhé!",
+  "errorLocationUnavailable": "Không thể truy cập vị trí. Hãy nhập địa chỉ của bạn nhé!",
+  "errorPlannerConnection": "Không thể kết nối tới máy chủ EverUs. Vui lòng thử lại!",
+  "errorPlanFailed": "Không thể tạo kế hoạch (lỗi {status}). Vui lòng thử lại!",
+  "@errorPlanFailed": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "plannerDefaultDateType": "Kế hoạch Hẹn hò",
+  "inviteCreateTitle": "Tạo Thư Mời Hẹn Hò",
+  "inviteReadyTitle": "Lời Mời Đã Sẵn Sàng! 🎉",
+  "inviteSenderLabel": "Xưng hô của bạn (Sender)",
+  "inviteReceiverLabel": "Gọi đối phương (Receiver)",
+  "inviteDateLabel": "Ngày hẹn",
+  "inviteTimeLabel": "Giờ hẹn gặp",
+  "inviteLocationLabel": "Địa điểm hẹn gặp / Khu vực",
+  "invitePickupLabel": "Ai sẽ đón ai? 🚗",
+  "inviteBodyLabel": "Nội dung thư mời (Tự do điều chỉnh theo ý muốn):",
+  "inviteCreating": "Đang xử lý lời mời...",
+  "inviteSubmit": "Xác Nhận & Tạo Lời Mời 💖",
+  "inviteLinkReady": "Đường Dẫn Lời Mời Đã Sẵn Sàng!",
+  "inviteLinkInstructions": "Sao chép liên kết bên dưới và gửi cho đối phương. Lời mời sẽ mở ra trang web lãng mạn chứa nhạc nền riêng biệt:",
+  "inviteCopied": "Đã chép!",
+  "inviteBackToItinerary": "Quay lại Lộ Trình Hẹn Hò",
+  "inviteCreateFailed": "Tạo lời mời không thành công.",
+  "commonError": "Lỗi: {error}",
+  "@commonError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mascotGreeting": "Chào cậu nhé! Chạm vào tớ đi! 💖",
+  "mascotComment1": "Hôm nay tụi mình đi đâu chơi nhỉ? 🤔",
+  "mascotComment2": "Yêu cậu nhiều lắm á! ♥",
+  "mascotComment3": "Lên lịch hẹn hò thôi! Tớ đã sẵn sàng! 🚀",
+  "mascotComment4": "Cùng tạo nên thật nhiều kỉ niệm nhé! 🥳",
+  "mascotComment5": "Hai cậu trông thật là đẹp đôi luôn á! 💑",
+  "mascotComment6": "Chạm vào tớ tiếp đi, tớ thích lắm! 🥰",
+  "miniLoveCounterHeading": "CHÚNG MÌNH ĐÃ BÊN NHAU",
+  "miniLoveCounterDays": "ngày",
+  "featurePlanDate": "Lên Lịch Hẹn Hò",
+  "featureReflection": "Nhìn Lại\nMối Quan Hệ",
+  "optionsDialogSubtitle": "Chọn trải nghiệm bạn muốn cùng thực hiện",
+  "optionsPlanTitle": "Lên kế hoạch hẹn hò",
+  "optionsPlanSubtitle": "Tự tạo lộ trình chi tiết cho buổi hẹn",
+  "optionsChallengeTitle": "Thử thách hẹn hò",
+  "optionsChallengeSubtitle": "Khám phá ý tưởng & thử thách thú vị",
+  "commonClose": "Đóng",
+  "loginSignUpSuccess": "Đăng ký tài khoản thành công! Chào mừng bạn đến với EverUs!",
+  "loginSignOutFailed": "Đăng xuất thất bại: {error}",
+  "@loginSignOutFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loginAnswersSaved": "Đã lưu câu trả lời của bạn!",
+  "loginTagline": "kết nối với nửa kia của bạn",
+  "loginProfileTitle": "Hồ sơ của bạn",
+  "loginDefaultName": "Người ấy",
+  "loginSignUpTitle": "Đăng ký",
+  "loginSignInTitle": "Đăng nhập",
+  "loginNameHint": "tên của bạn",
+  "loginNameRequired": "Vui lòng nhập tên của bạn",
+  "loginEmailHint": "địa chỉ email",
+  "loginEmailRequired": "Vui lòng nhập email của bạn",
+  "loginEmailInvalid": "Vui lòng nhập email hợp lệ",
+  "loginPasswordHint": "mật khẩu",
+  "loginPasswordRequired": "Vui lòng nhập mật khẩu",
+  "loginPasswordTooShort": "Mật khẩu phải dài ít nhất 6 ký tự",
+  "loginSignUpButton": "Đăng Ký",
+  "loginSignInButton": "Đăng Nhập",
+  "loginOr": "hoặc",
+  "loginHaveAccount": "Đã có tài khoản? ",
+  "loginNoAccount": "Chưa có tài khoản? ",
+  "loginSkipAsGuest": "Bỏ qua & Tiếp tục thiết lập ➔",
+  "profileEditAnswers": "Chỉnh sửa câu trả lời",
+  "profileSignOut": "Đăng xuất",
+  "googleContinue": "Tiếp tục với Google",
+  "gentleLoginTitle": "Yêu cầu đăng nhập 💖",
+  "gentleLoginBody": "Tính năng này cần đăng nhập để đồng bộ thông tin giữa hai bạn. Bạn có muốn đăng nhập ngay không?",
+  "commonLater": "Để sau",
+  "loveUploadPhoto": "Tải ảnh lên",
+  "loveGallery": "Thư viện",
+  "loveCamera": "Máy ảnh",
+  "loveAnniversaryRequired": "Vui lòng chọn ngày kỷ niệm của hai bạn.",
+  "loveSaved": "Đã lưu thông tin kỷ niệm thành công! 💖",
+  "loveFinishSetup": "Vui lòng hoàn thành thiết lập để tiếp tục! 💖",
+  "loveTogetherHeading": "CHÚNG TA ĐÃ BÊN NHAU ĐƯỢC",
+  "loveDaysUpper": "NGÀY",
+  "loveHideDetails": "Ẩn chi tiết",
+  "loveShowDetails": "Xem chi tiết (Giờ/Phút/Giây)",
+  "loveUnitDays": "Ngày",
+  "loveUnitHours": "Giờ",
+  "loveUnitMinutes": "Phút",
+  "loveUnitSeconds": "Giây",
+  "lovePickDate": "Chọn ngày",
+  "loveSetupTitle": "Tạo Bộ Đếm Ngày Yêu",
+  "loveSetupSubtitle": "Ghi lại cột mốc của bạn. Tất cả dữ liệu được bảo mật 100% trên điện thoại.",
+  "loveYou": "Bạn",
+  "loveAnniversaryLabel": "Ngày kỷ niệm",
+  "loveYourName": "Tên của bạn",
+  "lovePartnerNameRequired": "Vui lòng nhập tên người ấy",
+  "lovePartnerName": "Tên người ấy",
+  "loveSave": "Lưu & Đếm Ngày Yêu",
+  "loveAddPhoto": "Thêm ảnh",
+  "notificationsLoginRequired": "Vui lòng đăng nhập để xem thông báo.",
+  "notificationsLoadFailed": "Không thể tải danh sách thông báo ({status}).",
+  "@notificationsLoadFailed": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsPlanLoadFailed": "Không thể tải kế hoạch hẹn hò này.",
+  "notificationsPlanLoadError": "Lỗi tải kế hoạch: {error}",
+  "@notificationsPlanLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsTitle": "Thông Báo Hẹn Hò",
+  "notificationsEmptyTitle": "Bạn chưa có thông báo nào.",
+  "notificationsEmptyBody": "Các hoạt động tương tác từ đối phương sẽ hiển thị tại đây.",
+  "notificationsDefaultTitle": "Thông báo",
+  "notificationsAcceptedAt": "Thời gian chấp nhận: {time}",
+  "@notificationsAcceptedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsViewItinerary": "Xem lộ trình",
+  "notificationsMarkRead": "Đã đọc",
+  "pushInviteAcceptedTitle": "Lời mời được chấp nhận! 🎉",
+  "pushInviteAcceptedBody": "{name} đã chấp nhận lời mời hẹn hò của bạn.",
+  "@pushInviteAcceptedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pushChannelName": "Lời mời EverUs",
+  "pushChannelDescription": "Thông báo khi đối phương chấp nhận lời mời",
+  "inviteModalDefaultPartner": "Đối phương",
+  "inviteModalTitle": "Lời Mời Đã Được Đồng Ý! 🎉",
+  "inviteModalMessage": " đã chấp nhận lời mời hẹn hò lãng mạn của bạn. Hãy chuẩn bị tinh thần hẹn hò nhé! 💕",
+  "inviteModalDate": "Ngày",
+  "inviteModalTime": "Giờ",
+  "inviteModalLocation": "Nơi hẹn",
+  "inviteModalPickup": "Đón đưa",
+  "inviteModalViewItinerary": "Xem Lộ Trình ➔",
+  "notificationViewPlan": "Xem kế hoạch ➔",
+  "distanceNear": "Gần",
+  "distanceNearHint": "dưới 5km",
+  "distanceFar": "Xa",
+  "distanceFarHint": "5 - 15 km",
+  "distanceRandom": "Tuỳ hứng",
+  "distanceRandomHint": "Để EverUs chọn",
+  "plannerNoPlacesTitle": "Không Tìm Thấy Địa Điểm",
+  "plannerItineraryTitle": "Lộ Trình Hẹn Hò",
+  "plannerTitle": "Thiết Kế Hẹn Hò",
+  "plannerAddressRequired": "Vui lòng nhập địa chỉ của bạn!",
+  "plannerLocationRequired": "Vui lòng cho phép truy cập vị trí hoặc nhập địa chỉ của bạn!",
+  "plannerMinBudget": "Ngân sách tối thiểu là {amount} VND / người.",
+  "@plannerMinBudget": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "plannerLoadingTitle": "Đang tải kế hoạch...",
+  "plannerLoadingBody": "Đang lấy thông tin mới nhất cho buổi hẹn hò của bạn... 💕",
+  "plannerErrorTitle": "Không thể tạo kế hoạch",
+  "plannerRetry": "THỬ LẠI",
+  "plannerBackToEdit": "Quay lại chỉnh sửa",
+  "plannerGenerating": "EverUs đang lên lộ trình...",
+  "vibeCasual": "Đời\nthường",
+  "vibeCasualDescription": "trà chiều, đi dạo\n& những điều bình dị",
+  "vibeRomantic": "Lãng\nmạn",
+  "vibeRomanticDescription": "ánh nến, hoàng hôn\n& kết nối ngọt ngào",
+  "vibeAdventure": "Trải\nnghiệm",
+  "vibeAdventureDescription": "trò chơi, khám phá\n& phiêu lưu cùng nhau",
+  "plannerVibeTitle": "Vibe buổi hẹn hò",
+  "plannerDateLabel": "Ngày hẹn hò",
+  "plannerTimeLabel": "Thời gian",
+  "plannerTimeTo": "đến",
+  "plannerNextDay": "(hôm sau)",
+  "plannerMinDuration": "Buổi hẹn cần dài ít nhất 1 tiếng nhé!",
+  "plannerLocating": "Đang xác định vị trí...",
+  "plannerAddressHint": "Nhập địa chỉ xuất phát, VD: 45 Lê Lợi, Q1",
+  "plannerAddressSearch": "Tìm",
+  "plannerNoLocation": "Chưa có vị trí của bạn",
+  "commonRetry": "Thử lại",
+  "plannerDistanceTitle": "Khoảng cách",
+  "plannerTransportTitle": "Phương tiện di chuyển",
+  "plannerBudgetTitle": "Ngân sách tối đa cho 1 người",
+  "plannerBudgetHint": "Nhập số tiền",
+  "plannerHistoryLink": "Xem lại lịch sử ý tưởng",
+  "plannerSubmit": "BẮT ĐẦU LÊN Ý TƯỞNG",
+  "transportWalking": "Đi bộ",
+  "transportMotorbike": "Xe máy",
+  "transportTaxi": "Taxi",
+  "calendarMonthWithYear": "{month}/{year}",
+  "@calendarMonthWithYear": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarWeekdays": "CN,T2,T3,T4,T5,T6,T7",
+  "questionnaireSaveFailed": "Chưa lưu được câu trả lời. Vui lòng thử lại!",
+  "questionnairePrevious": "Câu trước",
+  "commonCancel": "Huỷ",
+  "questionnaireSkip": "Bỏ qua",
+  "questionnaireSaveChanges": "Lưu thay đổi",
+  "questionnaireFinish": "Hoàn thành & Bắt đầu",
+  "commonContinue": "Tiếp tục",
+  "questionnaireSkipAll": "Bỏ qua tất cả & Bắt đầu trải nghiệm ➔",
+  "questionnaireMultiSelect": "Có thể chọn nhiều đáp án",
+  "resultsNearYou": "Gần bạn",
+  "shareHeader": "✨ KẾ HOẠCH HẸN HÒ: {dateType} {emoji} ✨",
+  "@shareHeader": {
+    "placeholders": {
+      "dateType": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
+    }
+  },
+  "shareDate": "📅 Ngày hẹn: {date}",
+  "@shareDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "shareTotalDuration": "⏱️ Tổng thời lượng: {minutes} phút (~{hours} tiếng)",
+  "@shareTotalDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "shareBudget": "💰 Ngân sách: {budget} / người",
+  "@shareBudget": {
+    "placeholders": {
+      "budget": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArea": "📍 Khu vực: {area}",
+  "@shareArea": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "shareTransport": "🏍️ Phương tiện: {transport}",
+  "@shareTransport": {
+    "placeholders": {
+      "transport": {
+        "type": "String"
+      }
+    }
+  },
+  "sharePurpose": "🎯 Mục tiêu buổi hẹn: {purpose}",
+  "@sharePurpose": {
+    "placeholders": {
+      "purpose": {
+        "type": "String"
+      }
+    }
+  },
+  "shareStage": "📍 Chặng {num}: {title}",
+  "@shareStage": {
+    "placeholders": {
+      "num": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shareStageTime": "⏰ Thời gian: {start} - {end} ({minutes} phút)",
+  "@shareStageTime": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "shareStagePurpose": "🎯 Mục tiêu: {purpose}",
+  "@shareStagePurpose": {
+    "placeholders": {
+      "purpose": {
+        "type": "String"
+      }
+    }
+  },
+  "shareStageCategory": "🍴 Thể loại: {category}",
+  "@shareStageCategory": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "sharePlace": "📍 Địa điểm: {place}",
+  "@sharePlace": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAddress": "   Địa chỉ: {address}",
+  "@shareAddress": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "shareTasks": "✨ Hoạt động gợi ý:",
+  "shareTips": "💡 Mách nhỏ:",
+  "shareFooter": "👉 Tạo kế hoạch hẹn hò của riêng bạn trên app EverUs!",
+  "shareCopied": "📋 Đã sao chép lộ trình vào bộ nhớ tạm!",
+  "resultsDurationBadge": "{minutes} phút (~{hours}h)",
+  "@resultsDurationBadge": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "resultsStagesTitle": "LỘ TRÌNH CHI TIẾT",
+  "resultsOpenFullMap": "MỞ BẢN ĐỒ TOÀN LỘ TRÌNH",
+  "resultsRegenerate": "Tạo lại",
+  "resultsRegenerateFailed": "Không thể tạo lại kế hoạch: {error}",
+  "@resultsRegenerateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "resultsCopy": "Sao chép",
+  "resultsHistory": "Lịch sử",
+  "resultsCentralArea": "Khu vực trung tâm",
+  "resultsHours": "{hours} tiếng",
+  "@resultsHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "resultsInviteAccepted": "Lời mời đã được chấp nhận!",
+  "resultsInviteAcceptedBody": "Đối phương đã đồng ý tham gia buổi hẹn hò này.",
+  "resultsResendInvite": "XEM / GỬI LẠI LỜI MỜI HẸN HÒ",
+  "resultsSendInvite": "GỬI LỜI MỜI HẸN HÒ",
+  "resultsPurposeTitle": "Mục Tiêu Buổi Hẹn",
+  "resultsStagePurpose": "Mục đích",
+  "resultsStageCategory": "Thể loại",
+  "resultsStageDuration": "Thời lượng",
+  "resultsMinutes": "{minutes} phút",
+  "@resultsMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "resultsSuggestedTasks": "Hoạt động gợi ý",
+  "resultsSuggestedPlaces": "Địa điểm gợi ý",
+  "resultsHideBackups": "Thu gọn lựa chọn dự phòng",
+  "resultsShowBackups": "Xem thêm lựa chọn dự phòng ({count})",
+  "@resultsShowBackups": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "resultsTipsTitle": "Mách Nhỏ Cho Hai Bạn",
+  "resultsUnlike": "Bỏ thích",
+  "resultsLike": "Thích địa điểm này",
+  "resultsUndislike": "Bỏ không thích",
+  "resultsDislike": "Không thích địa điểm này",
+  "resultsBackupBadge": "LỰA CHỌN DỰ PHÒNG",
+  "resultsDefaultAddress": "Khu vực trung tâm, Hồ Chí Minh",
+  "resultsPriceRange": "Khoảng giá: {range}",
+  "@resultsPriceRange": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "resultsRating": "Đánh giá {rating}/5 ({count} lượt)",
+  "@resultsRating": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "resultsViewOnMap": "Xem trên bản đồ",
+  "resultsMakePrimary": "Đặt làm chính",
+  "resultsTransit": "{transport}: ~ {km} km (~{minutes} phút)",
+  "@resultsTransit": {
+    "placeholders": {
+      "transport": {
+        "type": "String"
+      },
+      "km": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "resultsDateTypeSuggestion": "GỢI Ý KIỂU HẸN HÒ",
+  "savedPlansLoginRequired": "Vui lòng đăng nhập để xem các kế hoạch đã lưu.",
+  "savedPlansLoadFailed": "Không thể tải danh sách kế hoạch từ máy chủ ({status}).",
+  "@savedPlansLoadFailed": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "errorServerConnection": "Có lỗi xảy ra khi kết nối tới máy chủ.",
+  "savedPlansDeleted": "Đã xoá kế hoạch thành công 💖",
+  "savedPlansDeleteFailed": "Xoá thất bại: {status}",
+  "@savedPlansDeleteFailed": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "savedPlansDeleteConnectionError": "Có lỗi xảy ra khi kết nối để xoá kế hoạch.",
+  "savedPlansConfirmDeleteTitle": "Xác nhận xoá",
+  "savedPlansConfirmDeleteBody": "Bạn có chắc chắn muốn xoá kế hoạch hẹn hò này không? Thao tác này không thể hoàn tác.",
+  "commonDelete": "Xoá",
+  "vibeLabelRomantic": "Lãng mạn",
+  "vibeLabelFun": "Sôi nổi",
+  "vibeLabelAdventure": "Trải nghiệm",
+  "vibeLabelCasual": "Đời thường",
+  "vibeLabelChill": "Chill",
+  "savedPlansTitle": "Kế Hoạch Hẹn Hò Đã Lưu",
+  "savedPlansEmptyTitle": "Bạn chưa lưu kế hoạch hẹn hò nào.",
+  "savedPlansEmptyBody": "Hãy lên lịch và tạo kế hoạch mới nhé, hệ thống sẽ tự động lưu lại ở đây!",
+  "savedPlansDateLine": "Ngày: {details}",
+  "@savedPlansDateLine": {
+    "placeholders": {
+      "details": {
+        "type": "String"
+      }
+    }
+  },
+  "savedPlansAccepted": "Đã nhận lời",
+  "savedPlansInviteSent": "Đã gửi lời mời",
+  "savedPlansStageCount": "{count} chặng",
+  "@savedPlansStageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

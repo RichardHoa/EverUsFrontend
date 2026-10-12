@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../utils/auth_helper.dart';
 import '../../login_screen.dart';
+import '../../../l10n/l10n.dart';
 
 class GentleLoginModal extends StatelessWidget {
   final VoidCallback onLoginSuccess;
@@ -65,7 +66,7 @@ class GentleLoginModal extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Yêu cầu đăng nhập 💖',
+            context.l10n.gentleLoginTitle,
             style: GoogleFonts.comfortaa(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -74,7 +75,7 @@ class GentleLoginModal extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Tính năng này cần đăng nhập để đồng bộ thông tin giữa hai bạn. Bạn có muốn đăng nhập ngay không?',
+            context.l10n.gentleLoginBody,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 14,
@@ -96,7 +97,7 @@ class GentleLoginModal extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'Để sau',
+                    context.l10n.commonLater,
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -129,7 +130,7 @@ class GentleLoginModal extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'Đăng nhập',
+                    context.l10n.loginSignInTitle,
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,

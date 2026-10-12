@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../l10n/l10n.dart';
 
 /// Simple spinner loader shown when retrieving an existing plan from the server.
 class DatePlannerLoading extends StatelessWidget {
@@ -42,7 +43,7 @@ class DatePlannerLoading extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Đang tải kế hoạch...',
+              context.l10n.plannerLoadingTitle,
               style: GoogleFonts.playfairDisplay(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -51,7 +52,7 @@ class DatePlannerLoading extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Đang lấy thông tin mới nhất cho buổi hẹn hò của bạn... 💕',
+              context.l10n.plannerLoadingBody,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,

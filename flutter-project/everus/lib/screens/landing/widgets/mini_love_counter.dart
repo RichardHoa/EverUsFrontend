@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../widgets/app_avatar.dart';
 import 'arc_name_label.dart';
+import '../../../l10n/l10n.dart';
 
 /// Love counter card from the Figma `landing_page` frame. Every measurement is
 /// in the frame's units (about 3x a phone); [scale] maps them to the screen.
@@ -86,7 +87,7 @@ class MiniLoveCounter extends StatelessWidget {
                 right: 0,
                 top: 45 * k,
                 child: Text(
-                  'CHÚNG MÌNH ĐÃ BÊN NHAU',
+                  context.l10n.miniLoveCounterHeading,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.nunito(
                     fontSize: 36.4 * k,
@@ -119,7 +120,7 @@ class MiniLoveCounter extends StatelessWidget {
                       ),
                       SizedBox(width: 24 * k),
                       Text(
-                        'ngày',
+                        context.l10n.miniLoveCounterDays,
                         style: GoogleFonts.nunito(
                           fontSize: 42 * k,
                           fontWeight: FontWeight.w600,

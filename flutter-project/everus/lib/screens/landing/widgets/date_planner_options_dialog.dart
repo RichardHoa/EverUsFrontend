@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../l10n/l10n.dart';
 
 class DatePlannerOptionsDialog {
   static void show(
@@ -11,7 +12,7 @@ class DatePlannerOptionsDialog {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Lên Lịch Hẹn Hò',
+      barrierLabel: context.l10n.featurePlanDate,
       barrierColor: Colors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 250),
       transitionBuilder: (context, anim1, anim2, child) {
@@ -74,7 +75,7 @@ class DatePlannerOptionsDialog {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      'Lên Lịch Hẹn Hò',
+                      context.l10n.featurePlanDate,
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -84,7 +85,7 @@ class DatePlannerOptionsDialog {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Chọn trải nghiệm bạn muốn cùng thực hiện',
+                      context.l10n.optionsDialogSubtitle,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -96,8 +97,8 @@ class DatePlannerOptionsDialog {
 
                     // Button 1: Lên kế hoạch hẹn hò
                     _DialogOptionButton(
-                      title: 'Lên kế hoạch hẹn hò',
-                      subtitle: 'Tự tạo lộ trình chi tiết cho buổi hẹn',
+                      title: context.l10n.optionsPlanTitle,
+                      subtitle: context.l10n.optionsPlanSubtitle,
                       gradientColors: const [Color(0xFF653851), Color(0xFF52283F)],
                       onTap: () {
                         Navigator.pop(ctx);
@@ -108,8 +109,8 @@ class DatePlannerOptionsDialog {
 
                     // Button 2: Thử thách hẹn hò
                     _DialogOptionButton(
-                      title: 'Thử thách hẹn hò',
-                      subtitle: 'Khám phá ý tưởng & thử thách thú vị',
+                      title: context.l10n.optionsChallengeTitle,
+                      subtitle: context.l10n.optionsChallengeSubtitle,
                       gradientColors: const [Color(0xFF824B6B), Color(0xFF6E3957)],
                       onTap: () {
                         Navigator.pop(ctx);
@@ -122,7 +123,7 @@ class DatePlannerOptionsDialog {
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
                       child: Text(
-                        'Đóng',
+                        context.l10n.commonClose,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

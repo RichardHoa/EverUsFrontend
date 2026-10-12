@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import '../l10n/l10n.dart';
 import '../utils/auth_helper.dart';
+import '../utils/display_language_helper.dart';
 
 class InviteTemplate {
   final String id;
@@ -141,7 +143,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
           onPressed: () => Navigator.of(context).pop(generatedUrl),
         ),
         title: Text(
-          generatedUrl == null ? "Tạo Thư Mời Hẹn Hò" : "Lời Mời Đã Sẵn Sàng! 🎉",
+          generatedUrl == null ? context.l10n.inviteCreateTitle : context.l10n.inviteReadyTitle,
           style: GoogleFonts.playfairDisplay(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -179,8 +181,8 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
             Expanded(
               child: TextFormField(
                 initialValue: senderName,
-                decoration: const InputDecoration(
-                  labelText: 'Xưng hô của bạn (Sender)',
+                decoration: InputDecoration(
+                  labelText: context.l10n.inviteSenderLabel,
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
@@ -194,8 +196,8 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
             Expanded(
               child: TextFormField(
                 initialValue: receiverName,
-                decoration: const InputDecoration(
-                  labelText: 'Gọi đối phương (Receiver)',
+                decoration: InputDecoration(
+                  labelText: context.l10n.inviteReceiverLabel,
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
@@ -229,8 +231,8 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
                   }
                 },
                 child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Ngày hẹn',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.inviteDateLabel,
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
@@ -250,8 +252,8 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
             Expanded(
               child: TextFormField(
                 initialValue: timeStr,
-                decoration: const InputDecoration(
-                  labelText: 'Giờ hẹn gặp',
+                decoration: InputDecoration(
+                  labelText: context.l10n.inviteTimeLabel,
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
@@ -268,8 +270,8 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
         // Location text field
         TextFormField(
           initialValue: locationStr,
-          decoration: const InputDecoration(
-            labelText: 'Địa điểm hẹn gặp / Khu vực',
+          decoration: InputDecoration(
+            labelText: context.l10n.inviteLocationLabel,
             border: OutlineInputBorder(),
           ),
           onChanged: (val) {
@@ -280,9 +282,9 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
         const SizedBox(height: 16),
 
         // Pickup Option Selector
-        const Text(
-          'Ai sẽ đón ai? 🚗',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
+        Text(
+          context.l10n.invitePickupLabel,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -298,9 +300,9 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
         const SizedBox(height: 16),
 
         // Custom invite text field
-        const Text(
-          'Nội dung thư mời (Tự do điều chỉnh theo ý muốn):',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
+        Text(
+          context.l10n.inviteBodyLabel,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -329,7 +331,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
             ),
           ),
           child: Text(
-            isCreating ? "Đang xử lý lời mời..." : "Xác Nhận & Tạo Lời Mời 💖",
+            isCreating ? context.l10n.inviteCreating : context.l10n.inviteSubmit,
             style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
           ),
         ),
@@ -345,7 +347,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
         const Icon(Icons.check_circle_outline, color: Colors.green, size: 80),
         const SizedBox(height: 24),
         Text(
-          'Đường Dẫn Lời Mời Đã Sẵn Sàng!',
+          context.l10n.inviteLinkReady,
           textAlign: TextAlign.center,
           style: GoogleFonts.playfairDisplay(
             fontSize: 22,
@@ -354,10 +356,10 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Sao chép liên kết bên dưới và gửi cho đối phương. Lời mời sẽ mở ra trang web lãng mạn chứa nhạc nền riêng biệt:',
+        Text(
+          context.l10n.inviteLinkInstructions,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
+          style: const TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
         ),
         const SizedBox(height: 32),
 
@@ -409,7 +411,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
                   ),
                 ),
                 child: Text(
-                  copied ? "Đã chép!" : "Sao chép",
+                  copied ? context.l10n.inviteCopied : context.l10n.resultsCopy,
                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
                 ),
               ),
@@ -428,7 +430,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: const Text('Quay lại Lộ Trình Hẹn Hò', style: TextStyle(color: Colors.black54)),
+          child: Text(context.l10n.inviteBackToItinerary, style: const TextStyle(color: Colors.black54)),
         ),
       ],
     );
@@ -504,7 +506,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
       final Map<String, dynamic> responseData = json.decode(utf8.decode(response.bodyBytes));
 
       if (response.statusCode >= 400) {
-        throw Exception(responseData['detail'] ?? 'Tạo lời mời không thành công.');
+        throw Exception(responseData['detail'] ?? DisplayLanguageHelper.strings.inviteCreateFailed);
       }
 
       if (mounted) {
@@ -515,7 +517,7 @@ class _CreateInviteScreenState extends State<CreateInviteScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text(context.l10n.commonError(e.toString()))),
         );
       }
     } finally {

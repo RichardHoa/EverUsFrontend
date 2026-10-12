@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/backend_work_overlay.dart';
 import '../date_planner_controller.dart';
+import '../../../l10n/l10n.dart';
 
 /// Screen displayed while the backend designs the itinerary.
 ///
@@ -14,6 +15,6 @@ class DatePlannerGenerating extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const BackendWorkOverlay(message: 'EverUs đang lên lộ trình...');
+    return BackendWorkOverlay(message: context.l10n.plannerGenerating);
   }
 }
